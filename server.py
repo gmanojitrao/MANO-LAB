@@ -508,20 +508,60 @@ def load_batch(batch_name: str):
     }
 
 
-# Serve Frontend Web Dashboard
-STATIC_DIR = Path(__file__).resolve().parent / "static"
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# ==============================================================================
+# Serve Frontend Web Dashboard & MANO-LAB Digital Laboratory Framework
+# ==============================================================================
+ROOT_DIR = Path(__file__).resolve().parent
+STATIC_DIR = ROOT_DIR / "static"
+APPS_DIR = ROOT_DIR / "apps"
+SRC_DIR = ROOT_DIR / "src"
+PUBLIC_DIR = ROOT_DIR / "public"
+
+# Mount static asset directories
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+if SRC_DIR.exists():
+    app.mount("/src", StaticFiles(directory=str(SRC_DIR)), name="src")
+
+if PUBLIC_DIR.exists():
+    app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
+
+if APPS_DIR.exists():
+    app.mount("/apps", StaticFiles(directory=str(APPS_DIR), html=True), name="apps")
 
 
 @app.get("/", response_class=HTMLResponse)
 def index_page():
+    """Serves the MANO-LAB Digital Laboratory Homepage."""
+    homepage = ROOT_DIR / "index.html"
+    if homepage.exists():
+        return HTMLResponse(content=homepage.read_text(encoding="utf-8"))
+    
+    # Fallback to static index if root index doesn't exist
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
-    return HTMLResponse("<h1>OmniScribe Web UI loading...</h1>")
+    return HTMLResponse("<h1>MANO-LAB Loading...</h1>")
+
+
+@app.get("/apps/audio-transcription", response_class=HTMLResponse)
+@app.get("/apps/audio-transcription/", response_class=HTMLResponse)
+def audio_transcription_page():
+    """Serves the standalone Audio Transcription Studio."""
+    app_file = APPS_DIR / "audio-transcription" / "index.html"
+    if app_file.exists():
+        return HTMLResponse(content=app_file.read_text(encoding="utf-8"))
+    
+    fallback = STATIC_DIR / "index.html"
+    if fallback.exists():
+        return HTMLResponse(content=fallback.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>Audio Transcription Studio Loading...</h1>")
 
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"[*] Starting OmniScribe Server on http://{Config.SERVER_HOST}:{Config.SERVER_PORT}")
+    print(f"[*] Starting MANO-LAB Server on http://{Config.SERVER_HOST}:{Config.SERVER_PORT}")
+    print(f"[*] Homepage: http://{Config.SERVER_HOST}:{Config.SERVER_PORT}/")
+    print(f"[*] Audio Transcription Studio: http://{Config.SERVER_HOST}:{Config.SERVER_PORT}/apps/audio-transcription/")
     uvicorn.run(app, host=Config.SERVER_HOST, port=Config.SERVER_PORT)
