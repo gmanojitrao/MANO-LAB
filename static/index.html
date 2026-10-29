@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniScribe AI - Field Interview & Artisan Transcription Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.2s, color 0.2s; }
+    .glass {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.25); border-radius: 9999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.45); }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); }
+    .speaker-interviewer { color: #2563eb; font-weight: 700; }
+    .dark .speaker-interviewer { color: #60a5fa; font-weight: 700; }
+    .speaker-artisan { color: #059669; font-weight: 700; }
+    .dark .speaker-artisan { color: #34d399; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-[#0b0f19] dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP NAVBAR -->
+  <header class="sticky top-0 z-40 bg-white/80 dark:bg-[#0f172a]/80 glass border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/20 text-white">
+          <i data-lucide="mic" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-700 to-slate-900 dark:from-white dark:via-slate-100 dark:to-slate-400">
+              OmniScribe
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
+              STUDIO 2.0
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
+            Field Interview Diarization • Artisan Dossier Aggregator • Bilingual Comparison
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions / Status -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- FFmpeg badge -->
+        <div id="ffmpegBadge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Audio Engine Ready</span>
+        </div>
+
+        <!-- Theme Toggle (Light / Dark) -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" title="Toggle Light/Dark Theme" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition">
+          <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Completed Batches Button -->
+        <button onclick="openBatchesModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30 transition">
+          <i data-lucide="archive" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+          <span>Batches (<span id="batchCountBadge">0</span>)</span>
+        </button>
+
+        <!-- API Keys Button -->
+        <button onclick="openSettingsModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
+          <i data-lucide="key" class="w-4 h-4 text-indigo-500"></i>
+          <span class="hidden sm:inline">API Keys</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Cloudflare Host Banner (Shows when hosted on Cloudflare Pages and API_BASE is empty) -->
+    <div id="cloudflaredBanner" class="hidden p-3.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between gap-3 text-xs text-indigo-900 dark:text-indigo-200 shadow-sm">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
+          <i data-lucide="cloud" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="font-bold">Hosted on Cloudflare Pages.</span>
+          <span class="text-indigo-700 dark:text-indigo-300"> To connect with your local OmniScribe processor or Cloudflare Tunnel, click <b>Configure Backend</b>.</span>
+        </div>
+      </div>
+      <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shrink-0 shadow-sm">Configure Backend</button>
+    </div>
+
+    <!-- HERO PROMISE CARD -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 text-white p-6 sm:p-8 shadow-xl shadow-indigo-500/10">
+      <div class="relative z-10 max-w-3xl space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold">
+          <span>✨ Multi-Folder Artisan Diarization & Aggregator</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+          Field Interview Transcription & Artisan Dossier Studio
+        </h1>
+        <p class="text-sm sm:text-base text-indigo-100/90 leading-relaxed">
+          Drop an entire folder, select multiple folders, or pick individual audio files. OmniScribe distinguishes <span class="text-white font-bold underline decoration-indigo-300">Interviewer</span> vs <span class="text-white font-bold underline decoration-emerald-300">Artisan</span> dialogue turns, gathers all split sections for each artisan across folders, and produces side-by-side bilingual dossiers.
+        </p>
+
+        <!-- Feature Pills -->
+        <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+          <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15">
+            <span class="w-7 h-7 rounded-lg bg-emerald-400 text-slate-900 flex items-center justify-center font-bold text-xs shrink-0">1</span>
+            <div>
+              <div class="text-xs font-bold text-white">🗣️ Authentic Native Script</div>
+              <div class="text-[11px] text-indigo-100">Verbatim original dialogue turns in native script (Devanagari, etc.)</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15">
+            <span class="w-7 h-7 rounded-lg bg-blue-300 text-slate-900 flex items-center justify-center font-bold text-xs shrink-0">2</span>
+            <div>
+              <div class="text-xs font-bold text-white">🌐 Genuine English Translation</div>
+              <div class="text-[11px] text-indigo-100">Pure raw dialogue translation without omissions or additions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK NOTIFICATION / LOADED BATCH BANNER -->
+    <div id="completedBatchBanner" class="hidden p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+      <div class="flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
+        <div>
+          <div id="bannerBatchTitle" class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>Batch Available:</span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold">meoww</span>
+          </div>
+          <p id="bannerBatchDesc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            20 audio files aggregated into 8 Artisan Complete Dossiers. Click below to inspect.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="scrollToResults()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+          <span>View Artisan Dossiers</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- INPUT & CONFIGURATION CARD -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      
+      <!-- Input Header -->
+      <div class="pb-4 border-b border-slate-100 dark:border-slate-800">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="folder-plus" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+          <span>Select Audio Files or Entire Folders</span>
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Choose an entire folder at once, drag-and-drop folders/files, or enter a local folder path.
+        </p>
+      </div>
+
+      <!-- Drag & Drop Zone with Direct Buttons -->
+      <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-3xl p-8 flex flex-col items-center justify-center text-center transition bg-slate-50/50 dark:bg-slate-800/30">
+        <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 shadow-sm">
+          <i data-lucide="cloud-upload" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
+          Drag & Drop Entire Folders or Audio Files Here
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+          Supports recursive folder extraction for M4A, MP3, WAV, AAC, OGG, FLAC, MP4 recordings.
+        </p>
+
+        <!-- Direct Action Buttons -->
+        <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <!-- Folder Upload Button -->
+          <label for="folderInput" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer transition flex items-center gap-2">
+            <i data-lucide="folder" class="w-4 h-4"></i>
+            <span>Select Entire Folder</span>
+          </label>
+          <input id="folderInput" type="file" webkitdirectory directory multiple class="hidden" onchange="handleFolderOrFilesUpload(this.files)">
+
+          <!-- Files Upload Button -->
+          <label for="filesInput" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 cursor-pointer transition flex items-center gap-2">
+            <i data-lucide="headphones" class="w-4 h-4 text-indigo-500"></i>
+            <span>Select Individual Audio Files</span>
+          </label>
+          <input id="filesInput" type="file" multiple accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.flac,.mp4,.mkv" class="hidden" onchange="handleFolderOrFilesUpload(this.files)">
+        </div>
+      </div>
+
+      <!-- Local Machine Folder Path Input (Optional Alternative) -->
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Or Scan a Local Directory on this PC
+          </label>
+          <span class="text-[10px] text-slate-400">e.g. C:\Users\gmano\OneDrive\Desktop\Interviews</span>
+        </div>
+        <div class="flex gap-2">
+          <input id="inputFolderPath" type="text" placeholder="Enter folder path on your computer..." class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+          <button onclick="scanFolder()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs transition flex items-center gap-1.5 shrink-0">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            <span>Scan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Uploaded / Discovered Audio Files Display -->
+      <div id="selectedFilesSummaryBox" class="hidden p-5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800/40 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span id="selectedCountText" class="text-xs font-bold text-indigo-950 dark:text-indigo-200">0 Audio Files Selected</span>
+          </div>
+          <button onclick="clearSelectedFiles()" class="text-xs font-semibold text-rose-500 hover:underline">Clear Selection</button>
+        </div>
+        <div id="selectedFilesList" class="max-h-44 overflow-y-auto custom-scrollbar space-y-1 text-xs pr-1"></div>
+      </div>
+
+      <!-- Batch Options -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Batch / Dossier Name</label>
+          <input id="inputBatchTitle" type="text" placeholder="e.g. Master_Field_Study_2026" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Transcription Engine</label>
+          <select id="selectEngine" onchange="updateEngineDisplay()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
+            <option value="gemini" selected>Google Gemini 3.5 Flash (Recommended: Diarized, Free, Fast)</option>
+            <option value="groq">Groq Cloud (Whisper Large v3)</option>
+            <option value="openai">OpenAI Whisper Cloud</option>
+            <option value="local">Local Offline Whisper (CPU)</option>
+          </select>
+          <div id="engineNote" class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">⚡ Fast & Free. Diarization, Indic scripts, verbatim English translation.</div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Audio Optimization</label>
+          <select id="selectDenoise" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
+            <option value="auto" selected>Auto-Denoise & Volume Normalize</option>
+            <option value="always">Deep Noise Suppression</option>
+            <option value="never">Raw Unmodified Audio</option>
+          </select>
+          <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Preserves continuous recordings without artificial splitting.</div>
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+          <span>No timestamps • Pure Native Script + Verbatim English Dialogue</span>
+        </div>
+        <button id="btnStartBatch" onclick="startBatchTranscription()" class="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Start Smart Batch Transcription</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- REAL-TIME PROGRESS PANEL -->
+    <div id="progressPanel" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center animate-spin">
+            <i data-lucide="loader" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 id="progressTitle" class="text-sm font-bold text-slate-900 dark:text-white">Processing Audio Files...</h3>
+            <p id="progressSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Initializing pipeline</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="progressPercent" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 font-mono">0%</span>
+          <button onclick="cancelCurrentBatch()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-800 transition">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Animated Progress Bar -->
+      <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+        <div id="progressBarFill" class="bg-gradient-to-r from-indigo-600 to-violet-500 h-full rounded-full transition-all duration-300 w-0"></div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- RESULTS & ARTISAN DOSSIERS HUB                               -->
+    <!-- ============================================================ -->
+    <div id="resultsHub" class="hidden space-y-6">
+
+      <!-- MASTER BATCH SUMMARY & DOWNLOAD ACTIONS BAR -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+        
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Batch Complete & Dossiers Ready</span>
+            </div>
+            <h2 id="hubBatchName" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
+              meoww
+            </h2>
+            <p id="hubBatchMetrics" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              20 Audio Files • 8 Artisans Identified • Consolidated Dossiers Ready
+            </p>
+          </div>
+
+          <!-- Master Download Buttons -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <a id="btnAllArtisansZip" href="#" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition">
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span>Download All Artisans (ZIP)</span>
+            </a>
+            <a id="btnMasterZip" href="#" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-600/20 transition">
+              <i data-lucide="archive" class="w-4 h-4"></i>
+              <span>Full Batch ZIP</span>
+            </a>
+            <a id="btnMasterDocx" href="#" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-500"></i>
+              <span>Master DOCX</span>
+            </a>
+            <a id="btnMasterPdf" href="#" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="file-check" class="w-3.5 h-3.5 text-rose-500"></i>
+              <span>Master PDF</span>
+            </a>
+            <a id="btnMasterMd" href="#" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="code" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>Master MD</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- VIEW TOGGLE TABS (Artisans vs All Files) -->
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+            <button id="viewTabArtisans" onclick="switchMainView('artisans')" class="py-2 px-4 rounded-lg text-xs font-bold transition bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm flex items-center gap-2">
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span>By Artisan Dossiers (<span id="tabCountArtisans">0</span>)</span>
+            </button>
+            <button id="viewTabFiles" onclick="switchMainView('files')" class="py-2 px-4 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-2">
+              <i data-lucide="headphones" class="w-4 h-4"></i>
+              <span>All Audio Files (<span id="tabCountFiles">0</span>)</span>
+            </button>
+          </div>
+
+          <!-- Artisan Search Bar -->
+          <div class="relative max-w-xs w-full hidden sm:block">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+            <input id="searchArtisanInput" oninput="filterArtisanCards()" type="text" placeholder="Search artisan or section..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 1: ARTISAN CARDS GRID (PRIMARY FEATURE)              -->
+      <!-- ============================================================ -->
+      <div id="artisanGridView" class="space-y-4">
+        <div id="artisanCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Dynamically populated artisan cards -->
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- SECTION 2: ALL AUDIO FILES VIEW                             -->
+      <!-- ============================================================ -->
+      <div id="allFilesView" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">All Audio Recordings in Batch</h3>
+          <span id="allFilesCountBadge" class="text-xs text-slate-500 font-mono">0 files</span>
+        </div>
+        <div id="allFilesListContainer" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- Dynamically populated file rows -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- SIDE-BY-SIDE BILINGUAL DIALOGUE READER MODAL                 -->
+  <!-- ============================================================ -->
+  <div id="dialogueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/70 dark:bg-black/80 backdrop-blur-md">
+    <div class="bg-white dark:bg-slate-900 max-w-5xl w-full h-[90vh] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0 bg-slate-50/50 dark:bg-slate-800/40">
+        <div class="flex items-center gap-3">
+          <div id="modalArtisanAvatar" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-extrabold flex items-center justify-center text-sm shadow">
+            DP
+          </div>
+          <div>
+            <h3 id="modalArtisanTitle" class="text-base font-extrabold text-slate-900 dark:text-white">
+              Deepak Prajapati - Complete Field Dossier
+            </h3>
+            <p id="modalArtisanSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Section A & Section B • Side-by-Side Bilingual Dialogue
+            </p>
+          </div>
+        </div>
+
+        <!-- Modal Download / Action Bar -->
+        <div class="flex items-center gap-2">
+          <div id="modalDownloadLinks" class="hidden sm:flex items-center gap-1.5"></div>
+          <button onclick="closeDialogueModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section Selector if multiple sections -->
+      <div id="modalSectionTabs" class="px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2 overflow-x-auto custom-scrollbar shrink-0"></div>
+
+      <!-- 2-COLUMN SIDE-BY-SIDE BILINGUAL READER BODY -->
+      <div class="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800 overflow-hidden">
+        
+        <!-- LEFT: NATIVE SCRIPT -->
+        <div class="flex flex-col h-full overflow-hidden bg-emerald-50/30 dark:bg-emerald-950/10">
+          <div class="p-3 px-5 border-b border-emerald-100 dark:border-emerald-950/40 flex items-center justify-between shrink-0 bg-emerald-50/60 dark:bg-emerald-950/20">
+            <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+              <span>🗣️ Native Script (Original Spoken Language)</span>
+            </span>
+            <button onclick="copyModalColumn('native')" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              <span id="copyNativeBtnText">Copy Native</span>
+            </button>
+          </div>
+          <div id="modalNativeContent" class="flex-1 p-5 overflow-y-auto custom-scrollbar space-y-3 text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-sans"></div>
+        </div>
+
+        <!-- RIGHT: ENGLISH TRANSLATION -->
+        <div class="flex flex-col h-full overflow-hidden bg-indigo-50/30 dark:bg-indigo-950/10">
+          <div class="p-3 px-5 border-b border-indigo-100 dark:border-indigo-950/40 flex items-center justify-between shrink-0 bg-indigo-50/60 dark:bg-indigo-950/20">
+            <span class="text-xs font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
+              <span>🌐 English Translation (Genuine Raw Dialogue)</span>
+            </span>
+            <button onclick="copyModalColumn('english')" class="text-[11px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              <span id="copyEnglishBtnText">Copy English</span>
+            </button>
+          </div>
+          <div id="modalEnglishContent" class="flex-1 p-5 overflow-y-auto custom-scrollbar space-y-3 text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-sans"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BATCHES MODAL -->
+  <div id="batchesModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="archive" class="w-4 h-4 text-emerald-500"></i>
+          <span>Completed Audio Batches</span>
+        </h3>
+        <button onclick="closeBatchesModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="batchesListContainer" class="space-y-2 max-h-[360px] overflow-y-auto custom-scrollbar"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="key" class="w-4 h-4 text-indigo-500"></i>
+          <span>Configure API Keys</span>
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Google Gemini API Key (Recommended)</label>
+            <a href="https://aistudio.google.com/apikey" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
+              <span>Get Free Key</span>
+              <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
+          <input id="modalGeminiKey" type="password" placeholder="AIzaSy..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+          <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">⚡ Fast & free. Handles Hindi, Gujarati, Rajasthani, Bangla + English.</p>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Groq API Key</label>
+            <a href="https://console.groq.com/keys" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
+              <span>Get Free Key</span>
+              <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
+          <input id="modalGroqKey" type="password" placeholder="gsk_..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">OpenAI API Key</label>
+          <input id="modalOpenAIKey" type="password" placeholder="sk-..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Backend Server URL</label>
+            <span class="text-[10px] text-slate-400">Optional (Cloudflare Pages)</span>
+          </div>
+          <input id="modalApiBase" type="text" placeholder="e.g. http://127.0.0.1:8000 (leave empty for same server)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Leave empty when using local server. If hosted on Cloudflare, set to your local IP or Cloudflare Tunnel.</p>
+        </div>
+      </div>
+
+      <div class="pt-3 flex gap-2">
+        <button onclick="closeSettingsModal()" class="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition">Cancel</button>
+        <button onclick="saveApiKeys()" class="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">Save Keys</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <script>
+    let currentMainView = 'artisans';
+    let selectedFiles = []; // Array of { name, path, size_mb }
+    let activeJobId = null;
+    let pollInterval = null;
+    let batchData = null;
+    let batchResults = [];
+    let batchArtisans = {};
+    let latestBatchName = null;
+    let currentModalArtisan = null;
+    let currentModalSectionIndex = 0;
+
+    // Cloudflare & Remote Backend API Base URL
+    let API_BASE = localStorage.getItem('omniscribe_api_base') || '';
+
+    function apiFetch(url, options = {}) {
+      const fullUrl = url.startsWith('/api') ? `${API_BASE}${url}` : url;
+      return fetch(fullUrl, options);
+    }
+
+    function getDlUrl(path) {
+      if (!path) return '';
+      if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      return `${API_BASE}${path}`;
+    }
+
+    // Supported extensions
+    const AUDIO_EXTS = ['.m4a', '.mp3', '.wav', '.aac', '.ogg', '.flac', '.mp4', '.mkv', '.webm', '.alac', '.opus', '.wma', '.3gp'];
+
+    function isAudioFilename(name) {
+      if (!name) return false;
+      const lower = name.toLowerCase();
+      return AUDIO_EXTS.some(e => lower.endsWith(e));
+    }
+
+    // Theme Management
+    function initTheme() {
+      const savedTheme = localStorage.getItem('omniscribe_theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        updateThemeIcon(true);
+      } else {
+        document.documentElement.classList.remove('dark');
+        updateThemeIcon(false);
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('omniscribe_theme', isDark ? 'dark' : 'light');
+      updateThemeIcon(isDark);
+    }
+
+    function updateThemeIcon(isDark) {
+      const icon = document.getElementById('themeIcon');
+      if (icon) {
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      lucide.createIcons();
+      initDragAndDrop();
+
+      // If loaded on Cloudflare Pages or remote host and no API_BASE set, reveal backend setup banner
+      const isRemoteHost = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost' && window.location.protocol.startsWith('http');
+      if (isRemoteHost && !API_BASE) {
+        const cfBanner = document.getElementById('cloudflaredBanner');
+        if (cfBanner) cfBanner.classList.remove('hidden');
+      }
+
+      fetchSystemStatus();
+      fetchCompletedBatches();
+    });
+
+    // Drag and Drop Handling (Folders + Files)
+    function initDragAndDrop() {
+      const dropZone = document.getElementById('dropZone');
+      if (!dropZone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('border-indigo-500', 'bg-indigo-50/20');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/20');
+        }, false);
+      });
+
+      dropZone.addEventListener('drop', async (e) => {
+        const dt = e.dataTransfer;
+        if (!dt) return;
+
+        let filesToAdd = [];
+        if (dt.items && dt.items.length > 0) {
+          filesToAdd = await extractFilesFromDataTransfer(dt.items);
+        } else if (dt.files && dt.files.length > 0) {
+          filesToAdd = Array.from(dt.files).filter(f => isAudioFilename(f.name));
+        }
+
+        if (filesToAdd.length > 0) {
+          await uploadFileList(filesToAdd);
+        } else {
+          alert("No compatible audio files detected in the dropped items.");
+        }
+      });
+    }
+
+    async function extractFilesFromDataTransfer(items) {
+      const resultFiles = [];
+      const queue = [];
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.webkitGetAsEntry) {
+          const entry = item.webkitGetAsEntry();
+          if (entry) queue.push(entry);
+        } else if (item.kind === 'file') {
+          const f = item.getAsFile();
+          if (f && isAudioFilename(f.name)) resultFiles.push(f);
+        }
+      }
+
+      while (queue.length > 0) {
+        const entry = queue.shift();
+        if (entry.isFile) {
+          const file = await new Promise(res => entry.file(res, () => res(null)));
+          if (file && isAudioFilename(file.name)) {
+            resultFiles.push(file);
+          }
+        } else if (entry.isDirectory) {
+          const reader = entry.createReader();
+          const entries = await new Promise(res => {
+            reader.readEntries(res, () => res([]));
+          });
+          queue.push(...entries);
+        }
+      }
+
+      return resultFiles;
+    }
+
+    async function handleFolderOrFilesUpload(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      const validFiles = Array.from(fileList).filter(f => isAudioFilename(f.name));
+      if (validFiles.length === 0) {
+        alert("No audio files detected in the selected folder/files.");
+        return;
+      }
+      await uploadFileList(validFiles);
+    }
+
+    async function uploadFileList(files) {
+      const dropZone = document.getElementById('dropZone');
+      const origText = dropZone.innerHTML;
+      dropZone.innerHTML = `
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 animate-spin">
+          <i data-lucide="loader" class="w-6 h-6"></i>
+        </div>
+        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Uploading and organizing ${files.length} audio file(s)...</span>
+      `;
+      lucide.createIcons();
+
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+
+      try {
+        const res = await apiFetch('/api/upload-files', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error("Upload server error");
+        const data = await res.json();
+        selectedFiles = selectedFiles.concat(data.files || []);
+        renderSelectedFiles();
+      } catch (e) {
+        alert("Failed to upload files: " + e.message);
+      } finally {
+        dropZone.innerHTML = origText;
+        lucide.createIcons();
+      }
+    }
+
+    function renderSelectedFiles() {
+      const box = document.getElementById('selectedFilesSummaryBox');
+      const list = document.getElementById('selectedFilesList');
+      const count = document.getElementById('selectedCountText');
+
+      if (selectedFiles.length === 0) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      box.classList.remove('hidden');
+      const totalMb = selectedFiles.reduce((acc, f) => acc + (f.size_mb || 0), 0);
+      count.textContent = `${selectedFiles.length} Audio File(s) Selected (${totalMb.toFixed(1)} MB total)`;
+
+      list.innerHTML = '';
+      selectedFiles.forEach((f, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 transition text-slate-700 dark:text-slate-300';
+        item.innerHTML = `
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-slate-400 font-mono text-[10px]">${idx + 1}.</span>
+            <span class="truncate font-semibold text-xs">${f.name}</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono shrink-0">${f.size_mb} MB</span>
+        `;
+        list.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    function clearSelectedFiles() {
+      selectedFiles = [];
+      renderSelectedFiles();
+    }
+
+    async function scanFolder() {
+      const path = document.getElementById('inputFolderPath').value.trim();
+      if (!path) {
+        alert("Please enter a folder path on your computer.");
+        return;
+      }
+
+      try {
+        const res = await apiFetch('/api/scan-folder', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ folder_path: path, recursive: true })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.detail || "Directory path does not exist on this machine.");
+          return;
+        }
+
+        const data = await res.json();
+        selectedFiles = data.files || [];
+        renderSelectedFiles();
+      } catch (e) {
+        alert("Error scanning folder: " + e.message);
+      }
+    }
+
+    async function startBatchTranscription() {
+      let filesToProcess = selectedFiles.map(f => f.path);
+
+      // Auto-fallback: check if user typed a folder path without clicking Scan
+      if (filesToProcess.length === 0) {
+        const typedPath = document.getElementById('inputFolderPath').value.trim();
+        if (typedPath) {
+          await scanFolder();
+          filesToProcess = selectedFiles.map(f => f.path);
+        }
+      }
+
+      if (filesToProcess.length === 0) {
+        alert("Please select audio files or an entire folder first.");
+        return;
+      }
+
+      const denoise = document.getElementById('selectDenoise').value;
+      const engine = document.getElementById('selectEngine').value;
+      const batchTitle = document.getElementById('inputBatchTitle').value.trim();
+
+      const btn = document.getElementById('btnStartBatch');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      document.getElementById('progressPanel').classList.remove('hidden');
+      document.getElementById('resultsHub').classList.add('hidden');
+
+      try {
+        const res = await apiFetch('/api/start-batch', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            files: filesToProcess,
+            batch_title: batchTitle || undefined,
+            engine: engine,
+            denoise_mode: denoise,
+            chunk_duration_mins: 45.0
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          btn.disabled = false;
+          btn.classList.remove('opacity-50');
+          document.getElementById('progressPanel').classList.add('hidden');
+          
+          if (errData.detail && errData.detail.includes("API Key is missing")) {
+            openSettingsModal();
+            alert(errData.detail);
+          } else {
+            alert("Error starting batch: " + (errData.detail || "Unknown error"));
+          }
+          return;
+        }
+
+        const data = await res.json();
+        activeJobId = data.job_id;
+        startPollingJobStatus();
+      } catch (e) {
+        alert("Failed to start batch: " + e.message);
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        document.getElementById('progressPanel').classList.add('hidden');
+      }
+    }
+
+    async function cancelCurrentBatch() {
+      if (!activeJobId) return;
+      if (!confirm("Are you sure you want to cancel the current batch?")) return;
+
+      try {
+        await apiFetch(`/api/cancel-batch/${activeJobId}`, { method: 'POST' });
+        if (pollInterval) clearInterval(pollInterval);
+        document.getElementById('progressTitle').textContent = "Batch Cancelled";
+        document.getElementById('progressSubtitle').textContent = "Cancelled by user";
+        document.getElementById('btnStartBatch').disabled = false;
+        document.getElementById('btnStartBatch').classList.remove('opacity-50');
+      } catch (e) {
+        alert("Error cancelling batch: " + e.message);
+      }
+    }
+
+    function startPollingJobStatus() {
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(async () => {
+        if (!activeJobId) return;
+
+        try {
+          const res = await apiFetch(`/api/job-status/${activeJobId}`);
+          if (!res.ok) return;
+
+          const data = await res.json();
+          document.getElementById('progressTitle').textContent = data.current_filename 
+            ? `Transcribing: ${data.current_filename}`
+            : `Processing Audio Batch...`;
+          document.getElementById('progressSubtitle').textContent = data.status_message;
+          document.getElementById('progressPercent').textContent = `${Math.round(data.percent_complete)}%`;
+          document.getElementById('progressBarFill').style.width = `${data.percent_complete}%`;
+
+          if (data.is_completed) {
+            clearInterval(pollInterval);
+            document.getElementById('btnStartBatch').disabled = false;
+            document.getElementById('btnStartBatch').classList.remove('opacity-50');
+            document.getElementById('progressPanel').classList.add('hidden');
+            displayResults(data);
+            scrollToResults();
+          }
+        } catch (e) {
+          console.error("Polling error", e);
+        }
+      }, 1000);
+    }
+
+    // ============================================================
+    // DISPLAY RESULTS & ARTISANS GRID
+    // ============================================================
+    function deriveArtisansClientSide(results) {
+      const groups = {};
+      results.forEach(r => {
+        let artisan = r.artisan_name;
+        let sec = r.section_name;
+        if (!artisan) {
+          const stem = (r.filename || '').replace(/\.[^/.]+$/, '').trim();
+          const m = stem.match(/^(?:Section[-_ ]*[A-Za-z0-9]+)\s*[-_ :]*\s*(.*)$/i);
+          if (m && m[1]) {
+            artisan = m[1].trim();
+            const secMatch = stem.match(/^(Section[-_ ]*[A-Za-z0-9]+)/i);
+            sec = secMatch ? secMatch[1].replace(/[-_ ]+/g, ' ').trim() : 'Section';
+          } else {
+            artisan = stem;
+            sec = 'General Interview';
+          }
+        }
+        if (!groups[artisan]) {
+          groups[artisan] = {
+            artisan_name: artisan,
+            sections_count: 0,
+            total_duration_seconds: 0,
+            total_duration_formatted: "0s",
+            sections: [],
+            downloads: {}
+          };
+        }
+        groups[artisan].sections.push({
+          section_name: sec,
+          filename: r.filename,
+          duration_formatted: r.duration_formatted,
+          language: r.language_detected
+        });
+        groups[artisan].sections_count += 1;
+        groups[artisan].total_duration_seconds += (r.duration_seconds || 0);
+      });
+
+      Object.values(groups).forEach(g => {
+        const mins = Math.floor(g.total_duration_seconds / 60);
+        const secs = Math.floor(g.total_duration_seconds % 60);
+        g.total_duration_formatted = `${mins}m ${secs}s`;
+      });
+
+      return groups;
+    }
+
+    function displayResults(data) {
+      batchData = data;
+      batchResults = data.results || [];
+      batchArtisans = (data.artisans && Object.keys(data.artisans).length > 0)
+        ? data.artisans
+        : deriveArtisansClientSide(batchResults);
+
+      const hub = document.getElementById('resultsHub');
+      if (hub) hub.classList.remove('hidden');
+
+      const nameEl = document.getElementById('hubBatchName');
+      if (nameEl) nameEl.textContent = data.batch_name || "Batch Results";
+      
+      const totalArtisans = Object.keys(batchArtisans).length;
+      const metricsEl = document.getElementById('hubBatchMetrics');
+      if (metricsEl) {
+        metricsEl.textContent = `${batchResults.length} Audio Files • ${totalArtisans} Artisans Aggregated • Ready for Download`;
+      }
+
+      const countArtEl = document.getElementById('tabCountArtisans');
+      if (countArtEl) countArtEl.textContent = totalArtisans;
+      const countFilesEl = document.getElementById('tabCountFiles');
+      if (countFilesEl) countFilesEl.textContent = batchResults.length;
+      const allFilesBadge = document.getElementById('allFilesCountBadge');
+      if (allFilesBadge) allFilesBadge.textContent = `${batchResults.length} files`;
+
+      // Master Downloads
+      const md = data.master_downloads || {};
+      const btnAllArt = document.getElementById('btnAllArtisansZip');
+      if (btnAllArt) {
+        if (md.artisans_zip) {
+          btnAllArt.href = getDlUrl(md.artisans_zip);
+          btnAllArt.classList.remove('hidden');
+        } else {
+          btnAllArt.classList.add('hidden');
+        }
+      }
+
+      const bZip = document.getElementById('btnMasterZip');
+      if (bZip && md.zip) bZip.href = getDlUrl(md.zip);
+      const bDocx = document.getElementById('btnMasterDocx');
+      if (bDocx && md.docx) bDocx.href = getDlUrl(md.docx);
+      const bPdf = document.getElementById('btnMasterPdf');
+      if (bPdf && md.pdf) bPdf.href = getDlUrl(md.pdf);
+      const bMd = document.getElementById('btnMasterMd');
+      if (bMd && md.md) bMd.href = getDlUrl(md.md);
+
+      renderArtisanCards();
+      renderAllFilesList();
+      lucide.createIcons();
+    }
+
+    function scrollToResults() {
+      const hub = document.getElementById('resultsHub');
+      if (hub) {
+        hub.classList.remove('hidden');
+        hub.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function switchMainView(view) {
+      currentMainView = view;
+      const tabArtisans = document.getElementById('viewTabArtisans');
+      const tabFiles = document.getElementById('viewTabFiles');
+      const gridArtisans = document.getElementById('artisanGridView');
+      const viewFiles = document.getElementById('allFilesView');
+
+      if (view === 'artisans') {
+        tabArtisans.className = 'py-2 px-4 rounded-lg text-xs font-bold transition bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm flex items-center gap-2';
+        tabFiles.className = 'py-2 px-4 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-2';
+        gridArtisans.classList.remove('hidden');
+        viewFiles.classList.add('hidden');
+      } else {
+        tabFiles.className = 'py-2 px-4 rounded-lg text-xs font-bold transition bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm flex items-center gap-2';
+        tabArtisans.className = 'py-2 px-4 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-2';
+        viewFiles.classList.remove('hidden');
+        gridArtisans.classList.add('hidden');
+      }
+    }
+
+    function getInitials(name) {
+      if (!name) return "AR";
+      const parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    const AVATAR_GRADIENTS = [
+      'from-emerald-500 to-teal-600',
+      'from-indigo-500 to-violet-600',
+      'from-blue-500 to-cyan-600',
+      'from-amber-500 to-orange-600',
+      'from-rose-500 to-pink-600',
+      'from-purple-500 to-indigo-600'
+    ];
+
+    function renderArtisanCards() {
+      const container = document.getElementById('artisanCardsContainer');
+      container.innerHTML = '';
+
+      const artisanNames = Object.keys(batchArtisans);
+      if (artisanNames.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-slate-500">
+            No artisan entities identified yet.
+          </div>
+        `;
+        return;
+      }
+
+      artisanNames.forEach((artisanName, idx) => {
+        const art = batchArtisans[artisanName];
+        const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
+        const initials = getInitials(artisanName);
+        const card = document.createElement('div');
+        card.className = 'artisan-card bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 shadow-sm hover:shadow-lg transition flex flex-col justify-between gap-5';
+        card.setAttribute('data-artisan-name', artisanName.toLowerCase());
+
+        const sectionsList = (art.sections || []).map(s => s.section_name || 'Section').join(', ');
+
+        card.innerHTML = `
+          <div class="space-y-4">
+            <!-- Header: Avatar + Name + Badges -->
+            <div class="flex items-start gap-3.5">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${gradient} text-white font-extrabold flex items-center justify-center text-base shadow shrink-0">
+                ${initials}
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white truncate" title="${artisanName}">
+                  ${artisanName}
+                </h3>
+                <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                  <span class="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-500/20">
+                    ${art.sections_count} Section${art.sections_count > 1 ? 's' : ''}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-medium font-mono">
+                    ${art.total_duration_formatted}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sections Included Pill Box -->
+            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Sections Found Across Folders</span>
+              <div class="text-slate-700 dark:text-slate-300 font-semibold truncate" title="${sectionsList}">
+                ${sectionsList || 'General Interview'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Actions: 1-Click Dossier Downloads & View Button -->
+          <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button onclick="openDialogueModalForArtisan('${artisanName.replace(/'/g, "\\'")}')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-2 border border-indigo-200 dark:border-indigo-500/20">
+              <i data-lucide="split" class="w-3.5 h-3.5"></i>
+              <span>Read Side-by-Side Dialogue</span>
+            </button>
+
+            <!-- 1-Click Dossier Downloads -->
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+              ${art.downloads && art.downloads.docx ? `
+                <a href="${getDlUrl(art.downloads.docx)}" title="Download Complete Word Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
+                  <i data-lucide="file-text" class="w-3 h-3"></i> DOCX
+                </a>` : ''}
+              ${art.downloads && art.downloads.pdf ? `
+                <a href="${getDlUrl(art.downloads.pdf)}" title="Download Complete PDF Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-rose-600 dark:text-rose-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
+                  <i data-lucide="file-check" class="w-3 h-3"></i> PDF
+                </a>` : ''}
+              ${art.downloads && art.downloads.md ? `
+                <a href="${getDlUrl(art.downloads.md)}" title="Download Markdown Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
+                  <i data-lucide="code" class="w-3 h-3"></i> MD
+                </a>` : ''}
+              ${art.downloads && art.downloads.txt ? `
+                <a href="${getDlUrl(art.downloads.txt)}" title="Download Plain Text Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
+                  <i data-lucide="file" class="w-3 h-3"></i> TXT
+                </a>` : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterArtisanCards() {
+      const q = document.getElementById('searchArtisanInput').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.artisan-card');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (!q || text.includes(q)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderAllFilesList() {
+      const container = document.getElementById('allFilesListContainer');
+      container.innerHTML = '';
+
+      batchResults.forEach((track, idx) => {
+        const row = document.createElement('div');
+        row.className = 'py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs font-mono font-bold shrink-0">
+              ${idx + 1}
+            </span>
+            <div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white">${track.filename}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
+                <span>👤 ${track.artisan_name || 'Artisan'}</span>
+                <span>•</span>
+                <span>📌 ${track.section_name || 'Section'}</span>
+                <span>•</span>
+                <span class="font-mono">${track.duration_formatted}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            ${track.downloads && track.downloads.docx ? `
+              <a href="${getDlUrl(track.downloads.docx)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">DOCX</a>` : ''}
+            ${track.downloads && track.downloads.pdf ? `
+              <a href="${getDlUrl(track.downloads.pdf)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">PDF</a>` : ''}
+            ${track.downloads && track.downloads.native_txt ? `
+              <a href="${getDlUrl(track.downloads.native_txt)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Native TXT</a>` : ''}
+            ${track.downloads && track.downloads.english_txt ? `
+              <a href="${getDlUrl(track.downloads.english_txt)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">English TXT</a>` : ''}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // ============================================================
+    // SIDE-BY-SIDE BILINGUAL READER MODAL LOGIC
+    // ============================================================
+    function openDialogueModalForArtisan(artisanName) {
+      currentModalArtisan = artisanName;
+      currentModalSectionIndex = 0;
+
+      // Find all result sections for this artisan
+      const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
+      const art = batchArtisans[artisanName];
+
+      document.getElementById('dialogueModal').classList.remove('hidden');
+      document.getElementById('modalArtisanTitle').textContent = `${artisanName} - Field Dossier`;
+      document.getElementById('modalArtisanAvatar').textContent = getInitials(artisanName);
+
+      document.getElementById('modalArtisanSubtitle').textContent = 
+        `${art ? art.sections_count : sections.length} Section(s) • ${art ? art.total_duration_formatted : ''} • Side-by-Side Bilingual Dialogue`;
+
+      const dlBox = document.getElementById('modalDownloadLinks');
+      dlBox.innerHTML = '';
+      if (art && art.downloads) {
+        if (art.downloads.docx) {
+          dlBox.innerHTML += `<a href="${getDlUrl(art.downloads.docx)}" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> DOCX</a>`;
+        }
+        if (art.downloads.pdf) {
+          dlBox.innerHTML += `<a href="${getDlUrl(art.downloads.pdf)}" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i data-lucide="file-check" class="w-3.5 h-3.5"></i> PDF</a>`;
+        }
+      }
+
+      renderModalSectionTabs(sections);
+      loadModalSection(sections, 0);
+      lucide.createIcons();
+    }
+
+    function renderModalSectionTabs(sections) {
+      const tabsContainer = document.getElementById('modalSectionTabs');
+      tabsContainer.innerHTML = '';
+
+      if (sections.length <= 1) {
+        tabsContainer.classList.add('hidden');
+        return;
+      }
+
+      tabsContainer.classList.remove('hidden');
+      sections.forEach((sec, idx) => {
+        const btn = document.createElement('button');
+        btn.id = `modalSecTab_${idx}`;
+        btn.className = idx === 0 
+          ? 'py-1 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0'
+          : 'py-1 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0';
+        btn.textContent = `${sec.section_name || `Section ${idx + 1}`} (${sec.duration_formatted})`;
+        btn.onclick = () => {
+          sections.forEach((_, i) => {
+            const b = document.getElementById(`modalSecTab_${i}`);
+            if (b) b.className = i === idx 
+              ? 'py-1 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0'
+              : 'py-1 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0';
+          });
+          loadModalSection(sections, idx);
+        };
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    function formatDialogueToHTML(text, artisanName) {
+      if (!text || !text.trim()) {
+        return '<p class="italic text-slate-400">(No spoken dialogue recorded)</p>';
+      }
+
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      let html = '';
+
+      lines.forEach(line => {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx > 0 && colonIdx < 35) {
+          const speaker = line.substring(0, colonIdx).trim();
+          const dialogue = line.substring(colonIdx + 1).trim();
+          const isInterviewer = /interviewer|question|प्रश्नकर्ता|सवाल/i.test(speaker);
+          const speakerClass = isInterviewer ? 'speaker-interviewer' : 'speaker-artisan';
+
+          html += `
+            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs">
+              <span class="${speakerClass}">${escapeHTML(speaker)}:</span>
+              <span class="text-slate-800 dark:text-slate-200 ml-1">${escapeHTML(dialogue)}</span>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="p-2 rounded-lg text-slate-700 dark:text-slate-300">
+              ${escapeHTML(line)}
+            </div>
+          `;
+        }
+      });
+
+      return html;
+    }
+
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function loadModalSection(sections, index) {
+      currentModalSectionIndex = index;
+      const sec = sections[index] || sections[0];
+      if (!sec) return;
+
+      const nativeContainer = document.getElementById('modalNativeContent');
+      const englishContainer = document.getElementById('modalEnglishContent');
+
+      nativeContainer.innerHTML = formatDialogueToHTML(sec.native_text, currentModalArtisan);
+      englishContainer.innerHTML = formatDialogueToHTML(sec.english_text, currentModalArtisan);
+    }
+
+    function closeDialogueModal() {
+      document.getElementById('dialogueModal').classList.add('hidden');
+    }
+
+    function copyModalColumn(col) {
+      const el = col === 'native' 
+        ? document.getElementById('modalNativeContent')
+        : document.getElementById('modalEnglishContent');
+      const btn = col === 'native'
+        ? document.getElementById('copyNativeBtnText')
+        : document.getElementById('copyEnglishBtnText');
+
+      navigator.clipboard.writeText(el.innerText).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    }
+
+    // ============================================================
+    // BATCHES & SETTINGS MODALS
+    // ============================================================
+    function openBatchesModal() {
+      document.getElementById('batchesModal').classList.remove('hidden');
+      renderBatchesList();
+    }
+
+    function closeBatchesModal() {
+      document.getElementById('batchesModal').classList.add('hidden');
+    }
+
+    async function loadCompletedBatch(batchName) {
+      try {
+        const res = await apiFetch(`/api/load-batch/${batchName}`);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert("Error loading batch: " + (err.detail || "Failed to load batch"));
+          return;
+        }
+        const data = await res.json();
+        displayResults(data);
+        closeBatchesModal();
+        scrollToResults();
+      } catch (e) {
+        alert("Error loading batch: " + e.message);
+      }
+    }
+
+    async function renderBatchesList() {
+      const container = document.getElementById('batchesListContainer');
+      container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">Loading batches...</div>';
+      try {
+        const res = await apiFetch('/api/completed-batches');
+        const data = await res.json();
+        const batches = data.batches || [];
+        if (batches.length === 0) {
+          container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">No completed batches found yet.</div>';
+          return;
+        }
+        container.innerHTML = '';
+        batches.forEach(b => {
+          const item = document.createElement('div');
+          item.className = 'p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between gap-3';
+          item.innerHTML = `
+            <div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-3.5 h-3.5 text-indigo-500"></i>
+                <span>${b.batch_name}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">${b.files_count} audio files • Dossiers Available</div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${b.downloads.zip ? `<a href="${getDlUrl(b.downloads.zip)}" title="Download ZIP" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-xs"><i data-lucide="archive" class="w-3.5 h-3.5"></i></a>` : ''}
+              <button onclick="loadCompletedBatch('${b.batch_name}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">Open</button>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+        lucide.createIcons();
+      } catch (e) {
+        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Failed to load: ${e.message}</div>`;
+      }
+    }
+
+    function openSettingsModal() {
+      const inputApiBase = document.getElementById('modalApiBase');
+      if (inputApiBase) {
+        inputApiBase.value = localStorage.getItem('omniscribe_api_base') || '';
+      }
+      document.getElementById('settingsModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    async function saveApiKeys() {
+      const inputApiBase = document.getElementById('modalApiBase');
+      if (inputApiBase) {
+        const apiBase = inputApiBase.value.trim().replace(/\/+$/, '');
+        localStorage.setItem('omniscribe_api_base', apiBase);
+        API_BASE = apiBase;
+        const banner = document.getElementById('cloudflaredBanner');
+        if (banner) {
+          if (API_BASE || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+            banner.classList.add('hidden');
+          }
+        }
+      }
+
+      const gem = document.getElementById('modalGeminiKey').value.trim();
+      const groq = document.getElementById('modalGroqKey').value.trim();
+      const oai = document.getElementById('modalOpenAIKey').value.trim();
+
+      try {
+        const res = await apiFetch('/api/save-keys', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            gemini_key: gem || undefined,
+            groq_key: groq || undefined,
+            openai_key: oai || undefined
+          })
+        });
+        if (res.ok) {
+          closeSettingsModal();
+          fetchSystemStatus();
+          alert("Settings and API keys saved successfully!");
+        }
+      } catch (e) {
+        alert("Failed to save keys: " + e.message);
+      }
+    }
+
+    async function fetchSystemStatus() {
+      try {
+        const res = await apiFetch('/api/system-status');
+        const data = await res.json();
+        if (data.ffmpeg_ready) {
+          document.getElementById('ffmpegBadge').classList.remove('hidden');
+        }
+        if (data.keys_configured.gemini) {
+          document.getElementById('modalGeminiKey').placeholder = data.keys_configured.gemini;
+        }
+        if (data.keys_configured.groq) {
+          document.getElementById('modalGroqKey').placeholder = data.keys_configured.groq;
+        }
+        if (data.keys_configured.openai) {
+          document.getElementById('modalOpenAIKey').placeholder = data.keys_configured.openai;
+        }
+      } catch (e) {
+        console.error("Status check failed", e);
+      }
+    }
+
+    async function fetchCompletedBatches() {
+      try {
+        const res = await apiFetch('/api/completed-batches');
+        const data = await res.json();
+        const batches = data.batches || [];
+        const badge = document.getElementById('batchCountBadge');
+        if (badge) badge.textContent = batches.length;
+
+        const validBatches = batches.filter(b => b.has_summary || b.has_docx || b.has_zip);
+        if (validBatches.length > 0) {
+          const top = validBatches[0];
+          latestBatchName = top.batch_name;
+          const banner = document.getElementById('completedBatchBanner');
+          if (banner) banner.classList.remove('hidden');
+          const title = document.getElementById('bannerBatchTitle');
+          if (title) title.innerHTML = `<span>Batch Available:</span> <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold">${top.batch_name}</span>`;
+          const desc = document.getElementById('bannerBatchDesc');
+          if (desc) desc.textContent = `${top.files_count} audios ready • Click below to view and download consolidated dossiers.`;
+          
+          if (!activeJobId) {
+            loadCompletedBatch(top.batch_name);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load completed batches", e);
+      }
+    }
+  </script>
+</body>
+</html>

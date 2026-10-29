@@ -1,0 +1,6 @@
+/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, OPTIONS
+  Access-Control-Allow-Headers: DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
