@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MANO-LAB — Small ideas. Real experiments.</title>
-  <meta name="description" content="A growing collection of interactive web apps, digital experiments, creative tools, and utilities. Static-first architecture powered by Cloudflare Pages.">
+  <meta name="description" content="A curated digital laboratory of interactive web applications, acoustic tools, generative toys, and productivity utilities. Static-first architecture powered by Cloudflare Pages.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2238%22 fill=%22%23c8ff00%22/></svg>">
 
   <!-- Inter & JetBrains Mono Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="src/styles/main.css">
@@ -20,6 +20,9 @@
 </head>
 <body>
 
+  <!-- Ambient Glow Background -->
+  <div class="ambient-glow" aria-hidden="true"></div>
+
   <!-- ============================================================ -->
   <!-- NAVIGATION HEADER                                            -->
   <!-- ============================================================ -->
@@ -28,23 +31,32 @@
       <a href="./" class="brand-link" aria-label="MANO-LAB Home">
         <span class="brand-dot" aria-hidden="true"></span>
         <span>MANO-LAB</span>
-        <span class="brand-tag">EXP / 2026</span>
+        <span class="brand-badge">EXP // 2026</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="#featured" class="nav-link">Featured</a></li>
-          <li><a href="#directory" class="nav-link">Apps & Experiments</a></li>
-          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#featured" class="nav-link">Featured App</a></li>
+          <li><a href="#directory" class="nav-link">Directory</a></li>
+          <li><a href="#sandbox" class="nav-link">Sandbox</a></li>
+          <li><a href="#about" class="nav-link">Philosophy</a></li>
         </ul>
       </nav>
 
       <div class="header-actions">
-        <button class="btn-header-search" onclick="document.getElementById('directorySearch').focus(); document.getElementById('directory').scrollIntoView({ behavior: 'smooth' });" aria-label="Search apps">
+        <!-- Tactile WebAudio Sound FX Toggle -->
+        <button id="soundToggleBtn" class="btn-sound-toggle" title="Toggle Tactile Mechanical Sound Effects">
+          <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
+          <span id="soundToggleText">Audio FX: OFF</span>
+        </button>
+
+        <!-- Command Palette Trigger -->
+        <button class="btn-header-search trigger-palette" aria-label="Search apps command palette">
           <i data-lucide="search" style="width: 14px; height: 14px;"></i>
           <span>Search</span>
-          <kbd class="kbd-shortcut">/</kbd>
+          <kbd class="kbd-shortcut">⌘K</kbd>
         </button>
+
         <a href="https://github.com/gmanojitrao/MANO-LAB" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;" aria-label="GitHub Repository">
           <i data-lucide="github" style="width: 15px; height: 15px;"></i>
           <span class="font-mono">GitHub</span>
@@ -56,9 +68,12 @@
   <main id="mainContent">
 
     <!-- ============================================================ -->
-    <!-- HERO SECTION                                                 -->
+    <!-- HERO SECTION WITH INTERACTIVE PARTICLE CANVAS                -->
     <!-- ============================================================ -->
     <section class="hero-section">
+      <!-- Particle Constellation Interactive Canvas -->
+      <canvas id="heroCanvas"></canvas>
+
       <div class="container hero-grid">
         <div class="hero-content">
           <div class="hero-pill">
@@ -72,7 +87,7 @@
           </h1>
 
           <p class="hero-lead">
-            MANO-LAB is a curated digital playground of independent web applications, audio tools, generative toys, and productivity utilities. Fast, static-first, and built for discovery.
+            MANO-LAB is a personal incubator of independent web applications, acoustic tools, generative toys, and productivity utilities. Fast, static-first, and designed with editorial craft.
           </p>
 
           <div class="hero-actions">
@@ -87,38 +102,56 @@
           </div>
         </div>
 
-        <!-- Telemetry / Spec Dashboard Box -->
+        <!-- Telemetry HUD Box -->
         <div class="hero-spec-box">
           <div class="hero-spec-header">
-            <span class="spec-title">Laboratory Telemetry</span>
-            <span class="spec-badge">Active Engine</span>
+            <span class="spec-title">
+              <i data-lucide="terminal" style="width: 14px; height: 14px; color: var(--accent-lime);"></i>
+              Laboratory Telemetry
+            </span>
+            <span class="spec-badge">Node Online</span>
           </div>
           <div class="spec-row">
-            <span class="spec-label">Architecture</span>
-            <span class="spec-value">Static-First / Micro-Apps</span>
+            <span class="spec-label">
+              <i data-lucide="layers" style="width: 13px; height: 13px;"></i>
+              Architecture
+            </span>
+            <span class="spec-value">Modular Micro-Apps</span>
           </div>
           <div class="spec-row">
-            <span class="spec-label">Primary Node</span>
+            <span class="spec-label">
+              <i data-lucide="mic" style="width: 13px; height: 13px;"></i>
+              Flagship Engine
+            </span>
             <span class="spec-value">Audio Transcription v2.0</span>
           </div>
           <div class="spec-row">
-            <span class="spec-label">Edge Network</span>
+            <span class="spec-label">
+              <i data-lucide="globe" style="width: 13px; height: 13px;"></i>
+              Edge Network
+            </span>
             <span class="spec-value">Cloudflare Pages CDN</span>
           </div>
           <div class="spec-row">
-            <span class="spec-label">Diarization Engine</span>
-            <span class="spec-value">Gemini / Groq / Whisper</span>
+            <span class="spec-label">
+              <i data-lucide="cpu" style="width: 13px; height: 13px;"></i>
+              Local Processing
+            </span>
+            <span class="spec-value">FastAPI / FFmpeg</span>
           </div>
           <div class="spec-row">
-            <span class="spec-label">Registry Status</span>
-            <span class="spec-value" style="color: var(--accent-lime);">Modular & Extendable</span>
+            <span class="spec-label">
+              <i data-lucide="zap" style="width: 13px; height: 13px;"></i>
+              Friction
+            </span>
+            <span class="spec-value" style="color: var(--accent-lime);">Zero-Build / Local-First</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ============================================================ -->
-    <!-- FEATURED APPLICATION SPOTLIGHT                               -->
+    <!-- FEATURED APPLICATION SPOTLIGHT (INTERACTIVE SIMULATOR)       -->
     <!-- ============================================================ -->
     <section id="featured" class="section-featured">
       <div class="container">
@@ -143,25 +176,25 @@
             <h3 class="featured-title">OmniScribe Transcription Engine</h3>
             <p class="featured-tagline">Converts audio recordings into accurate text with speaker diarization.</p>
             <p class="featured-desc">
-              Designed for field researchers and multi-session interviews. The tool accurately detects distinct speakers (Interviewer vs. Artisan), preserves native regional scripts (Hindi, Bengali, Maithili), and creates a side-by-side English translation without omissions.
+              Designed for field researchers and multi-session interviews. The tool accurately detects distinct speakers (Interviewer vs. Artisan), preserves native regional scripts (Hindi, Bengali, Maithili), and creates a side-by-side English translation without additions or omissions.
             </p>
 
             <ul class="capabilities-list">
               <li>
                 <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
-                <span><strong>Interviewer vs. Artisan Attribution:</strong> Automatically labels who asked the questions and who responded.</span>
+                <span><strong>Speaker Diarization:</strong> Identifies who is asking questions and who is responding.</span>
               </li>
               <li>
                 <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
-                <span><strong>Side-by-Side Bilingual Dialogue:</strong> Read native script on one column and genuine English translation in the other.</span>
+                <span><strong>Side-by-Side Bilingual Dialogue:</strong> Native regional script in one column, genuine English translation in the other.</span>
               </li>
               <li>
                 <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
-                <span><strong>Cross-Folder Synthesis:</strong> Collates multi-part interviews of the same artisan into unified dossiers.</span>
+                <span><strong>Cross-Folder Synthesis:</strong> Clusters multi-part recordings of the same artisan into unified dossiers.</span>
               </li>
               <li>
                 <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
-                <span><strong>Consolidated Exports:</strong> Download clean Word (.docx), PDF (.pdf), and Markdown reports.</span>
+                <span><strong>Multi-Format Exports:</strong> Download clean Word (.docx), PDF (.pdf), Markdown, and plain text.</span>
               </li>
             </ul>
 
@@ -172,35 +205,53 @@
               </a>
               <span class="font-mono" style="font-size: 0.75rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.35rem;">
                 <i data-lucide="cpu" style="width: 13px; height: 13px;"></i>
-                <span>FastAPI + Local Engine Ready</span>
+                <span>Local Engine: http://127.0.0.1:8000</span>
               </span>
             </div>
           </div>
 
-          <!-- Interactive Simulated Dialogue Card -->
-          <div class="featured-interactive-preview">
-            <div class="preview-screen">
-              <div class="preview-header">
-                <span class="preview-col-title">Live Bilingual Preview</span>
-                <span class="font-mono text-[10px]" style="color: var(--accent-lime);">Dossier Mode</span>
+          <!-- Interactive Waveform & Diarization Simulator -->
+          <div class="interactive-studio-preview">
+            <div class="studio-toolbar">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="brand-dot" style="width: 6px; height: 6px;"></span>
+                <span class="font-mono text-[11px]" style="color: var(--text-muted); text-transform: uppercase;">Acoustic Simulator</span>
               </div>
+              <button id="btnPlayWaveform" class="btn-interactive-play">
+                <i data-lucide="play" style="width: 12px; height: 12px;"></i>
+                <span>Simulate Diarization</span>
+              </button>
+            </div>
 
-              <div class="preview-dialogue-row">
-                <span class="speaker-label speaker-int">INTERVIEWER (प्रश्नकर्ता):</span>
-                <p style="color: var(--text-primary); font-size: 0.8rem;">Tell me what is your craft and where do you practice?</p>
+            <!-- Waveform Canvas Box -->
+            <div class="waveform-canvas-box">
+              <canvas id="waveformCanvas"></canvas>
+            </div>
+
+            <!-- Real-time Simulated Dialogue Stream -->
+            <div id="bilingualStream" class="bilingual-stream-box">
+              <div class="stream-row">
+                <div class="speaker-label speaker-int">
+                  <span class="status-dot" style="background: currentColor;"></span>
+                  <span>INTERVIEWER (प्रश्नकर्ता):</span>
+                </div>
+                <div class="dialogue-native">नमस्ते, क्या आप हमें अपने शिल्प के बारे में बता सकते हैं?</div>
+                <div class="dialogue-english">"Hello, could you tell us about your traditional craft?"</div>
               </div>
-
-              <div class="preview-dialogue-row">
-                <span class="speaker-label speaker-art">ARTISAN (कारीगर):</span>
-                <p style="color: var(--text-secondary); font-size: 0.8rem; font-family: serif;">हम टेराकोटा की मूर्तियां और मिट्टी के बर्तन बनाते हैं, यह हमारा पुश्तैनी काम है।</p>
-                <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;"><em>"We make terracotta sculptures and clay pottery; this is our ancestral craft."</em></p>
+              <div class="stream-row">
+                <div class="speaker-label speaker-art">
+                  <span class="status-dot" style="background: currentColor;"></span>
+                  <span>ARTISAN (कारीगर):</span>
+                </div>
+                <div class="dialogue-native">हम तीन पीढ़ियों से टेराकोटा और मिट्टी के पात्र तैयार कर रहे हैं।</div>
+                <div class="dialogue-english">"We have been handcrafting terracotta and earthenware for three generations."</div>
               </div>
             </div>
 
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">
-              <span>Format: Word / PDF / MD</span>
+              <span>Formats: DOCX • PDF • MD</span>
               <a href="apps/audio-transcription/" style="color: var(--accent-lime); font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
-                <span>Open App</span>
+                <span>Open Full App</span>
                 <i data-lucide="external-link" style="width: 12px; height: 12px;"></i>
               </a>
             </div>
@@ -229,14 +280,55 @@
           </div>
 
           <div class="search-box-wrapper">
-            <i data-lucide="search" class="search-icon" style="width: 15px; height: 15px;"></i>
+            <i data-lucide="search" class="search-icon" style="width: 16px; height: 16px;"></i>
             <input type="text" id="directorySearch" class="search-input" placeholder="Search experiments... (Press '/' to focus)" aria-label="Search apps directory">
           </div>
         </div>
 
-        <!-- Dynamic Grid of App Cards -->
+        <!-- Dynamic Grid of App Cards with Spotlight Cursor Glow -->
         <div id="appsGrid" class="apps-grid">
           <!-- Dynamically populated via lab.js from MANO_APPS registry -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- INTERACTIVE CELLULAR EMERGENCE SANDBOX                       -->
+    <!-- ============================================================ -->
+    <section id="sandbox" class="section-sandbox">
+      <div class="container">
+        <div class="sandbox-container">
+          <div class="sandbox-info">
+            <div class="section-label-row">
+              <span class="section-tag">Interactive Toy</span>
+            </div>
+            <h2 class="section-heading" style="font-size: 2rem;">Cellular Emergence Matrix</h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.65; margin-bottom: 1.5rem;">
+              A browser-based micro-simulation of Conway's Game of Life running directly in JavaScript. Drag your mouse across the grid to seed glowing organic lifeforms and observe self-organizing mathematical chaos.
+            </p>
+            <div class="hero-actions">
+              <button id="btnSpawnSandbox" class="btn-primary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem;">
+                <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+                <span>Random Seed</span>
+              </button>
+              <button id="btnClearSandbox" class="btn-secondary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem;">
+                <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+                <span>Clear Canvas</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sandbox-canvas-wrapper">
+            <canvas id="cellularCanvas"></canvas>
+            <div class="sandbox-controls">
+              <span class="font-mono text-[11px]" style="color: var(--text-muted);">
+                🖱️ Drag cursor to draw living cells
+              </span>
+              <span class="status-pill status-experimental" style="font-size: 0.65rem;">
+                <span>Emergence Sandbox</span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -252,15 +344,15 @@
           </div>
           <h3>Why MANO-LAB Exists</h3>
           <p>
-            Software does not always need to be a monolithic product. MANO-LAB operates as an incubator for specialized tools, hyper-focused utilities, and experimental prototypes.
+            Software does not always need to be a monolithic venture. MANO-LAB operates as an incubator for specialized tools, hyper-focused utilities, and experimental prototypes.
           </p>
           <p>
             Each application lives in its own isolated directory with zero unnecessary inter-dependencies. This ensures that experiments can be built rapidly, iterate independently, and deploy smoothly without breaking existing tools.
           </p>
-          <div style="margin-top: 1.5rem;">
+          <div style="margin-top: 1.75rem;">
             <a href="https://github.com/gmanojitrao/MANO-LAB" target="_blank" rel="noopener noreferrer" class="btn-secondary">
               <i data-lucide="git-branch" style="width: 16px; height: 16px;"></i>
-              <span>Contribute on GitHub</span>
+              <span>View Source on GitHub</span>
             </a>
           </div>
         </div>
@@ -290,6 +382,22 @@
   </main>
 
   <!-- ============================================================ -->
+  <!-- SPOTLIGHT COMMAND PALETTE MODAL                              -->
+  <!-- ============================================================ -->
+  <div id="paletteModal" class="palette-backdrop" role="dialog" aria-modal="true" aria-label="Command Palette">
+    <div class="palette-box">
+      <div class="palette-input-wrap">
+        <i data-lucide="search" style="width: 18px; height: 18px; color: var(--accent-lime);"></i>
+        <input type="text" id="paletteInput" class="palette-input" placeholder="Type an app name or category..." autocomplete="off">
+        <kbd class="kbd-shortcut">ESC</kbd>
+      </div>
+      <div id="paletteResults" class="palette-results">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
   <!-- FOOTER                                                       -->
   <!-- ============================================================ -->
   <footer class="site-footer">
@@ -298,7 +406,7 @@
         <div class="footer-brand">
           <h4>MANO-LAB</h4>
           <p class="footer-tagline">Small ideas. Real experiments.</p>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; max-width: 22rem;">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.6rem; max-width: 24rem;">
             A personal digital laboratory for interactive web applications, acoustic tools, and research utilities.
           </p>
         </div>
@@ -309,6 +417,7 @@
             <ul>
               <li><a href="#featured">Featured App</a></li>
               <li><a href="#directory">All Experiments</a></li>
+              <li><a href="#sandbox">Emergence Matrix</a></li>
               <li><a href="#about">Philosophy</a></li>
             </ul>
           </div>
