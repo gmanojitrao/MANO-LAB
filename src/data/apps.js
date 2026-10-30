@@ -18,6 +18,20 @@ const MANO_APPS = [
     badge: "Flagship App"
   },
   {
+    id: "zen-sand",
+    name: "The Wheel of Time",
+    tagline: "Kinetic sand table: scoop scars & watch time heal everything",
+    description: "A meditative kinetic sand garden inspired by the law of patience. Carve scars, scoop hollows, or pour sand, and watch the rotating rake arm of time gently restore total harmony round by round.",
+    category: "Audio & Focus",
+    route: "apps/zen-sand/",
+    status: "Available",
+    featured: true,
+    emoji: "⏳",
+    accentColor: "#d4af37",
+    tags: ["Zen Garden", "Kinetic Sand", "Time Heals", "Meditation"],
+    badge: "Featured Wonder"
+  },
+  {
     id: "cyber-snake",
     name: "Cyber Snake",
     tagline: "Neon arcade snake with speed combos & particle sparks",

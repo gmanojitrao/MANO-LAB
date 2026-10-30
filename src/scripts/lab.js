@@ -12,6 +12,8 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     updateCounts();
+    initHeroModeSwitcher();
+    initHeroZenSand();
     initBouncyCanvas();
     initFilters();
     renderCards();
@@ -384,6 +386,328 @@
         setTimeout(() => dot.remove(), 550);
       }
     });
+  }
+
+  // ==========================================================================
+  // 8. Hero Mode Switcher (The Wheel of Time vs App Bubbles)
+  // ==========================================================================
+  function initHeroModeSwitcher() {
+    const btnZen = document.getElementById('btnModeZen');
+    const btnOrbs = document.getElementById('btnModeOrbs');
+    const panelZen = document.getElementById('zenHeroPanel');
+    const panelOrbs = document.getElementById('orbsHeroPanel');
+
+    if (!btnZen || !btnOrbs || !panelZen || !panelOrbs) return;
+
+    btnZen.addEventListener('click', () => {
+      btnZen.classList.add('active');
+      btnOrbs.classList.remove('active');
+      panelZen.style.display = 'flex';
+      panelOrbs.style.display = 'none';
+      playPop(900);
+    });
+
+    btnOrbs.addEventListener('click', () => {
+      btnOrbs.classList.add('active');
+      btnZen.classList.remove('active');
+      panelZen.style.display = 'none';
+      panelOrbs.style.display = 'block';
+      playPop(1100);
+    });
+  }
+
+  // ==========================================================================
+  // 9. Frontpage Kinetic Zen Sand Garden Engine
+  // ==========================================================================
+  function initHeroZenSand() {
+    const canvas = document.getElementById('heroSandCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const quoteText = document.getElementById('heroQuoteText');
+
+    const GRID = 160;
+    const R_GRID = GRID / 2;
+    const heights = new Float32Array(GRID * GRID);
+    const targetHeights = new Float32Array(GRID * GRID);
+    const grainTable = new Float32Array(GRID * GRID);
+
+    for (let i = 0; i < grainTable.length; i++) {
+      grainTable[i] = (Math.random() - 0.5) * 2;
+    }
+
+    // Concentric Ripples Target
+    for (let y = 0; y < GRID; y++) {
+      for (let x = 0; x < GRID; x++) {
+        const idx = y * GRID + x;
+        const dx = x - R_GRID;
+        const dy = y - R_GRID;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > R_GRID) {
+          targetHeights[idx] = 0;
+        } else {
+          targetHeights[idx] = Math.cos(dist * 0.38) * 0.45;
+        }
+        heights[idx] = targetHeights[idx];
+      }
+    }
+
+    let rakeAngle = 0;
+    let currentTool = 'scoop';
+    let isDrawing = false;
+    let disturbance = 0;
+    let quoteState = 'restored';
+
+    const QUOTES = {
+      disturbed: "A scar appears in an instant... but time never stops turning.",
+      healing: "Round by round, the edges soften. The hollows fill.",
+      restored: "Your patience. In time, everything fits into its proper place."
+    };
+
+    function setHeroQuote(text) {
+      if (!quoteText || quoteText.textContent === `"${text}"`) return;
+      quoteText.style.opacity = '0';
+      setTimeout(() => {
+        quoteText.textContent = `"${text}"`;
+        quoteText.style.opacity = '1';
+      }, 250);
+    }
+
+    // Tool switching
+    document.querySelectorAll('.zen-mini-tool[data-tool]').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.zen-mini-tool[data-tool]').forEach(el => el.classList.remove('active'));
+        b.classList.add('active');
+        currentTool = b.dataset.tool;
+        playPop(1000);
+      });
+    });
+
+    // Chaos button
+    const btnChaos = document.getElementById('btnHeroChaos');
+    if (btnChaos) {
+      btnChaos.addEventListener('click', () => {
+        for (let i = 0; i < 4; i++) {
+          const rx = Math.round(R_GRID + (Math.random() - 0.5) * R_GRID * 1.2);
+          const ry = Math.round(R_GRID + (Math.random() - 0.5) * R_GRID * 1.2);
+          applyHeroTool(rx, ry, 'scoop');
+        }
+        setHeroQuote(QUOTES.disturbed);
+        playPop(600);
+      });
+    }
+
+    // Harmonize button
+    const btnHeal = document.getElementById('btnHeroHeal');
+    if (btnHeal) {
+      btnHeal.addEventListener('click', () => {
+        for (let i = 0; i < heights.length; i++) {
+          heights[i] = targetHeights[i];
+        }
+        setHeroQuote(QUOTES.restored);
+        playPop(1200);
+      });
+    }
+
+    function applyHeroTool(gx, gy, tool) {
+      const radius = tool === 'scoop' ? 12 : 16;
+      const rSq = radius * radius;
+      const dCenter = Math.sqrt((gx - R_GRID) ** 2 + (gy - R_GRID) ** 2);
+      if (dCenter > R_GRID - 3) return;
+
+      for (let y = Math.max(1, gy - radius); y <= Math.min(GRID - 2, gy + radius); y++) {
+        for (let x = Math.max(1, gx - radius); x <= Math.min(GRID - 2, gx + radius); x++) {
+          const distSq = (x - gx) ** 2 + (y - gy) ** 2;
+          if (distSq > rSq) continue;
+          const dist = Math.sqrt(distSq);
+          const factor = (1 - dist / radius);
+          const idx = y * GRID + x;
+
+          if (tool === 'scoop') {
+            if (dist < radius * 0.6) heights[idx] -= factor * 0.75;
+            else heights[idx] += factor * 0.4;
+          } else {
+            heights[idx] += factor * 0.55;
+          }
+          heights[idx] = Math.max(-1.8, Math.min(1.8, heights[idx]));
+        }
+      }
+
+      setHeroQuote(QUOTES.disturbed);
+    }
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        gx: Math.round(((cx - rect.left) / rect.width) * GRID),
+        gy: Math.round(((cy - rect.top) / rect.height) * GRID)
+      };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      isDrawing = true;
+      const { gx, gy } = getCoords(e);
+      applyHeroTool(gx, gy, currentTool);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDrawing) return;
+      const { gx, gy } = getCoords(e);
+      applyHeroTool(gx, gy, currentTool);
+    });
+
+    window.addEventListener('pointerup', () => { isDrawing = false; });
+    window.addEventListener('pointercancel', () => { isDrawing = false; });
+
+    // Rake and Render Loop
+    const imgData = ctx.createImageData(GRID, GRID);
+    const data32 = new Uint32Array(imgData.data.buffer);
+
+    // Warm Golden Sand Palette
+    const bR = 222, bG = 190, bB = 142;
+    const hR = 255, hG = 238, hB = 205;
+    const sR = 115, sG = 84, sB = 52;
+    const nlx = -0.52, nly = -0.62, nlz = 0.58;
+
+    function renderLoop() {
+      // Rotate Rake of Time
+      const prevAngle = rakeAngle;
+      rakeAngle = (rakeAngle + 0.009) % (Math.PI * 2);
+
+      let totalDiff = 0;
+      for (let i = 0; i < 90; i++) {
+        const r = (i / 90) * (R_GRID - 2);
+        for (let a = prevAngle; a <= rakeAngle + 0.02; a += 0.02) {
+          const gx = Math.round(R_GRID + Math.cos(a) * r);
+          const gy = Math.round(R_GRID + Math.sin(a) * r);
+          if (gx >= 0 && gx < GRID && gy >= 0 && gy < GRID) {
+            const idx = gy * GRID + gx;
+            const diff = Math.abs(heights[idx] - targetHeights[idx]);
+            totalDiff += diff;
+            heights[idx] += (targetHeights[idx] - heights[idx]) * 0.12;
+          }
+        }
+      }
+
+      disturbance = totalDiff;
+      if (disturbance > 12) {
+        if (quoteState !== 'healing') {
+          quoteState = 'healing';
+          setHeroQuote(QUOTES.healing);
+        }
+      } else {
+        if (quoteState !== 'restored') {
+          quoteState = 'restored';
+          setHeroQuote(QUOTES.restored);
+        }
+      }
+
+      // Normal-mapped pixel shader
+      for (let y = 1; y < GRID - 1; y++) {
+        const yOffset = y * GRID;
+        for (let x = 1; x < GRID - 1; x++) {
+          const idx = yOffset + x;
+          const dx = x - R_GRID;
+          const dy = y - R_GRID;
+          if (dx * dx + dy * dy > (R_GRID - 1) * (R_GRID - 1)) {
+            data32[idx] = 0x00000000;
+            continue;
+          }
+
+          const dzdx = (heights[idx + 1] - heights[idx - 1]) * 1.8;
+          const dzdy = (heights[idx + GRID] - heights[idx - GRID]) * 1.8;
+          const invLen = 1 / Math.sqrt(dzdx * dzdx + dzdy * dzdy + 1);
+          const nx = -dzdx * invLen;
+          const ny = -dzdy * invLen;
+          const nz = invLen;
+
+          const dot = nx * nlx + ny * nly + nz * nlz;
+          const light = Math.max(0, Math.min(1, dot));
+          const grain = grainTable[idx] * 12;
+          const h = heights[idx];
+          const depth = Math.max(0.65, Math.min(1.25, 1 + h * 0.4));
+
+          let r, g, b;
+          if (light > 0.5) {
+            const f = (light - 0.5) * 2;
+            r = Math.min(255, (bR + (hR - bR) * f) * depth + grain);
+            g = Math.min(255, (bG + (hG - bG) * f) * depth + grain);
+            b = Math.min(255, (bB + (hB - bB) * f) * depth + grain);
+          } else {
+            const f = light * 2;
+            r = Math.max(0, (sR + (bR - sR) * f) * depth + grain);
+            g = Math.max(0, (sG + (bG - sG) * f) * depth + grain);
+            b = Math.max(0, (sB + (bB - sB) * f) * depth + grain);
+          }
+
+          data32[idx] = (255 << 24) | ((b & 0xff) << 16) | ((g & 0xff) << 8) | (r & 0xff);
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+
+      // Render Rake Arm overlay
+      const cx = 160;
+      const cy = 160;
+      const armLen = 155;
+      const ax = cx + Math.cos(rakeAngle) * armLen;
+      const ay = cy + Math.sin(rakeAngle) * armLen;
+
+      // Shadow
+      ctx.beginPath();
+      ctx.moveTo(cx + 4, cy + 6);
+      ctx.lineTo(ax + 4, ay + 6);
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Brass Arm
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ax, ay);
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(212,175,55,0.4)';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      // Comb Tines
+      for (let i = 2; i < 11; i++) {
+        const tr = (i / 11) * armLen;
+        const tx = cx + Math.cos(rakeAngle) * tr;
+        const ty = cy + Math.sin(rakeAngle) * tr;
+        const pa = rakeAngle + Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(tx - Math.cos(pa) * 4, ty - Math.sin(pa) * 4);
+        ctx.lineTo(tx + Math.cos(pa) * 4, ty + Math.sin(pa) * 4);
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+      }
+
+      // Spindle Center Jewel
+      ctx.shadowColor = '#c8ff00';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#141722';
+      ctx.fill();
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#c8ff00';
+      ctx.fill();
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    renderLoop();
   }
 
   window.playPop = playPop;

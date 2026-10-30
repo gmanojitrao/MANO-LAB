@@ -7,10 +7,10 @@
   <meta name="description" content="A playful digital laboratory of interactive web applications, audio tools, and creative utilities.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2238%22 fill=%22%23c8ff00%22/></svg>">
 
-  <!-- Plus Jakarta Sans & JetBrains Mono Fonts -->
+  <!-- Plus Jakarta Sans, JetBrains Mono & Playfair Display Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Playfair+Display:ital,wght@0,600;1,400;1,600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="src/styles/main.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -76,8 +76,57 @@
           </button>
         </div>
 
-        <!-- Interactive Bouncy Physics Canvas (Click any orb to launch!) -->
-        <div class="bouncy-canvas-wrap" title="Drag your mouse to bounce the bubbles! Click any orb to launch.">
+        <!-- Interactive Mode Switcher in Hero -->
+        <div class="hero-mode-bar">
+          <button id="btnModeZen" class="hero-mode-btn active" title="Interactive Kinetic Sand Garden">
+            <span>⏳</span>
+            <span>The Wheel of Time</span>
+          </button>
+          <button id="btnModeOrbs" class="hero-mode-btn" title="Floating Interactive App Bubbles">
+            <span>🫧</span>
+            <span>App Bubbles</span>
+          </button>
+        </div>
+
+        <!-- Mode 1: Interactive Kinetic Zen Sand Table (Active by default!) -->
+        <div id="zenHeroPanel" class="zen-hero-panel">
+          <div class="zen-hero-quote">
+            <p id="heroQuoteText">"Your patience. In time, everything fits into its proper place."</p>
+            <span class="zen-hero-sub">Click & drag to scoop sand or pour mounds. Watch time's rake restore harmony.</span>
+          </div>
+
+          <div class="zen-hero-stage">
+            <div class="zen-hero-vessel" id="heroSandVessel" title="Click or drag to carve scars or drop sand!">
+              <canvas id="heroSandCanvas" width="320" height="320"></canvas>
+            </div>
+            
+            <div class="zen-hero-tools">
+              <button class="zen-mini-tool active" data-tool="scoop" title="Scoop out craters & scars">
+                <span>🥄</span>
+                <span>Scoop</span>
+              </button>
+              <button class="zen-mini-tool" data-tool="pour" title="Pour fresh mounds of sand">
+                <span>⏳</span>
+                <span>Pour</span>
+              </button>
+              <button id="btnHeroChaos" class="zen-mini-tool" title="Inflict sudden scars of life">
+                <span>⚡</span>
+                <span>Scars</span>
+              </button>
+              <button id="btnHeroHeal" class="zen-mini-tool" title="Fast-forward time to pure harmony">
+                <span>✨</span>
+                <span>Harmonize</span>
+              </button>
+              <a href="apps/zen-sand/" class="zen-mini-tool full-link" title="Open Full Screen Zen Studio with stones, sound & palettes">
+                <span>Full Studio</span>
+                <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 2: Interactive Bouncy Physics Canvas (Click any orb to launch!) -->
+        <div id="orbsHeroPanel" class="bouncy-canvas-wrap" style="display: none;" title="Drag your mouse to bounce the bubbles! Click any orb to launch.">
           <canvas id="bouncyCanvas"></canvas>
         </div>
       </div>

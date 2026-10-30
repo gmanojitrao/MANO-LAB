@@ -15,27 +15,30 @@ MANO-LAB is built on a **static-first, modular micro-app framework** deployable 
 
 ---
 
-## 🔬 Applications & Arcade Games (12 Online)
+## 🔬 Applications & Interactive Wonders (13 Online)
 
-MANO-LAB includes a diverse suite of productivity tools, audio experiments, creative studios, and retro arcade games:
+MANO-LAB includes a diverse suite of productivity tools, audio experiments, creative studios, meditative wonders, and retro arcade games:
+
+### ✨ Featured Kinetic Wonder
+1. **The Wheel of Time (`apps/zen-sand/`):** Meditative kinetic sand garden inspired by the law of patience. Carve scars, scoop craters, or pour sand—the rotating brass rake arm of time gently smooths every wound, recarving sacred concentric ripples round by round. Complete with procedural sand crunch audio, normal-mapped 3D lighting, and Tibetan singing bowl resonance.
 
 ### 🎮 Arcade & Games
-1. **Cyber Snake (`apps/cyber-snake/`):** 60FPS neon snake arcade with food particle bursts, speed combos, on-screen mobile D-pad, and high-score memory.
-2. **Neon Breakout (`apps/neon-breakout/`):** Brick breaker with responsive paddle, ball motion trails, bouncy particle physics, and retro sound FX.
-3. **2048 Neon (`apps/game-2048/`):** Glowing neon sliding number puzzle with swipe gestures, keyboard arrow controls, merge audio, and best score tracking.
-4. **Cyber Flap (`apps/cyber-flap/`):** Addictive 1-tap reaction flyer. Hit Space or tap to fire thrusters, dodge cyber gates, and set new high scores.
+2. **Cyber Snake (`apps/cyber-snake/`):** 60FPS neon snake arcade with food particle bursts, speed combos, on-screen mobile D-pad, and high-score memory.
+3. **Neon Breakout (`apps/neon-breakout/`):** Brick breaker with responsive paddle, ball motion trails, bouncy particle physics, and retro sound FX.
+4. **2048 Neon (`apps/game-2048/`):** Glowing neon sliding number puzzle with swipe gestures, keyboard arrow controls, merge audio, and best score tracking.
+5. **Cyber Flap (`apps/cyber-flap/`):** Addictive 1-tap reaction flyer. Hit Space or tap to fire thrusters, dodge cyber gates, and set new high scores.
 
 ### 🎙️ Audio & Productivity
-5. **Audio Transcription Studio (`apps/audio-transcription/`):** Flagship AI speech-to-text studio with speaker diarization, bilingual native script translation, and PDF/DOCX dossier export.
-6. **SynthPad (`apps/synth-pad/`):** Interactive musical keyboard (A-K keys) and 4 punchy drum pads with live 60FPS oscilloscope waveforms.
-7. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with Pomodoro focus timer.
-8. **Markdown Studio (`apps/markdown-studio/`):** Split-view distraction-free markdown note editor with live preview, word counter, and `.md` file export.
+6. **Audio Transcription Studio (`apps/audio-transcription/`):** Flagship AI speech-to-text studio with speaker diarization, bilingual native script translation, and PDF/DOCX dossier export.
+7. **SynthPad (`apps/synth-pad/`):** Interactive musical keyboard (A-K keys) and 4 punchy drum pads with live 60FPS oscilloscope waveforms.
+8. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with Pomodoro focus timer.
+9. **Markdown Studio (`apps/markdown-studio/`):** Split-view distraction-free markdown note editor with live preview, word counter, and `.md` file export.
 
 ### 🛠️ Creative & Utilities
-9. **Palette Studio (`apps/palette-studio/`):** Spacebar-shuffle harmonic color palette generator with hex locking and click-to-copy.
-10. **Image Forge (`apps/image-forge/`):** 100% private client-side image resizer, crop, and WebP/PNG/JPEG compressor.
-11. **QR Studio (`apps/qr-studio/`):** Vector QR code designer with instant PNG export.
-12. **Text Morph (`apps/text-tools/`):** JSON beautifier, line deduplicator, Base64 encoder/decoder, and text transformation utility.
+10. **Palette Studio (`apps/palette-studio/`):** Spacebar-shuffle harmonic color palette generator with hex locking and click-to-copy.
+11. **Image Forge (`apps/image-forge/`):** 100% private client-side image resizer, crop, and WebP/PNG/JPEG compressor.
+12. **QR Studio (`apps/qr-studio/`):** Vector QR code designer with instant PNG export.
+13. **Text Morph (`apps/text-tools/`):** JSON beautifier, line deduplicator, Base64 encoder/decoder, and text transformation utility.
 
 ---
 
