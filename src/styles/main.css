@@ -393,6 +393,97 @@ a {
 }
 
 /* ==========================================================================
+   ORIGINAL ART SPOTLIGHT: AETHER-WEAVE
+   ========================================================================== */
+.art-spotlight {
+  background: linear-gradient(135deg, rgba(8, 14, 30, 0.9) 0%, rgba(20, 10, 28, 0.9) 50%, rgba(10, 18, 26, 0.9) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 35px rgba(236, 72, 153, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .art-spotlight {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.art-spotlight-left {
+  max-width: 660px;
+}
+
+.art-badge-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  font-family: var(--font-mono);
+}
+
+.badge-art-origin {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #38bdf8, #ec4899);
+  color: #fff;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.art-spotlight-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.art-spotlight-desc {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.art-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn-art-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.9rem 2rem;
+  background: linear-gradient(135deg, #38bdf8, #ec4899);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.4);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-art-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(236, 72, 153, 0.6);
+  filter: brightness(1.1);
+  color: #fff;
+}
+
+/* ==========================================================================
    PRODUCTIVITY: FOCUS AMBIENT
    ========================================================================== */
 .focus-card {

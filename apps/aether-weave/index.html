@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AETHER-WEAVE — The Living Art Form — MANO-LAB</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2244%22 fill=%22none%22 stroke=%22%2338bdf8%22 stroke-width=%228%22/><circle cx=%2250%22 cy=%2250%22 r=%2222%22 fill=%22%23ec4899%22/></svg>">
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #04060a;
+      --card-bg: rgba(10, 14, 24, 0.75);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --accent-cyan: #38bdf8;
+      --accent-pink: #ec4899;
+      --accent-amber: #f59e0b;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+    }
+
+    /* Fullscreen Canvas */
+    #artCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      cursor: crosshair;
+    }
+
+    /* Top Floating Navigation */
+    .top-bar {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .top-bar > * {
+      pointer-events: auto;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 1rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .brand-pill:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .art-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(236, 72, 153, 0.2));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: all 0.15s;
+    }
+    .btn-icon:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+    .btn-icon.active {
+      color: #38bdf8;
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    /* Floating Studio Dock (Bottom Center) */
+    .studio-dock {
+      position: absolute;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      background: rgba(8, 12, 22, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(56, 189, 248, 0.1);
+      z-index: 20;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 95vw;
+    }
+
+    .dock-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.3rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-mode:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .btn-mode.active {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(236, 72, 153, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+    }
+
+    .dock-select {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      padding: 0.35rem 0.6rem;
+    }
+    .dock-select option {
+      background: #0f172a;
+      color: #fff;
+    }
+
+    .btn-dock-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.95rem;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: #1e293b;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-dock-action:hover {
+      background: #334155;
+      transform: translateY(-1px);
+    }
+    .btn-dock-action.primary {
+      background: linear-gradient(135deg, #38bdf8, #ec4899);
+      border: none;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+    }
+    .btn-dock-action.primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5);
+    }
+
+    /* Living Art Hint / Poetic Whisper */
+    .whisper-badge {
+      position: absolute;
+      top: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 10;
+      text-align: center;
+      transition: opacity 1.5s ease;
+      max-width: 90vw;
+    }
+    .whisper-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      background: linear-gradient(135deg, #f8fafc, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.25rem;
+    }
+    .whisper-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Ambient Pulsing Reticle */
+    .reticle {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      border: 1px dashed rgba(56, 189, 248, 0.4);
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, opacity 0.3s;
+      opacity: 0;
+      z-index: 15;
+    }
+
+    /* Snapshot Flash */
+    .snapshot-flash {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 100;
+      transition: opacity 0.4s ease-out;
+    }
+    .snapshot-flash.flash {
+      opacity: 0.8;
+      transition: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Living Canvas -->
+  <canvas id="artCanvas"></canvas>
+  <div id="reticle" class="reticle"></div>
+  <div id="flashOverlay" class="snapshot-flash"></div>
+
+  <!-- Top Navigation & Global Controls -->
+  <div class="top-bar">
+    <a href="../../" class="brand-pill">
+      <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+      <span>MANO-LAB</span>
+      <span class="art-badge">✦ AETHER-WEAVE</span>
+    </a>
+
+    <div class="top-actions">
+      <!-- Symmetry Toggle -->
+      <button id="btnSymmetry" class="btn-icon" title="Toggle 6-Fold Radial Mandala Symmetry">
+        <i data-lucide="sun" style="width: 18px; height: 18px;"></i>
+      </button>
+
+      <!-- Audio Resonance Toggle -->
+      <button id="btnAudio" class="btn-icon active" title="Toggle Procedural Crystal Singing Bowl Resonance">
+        <i data-lucide="volume-2" style="width: 18px; height: 18px;"></i>
+      </button>
+
+      <!-- Info / Philosophy Modal -->
+      <button id="btnInfo" class="btn-icon" title="About the Art Form">
+        <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Poetic Whisper Instruction -->
+  <div id="whisper" class="whisper-badge">
+    <div class="whisper-title">Touch or drag to weave living harmonic light ribbons</div>
+    <div class="whisper-sub">Not paint on canvas, but luminous filaments that breathe and entangle in void space.</div>
+  </div>
+
+  <!-- Bottom Floating Studio Dock -->
+  <div class="studio-dock">
+    <!-- Mode / Brush Selector -->
+    <div class="dock-group">
+      <button class="btn-mode active" data-brush="filament" title="Weave undulating prismatic filaments">
+        <span>🪡</span>
+        <span>Filament</span>
+      </button>
+      <button class="btn-mode" data-brush="ribbon" title="Sculpt broad iridescent mobius light ribbons">
+        <span>🌊</span>
+        <span>Ribbon</span>
+      </button>
+      <button class="btn-mode" data-brush="lattice" title="Spin self-weaving quantum gossamer meshes">
+        <span>🕸️</span>
+        <span>Lattice</span>
+      </button>
+      <button class="btn-mode" data-brush="vortex" title="Distort and pull light into cosmic vortex eddies">
+        <span>🌀</span>
+        <span>Vortex</span>
+      </button>
+    </div>
+
+    <!-- Refraction Palette Material -->
+    <div class="dock-group">
+      <select id="paletteSelect" class="dock-select" title="Change the optical dispersion spectrum">
+        <option value="opal">Liquid Opal (Iridescent Birefringence)</option>
+        <option value="solar">Solar Corona (Molten Gold & Plasma)</option>
+        <option value="aurora">Abyssal Aurora (Cyan, Emerald & Violet)</option>
+        <option value="mercury">Void Mercury (Liquid Platinum Chrome)</option>
+        <option value="nebula">Nebula Bloom (Deep Magenta & Starlight)</option>
+      </select>
+    </div>
+
+    <!-- Action Tools -->
+    <div class="dock-group">
+      <button id="btnEvolve" class="btn-dock-action" title="Infuse dynamic quantum wave energy into all strands">
+        <i data-lucide="wand-2" style="width: 14px; height: 14px; color: #38bdf8;"></i>
+        <span>Evolve</span>
+      </button>
+
+      <button id="btnClear" class="btn-dock-action" title="Gracefully dissolve all light into cosmic stardust">
+        <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+        <span>Dissolve</span>
+      </button>
+
+      <button id="btnExport" class="btn-dock-action primary" title="Capture high-resolution 4K wallpaper export">
+        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+        <span>Export 4K</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+
+    // =========================================================================
+    // 1. Procedural WebAudio Resonance Engine (Crystal Singing Bowl & Harmonics)
+    // =========================================================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // Procedural crystalline harmonic chime
+    function playHarmonicTone(freq = 432, pan = 0, duration = 1.8) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const now = audioCtx.currentTime;
+
+        // Dual pure sine oscillators for warm beating interference
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(freq, now);
+        osc1.frequency.exponentialRampToValueAtTime(freq * 0.995, now + duration);
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * 2.015, now); // Sweet harmonic octave shimmer
+        osc2.frequency.exponentialRampToValueAtTime(freq * 2.005, now + duration);
+
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        if (panner) {
+          panner.pan.setValueAtTime(Math.max(-0.8, Math.min(0.8, pan)), now);
+          osc1.connect(panner);
+          osc2.connect(panner);
+          panner.connect(gain);
+        } else {
+          osc1.connect(gain);
+          osc2.connect(gain);
+        }
+
+        gain.connect(audioCtx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+      } catch (e) {}
+    }
+
+    const btnAudio = document.getElementById('btnAudio');
+    btnAudio.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      btnAudio.classList.toggle('active', soundEnabled);
+      if (soundEnabled) playHarmonicTone(528, 0, 1.2);
+    });
+
+    // =========================================================================
+    // 2. High-Dimensional Optical Dispersion & Color Palettes
+    // =========================================================================
+    const PALETTES = {
+      opal: {
+        name: "Liquid Opal",
+        spectra: (t) => {
+          // Thin-film interference: shifts cyan -> magenta -> gold -> iridescent white
+          const r = Math.sin(t * 1.5 + 0.0) * 127 + 128;
+          const g = Math.sin(t * 1.5 + 2.0) * 127 + 128;
+          const b = Math.sin(t * 1.5 + 4.0) * 127 + 128;
+          return `rgba(${Math.round(r * 0.8 + 50)}, ${Math.round(g * 0.85 + 40)}, ${Math.round(b * 0.9 + 25)}, `;
+        },
+        coreGlow: 'rgba(255, 255, 255, 0.95)',
+        bloomColor: '#38bdf8'
+      },
+      solar: {
+        name: "Solar Corona",
+        spectra: (t) => {
+          // Incandescent molten plasma: white hot -> lemon -> amber -> vermillion
+          const r = Math.min(255, Math.sin(t * 1.2) * 50 + 215);
+          const g = Math.max(0, Math.sin(t * 1.4 + 1.2) * 90 + 130);
+          const b = Math.max(0, Math.sin(t * 2.0 + 3.0) * 40 + 30);
+          return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, `;
+        },
+        coreGlow: 'rgba(255, 250, 220, 0.95)',
+        bloomColor: '#f59e0b'
+      },
+      aurora: {
+        name: "Abyssal Aurora",
+        spectra: (t) => {
+          // Aurora borealis: electric turquoise, emerald, and deep indigo
+          const r = Math.sin(t * 1.3 + 3.5) * 80 + 40;
+          const g = Math.sin(t * 1.1 + 0.5) * 110 + 145;
+          const b = Math.sin(t * 1.4 + 2.0) * 100 + 155;
+          return `rgba(${Math.round(Math.max(0, r))}, ${Math.round(Math.max(0, g))}, ${Math.round(b)}, `;
+        },
+        coreGlow: 'rgba(167, 243, 208, 0.95)',
+        bloomColor: '#10b981'
+      },
+      mercury: {
+        name: "Void Mercury",
+        spectra: (t) => {
+          // Liquid platinum chrome: pure silver-white reflections with cold cyan edge
+          const lum = Math.sin(t * 2.0) * 80 + 175;
+          return `rgba(${Math.round(lum)}, ${Math.round(lum * 0.98 + 4)}, ${Math.round(lum * 1.05)}, `;
+        },
+        coreGlow: 'rgba(255, 255, 255, 0.98)',
+        bloomColor: '#94a3b8'
+      },
+      nebula: {
+        name: "Nebula Bloom",
+        spectra: (t) => {
+          // Cosmic dust: rose quartz, celestial violet, starlight azure
+          const r = Math.sin(t * 1.2 + 0.2) * 90 + 165;
+          const g = Math.sin(t * 1.6 + 2.5) * 60 + 60;
+          const b = Math.sin(t * 1.0 + 4.5) * 90 + 165;
+          return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, `;
+        },
+        coreGlow: 'rgba(253, 230, 138, 0.95)',
+        bloomColor: '#ec4899'
+      }
+    };
+
+    let activePalette = PALETTES.opal;
+    let activeBrush = 'filament'; // filament, ribbon, lattice, vortex
+    let radialSymmetry = false; // 6-fold mandala
+
+    // =========================================================================
+    // 3. Living Light Ribbon Physics Engine
+    // =========================================================================
+    const canvas = document.getElementById('artCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let W = 0, H = 0, DPR = 1;
+    function resize() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      ctx.scale(DPR, DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // A Strand is a continuous chain of living light nodes
+    class Node {
+      constructor(x, y, vx = 0, vy = 0, width = 8) {
+        this.x = x;
+        this.y = y;
+        this.ox = x; // original anchor
+        this.oy = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.width = width;
+        this.phase = Math.random() * Math.PI * 2;
+        this.frequency = 0.04 + Math.random() * 0.03;
+      }
+    }
+
+    class Strand {
+      constructor(type, palette) {
+        this.type = type; // filament, ribbon, lattice
+        this.palette = palette;
+        this.nodes = [];
+        this.createdAt = performance.now();
+        this.tension = 0.92;
+        this.undulationSpeed = 0.025;
+        this.age = 0;
+        this.dissolving = false;
+        this.opacity = 1.0;
+        this.id = Math.random();
+      }
+
+      addNode(x, y, width) {
+        // Prevent stacking duplicate points
+        if (this.nodes.length > 0) {
+          const last = this.nodes[this.nodes.length - 1];
+          const dist = Math.hypot(x - last.x, y - last.y);
+          if (dist < 4) return;
+        }
+        this.nodes.push(new Node(x, y, 0, 0, width));
+      }
+
+      update(time) {
+        this.age += 0.016;
+
+        if (this.dissolving) {
+          this.opacity -= 0.02;
+          if (this.opacity <= 0) return false;
+        }
+
+        // Living standing waves and breathing physics
+        const len = this.nodes.length;
+        for (let i = 0; i < len; i++) {
+          const n = this.nodes[i];
+          n.phase += this.undulationSpeed;
+
+          // Wave propagation
+          const waveAmp = (this.type === 'ribbon' ? 1.8 : 0.8) * Math.sin(n.phase + i * 0.15);
+          
+          // Tangent normal displacement
+          let nx = 0, ny = 0;
+          if (i > 0 && i < len - 1) {
+            const dx = this.nodes[i + 1].x - this.nodes[i - 1].x;
+            const dy = this.nodes[i + 1].y - this.nodes[i - 1].y;
+            const mag = Math.hypot(dx, dy) || 1;
+            nx = -dy / mag;
+            ny = dx / mag;
+          }
+
+          n.vx += nx * waveAmp * 0.08;
+          n.vy += ny * waveAmp * 0.08;
+
+          // Friction damping
+          n.vx *= this.tension;
+          n.vy *= this.tension;
+
+          n.x += n.vx;
+          n.y += n.vy;
+        }
+
+        return true;
+      }
+
+      draw(context, time) {
+        if (this.nodes.length < 2) return;
+        const pal = this.palette;
+
+        context.save();
+        context.globalAlpha = this.opacity;
+
+        if (this.type === 'filament') {
+          // Living Prismatic Silk Filament: layered glow + spine + iridescent interference
+          context.lineCap = 'round';
+          context.lineJoin = 'round';
+
+          // Pass 1: Outer Resonant Bloom Aura
+          context.beginPath();
+          context.moveTo(this.nodes[0].x, this.nodes[0].y);
+          for (let i = 1; i < this.nodes.length; i++) {
+            const xc = (this.nodes[i].x + this.nodes[i - 1].x) / 2;
+            const yc = (this.nodes[i].y + this.nodes[i - 1].y) / 2;
+            context.quadraticCurveTo(this.nodes[i - 1].x, this.nodes[i - 1].y, xc, yc);
+          }
+          context.strokeStyle = pal.spectra(time * 0.5) + '0.12)';
+          context.lineWidth = 18;
+          context.stroke();
+
+          // Pass 2: Chromatic Dispersion Strand
+          for (let i = 1; i < this.nodes.length; i++) {
+            const n1 = this.nodes[i - 1];
+            const n2 = this.nodes[i];
+            const segDist = Math.hypot(n2.x - n1.x, n2.y - n1.y);
+
+            context.beginPath();
+            context.moveTo(n1.x, n1.y);
+            context.lineTo(n2.x, n2.y);
+            context.strokeStyle = pal.spectra(i * 0.12 + time) + '0.75)';
+            context.lineWidth = Math.max(2, n2.width * 0.85);
+            context.stroke();
+          }
+
+          // Pass 3: Incandescent Core Spine (Pure Light Line)
+          context.beginPath();
+          context.moveTo(this.nodes[0].x, this.nodes[0].y);
+          for (let i = 1; i < this.nodes.length; i++) {
+            const xc = (this.nodes[i].x + this.nodes[i - 1].x) / 2;
+            const yc = (this.nodes[i].y + this.nodes[i - 1].y) / 2;
+            context.quadraticCurveTo(this.nodes[i - 1].x, this.nodes[i - 1].y, xc, yc);
+          }
+          context.strokeStyle = pal.coreGlow;
+          context.lineWidth = 1.5;
+          context.stroke();
+
+        } else if (this.type === 'ribbon') {
+          // Broad Iridescent Mobius Light Ribbon (Meshed 3D Band)
+          for (let i = 1; i < this.nodes.length; i++) {
+            const n1 = this.nodes[i - 1];
+            const n2 = this.nodes[i];
+            const dx = n2.x - n1.x;
+            const dy = n2.y - n1.y;
+            const mag = Math.hypot(dx, dy) || 1;
+            const nx = -dy / mag;
+            const ny = dx / mag;
+
+            const w1 = n1.width * (1.2 + Math.sin(n1.phase) * 0.4);
+            const w2 = n2.width * (1.2 + Math.sin(n2.phase) * 0.4);
+
+            // Left and right wing vertices
+            const lx1 = n1.x + nx * w1, ly1 = n1.y + ny * w1;
+            const rx1 = n1.x - nx * w1, ry1 = n1.y - ny * w1;
+            const lx2 = n2.x + nx * w2, ly2 = n2.y + ny * w2;
+            const rx2 = n2.x - nx * w2, ry2 = n2.y - ny * w2;
+
+            // Translucent iridescent polygon slice
+            context.beginPath();
+            context.moveTo(lx1, ly1);
+            context.lineTo(lx2, ly2);
+            context.lineTo(rx2, ry2);
+            context.lineTo(rx1, ry1);
+            context.closePath();
+
+            const grad = context.createLinearGradient(lx1, ly1, rx2, ry2);
+            grad.addColorStop(0, pal.spectra(i * 0.15 + time) + '0.45)');
+            grad.addColorStop(0.5, pal.coreGlow);
+            grad.addColorStop(1, pal.spectra(i * 0.15 + time + 2) + '0.45)');
+
+            context.fillStyle = grad;
+            context.fill();
+
+            // Edge accent filaments
+            context.beginPath();
+            context.moveTo(lx1, ly1);
+            context.lineTo(lx2, ly2);
+            context.strokeStyle = pal.spectra(i * 0.2 + time) + '0.9)';
+            context.lineWidth = 1.5;
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(rx1, ry1);
+            context.lineTo(rx2, ry2);
+            context.strokeStyle = pal.spectra(i * 0.2 + time + Math.PI) + '0.9)';
+            context.lineWidth = 1.5;
+            context.stroke();
+          }
+
+        } else if (this.type === 'lattice') {
+          // Self-Weaving Quantum Gossamer Mesh
+          context.lineWidth = 1;
+          for (let i = 0; i < this.nodes.length; i++) {
+            const n = this.nodes[i];
+
+            // Point node glow
+            context.beginPath();
+            context.arc(n.x, n.y, 2.5, 0, Math.PI * 2);
+            context.fillStyle = pal.coreGlow;
+            context.fill();
+
+            // Cross-stitching to nearby nodes within the strand
+            for (let j = Math.max(0, i - 6); j < i; j++) {
+              const prev = this.nodes[j];
+              const d = Math.hypot(n.x - prev.x, n.y - prev.y);
+              if (d < 65) {
+                context.beginPath();
+                context.moveTo(n.x, n.y);
+                context.lineTo(prev.x, prev.y);
+                context.strokeStyle = pal.spectra(i * 0.1 + time) + `${(1 - d / 65) * 0.55})`;
+                context.stroke();
+              }
+            }
+          }
+        }
+
+        context.restore();
+      }
+    }
+
+    // =========================================================================
+    // 4. Quantum Gossamer Entanglement (Bridges between separate strands)
+    // =========================================================================
+    let strands = [];
+    let activeStrand = null;
+    let isDrawing = false;
+    let lastX = 0, lastY = 0;
+
+    function renderQuantumEntanglement(context, time) {
+      if (strands.length < 2) return;
+      context.save();
+      context.lineWidth = 0.85;
+
+      // Sample a subset of nodes between different strands
+      for (let s1 = 0; s1 < strands.length; s1++) {
+        const nodes1 = strands[s1].nodes;
+        if (nodes1.length === 0) continue;
+
+        for (let s2 = s1 + 1; s2 < strands.length; s2++) {
+          const nodes2 = strands[s2].nodes;
+          if (nodes2.length === 0) continue;
+
+          // Check proximity
+          const step1 = Math.max(1, Math.floor(nodes1.length / 18));
+          const step2 = Math.max(1, Math.floor(nodes2.length / 18));
+
+          for (let i = 0; i < nodes1.length; i += step1) {
+            const p1 = nodes1[i];
+            for (let j = 0; j < nodes2.length; j += step2) {
+              const p2 = nodes2[j];
+              const dx = p2.x - p1.x;
+              const dy = p2.y - p1.y;
+              const distSq = dx * dx + dy * dy;
+
+              // Entanglement radius: 80px
+              if (distSq < 6400 && distSq > 100) {
+                const dist = Math.sqrt(distSq);
+                const alpha = (1 - dist / 80) * 0.4;
+                context.beginPath();
+                context.moveTo(p1.x, p1.y);
+
+                // Slight electrostatic curve
+                const midX = (p1.x + p2.x) / 2 + Math.sin(time * 2 + i) * 8;
+                const midY = (p1.y + p2.y) / 2 + Math.cos(time * 2 + j) * 8;
+                context.quadraticCurveTo(midX, midY, p2.x, p2.y);
+
+                context.strokeStyle = strands[s1].palette.spectra(time + dist * 0.1) + `${alpha})`;
+                context.stroke();
+              }
+            }
+          }
+        }
+      }
+      context.restore();
+    }
+
+    // =========================================================================
+    // 5. Pointer Interactions & Vortex Field
+    // =========================================================================
+    const reticle = document.getElementById('reticle');
+    const whisper = document.getElementById('whisper');
+
+    function hideWhisper() {
+      if (whisper) whisper.style.opacity = '0';
+    }
+
+    function onPointerDown(e) {
+      isDrawing = true;
+      hideWhisper();
+      const x = e.clientX;
+      const y = e.clientY;
+      lastX = x;
+      lastY = y;
+
+      if (activeBrush === 'vortex') {
+        applyVortex(x, y, 60);
+        playHarmonicTone(260, (x / W) * 2 - 1, 1.2);
+        return;
+      }
+
+      // Initialize new light strand
+      activeStrand = new Strand(activeBrush, activePalette);
+      const strokeWidth = activeBrush === 'ribbon' ? 14 : activeBrush === 'filament' ? 6 : 4;
+      activeStrand.addNode(x, y, strokeWidth);
+      strands.push(activeStrand);
+
+      // Acoustic chime mapped to spatial screen position
+      const normX = (x / W);
+      const baseFreq = 380 + normX * 360;
+      playHarmonicTone(baseFreq, normX * 2 - 1, 1.6);
+    }
+
+    function onPointerMove(e) {
+      const x = e.clientX;
+      const y = e.clientY;
+
+      // Update reticle
+      if (activeBrush === 'vortex') {
+        reticle.style.left = `${x}px`;
+        reticle.style.top = `${y}px`;
+        reticle.style.width = '140px';
+        reticle.style.height = '140px';
+        reticle.style.opacity = '1';
+      } else {
+        reticle.style.opacity = '0';
+      }
+
+      if (!isDrawing) return;
+
+      const speed = Math.hypot(x - lastX, y - lastY);
+      lastX = x;
+      lastY = y;
+
+      if (activeBrush === 'vortex') {
+        applyVortex(x, y, 40);
+        return;
+      }
+
+      if (activeStrand) {
+        // Variable stroke thickness with drawing velocity
+        const baseWidth = activeBrush === 'ribbon' ? 16 : 6;
+        const width = Math.max(2, baseWidth - Math.min(baseWidth * 0.6, speed * 0.15));
+        activeStrand.addNode(x, y, width);
+
+        // Periodic plucks during continuous drawing
+        if (Math.random() < 0.08) {
+          const normX = (x / W);
+          playHarmonicTone(320 + normX * 440, normX * 2 - 1, 0.9);
+        }
+      }
+    }
+
+    function onPointerUp() {
+      isDrawing = false;
+      activeStrand = null;
+    }
+
+    // Gravitational Vortex Distortion
+    function applyVortex(cx, cy, strength) {
+      const radius = 180;
+      strands.forEach(s => {
+        s.nodes.forEach(n => {
+          const dx = n.x - cx;
+          const dy = n.y - cy;
+          const dist = Math.hypot(dx, dy);
+          if (dist < radius && dist > 1) {
+            const angle = Math.atan2(dy, dx);
+            const force = (1 - dist / radius) * strength * 0.15;
+            // Perpendicular swirl + inward suction
+            n.vx += -Math.sin(angle) * force * 1.5 - Math.cos(angle) * force * 0.5;
+            n.vy += Math.cos(angle) * force * 1.5 - Math.sin(angle) * force * 0.5;
+          }
+        });
+      });
+    }
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+
+    // =========================================================================
+    // 6. Generative Seeds & Presets (Art Born from Nothing)
+    // =========================================================================
+    function spawnInitialHarmony() {
+      // Create initial organic living weave so user is greeted by living art
+      const centerX = W / 2;
+      const centerY = H / 2;
+
+      for (let s = 0; s < 3; s++) {
+        const strand = new Strand('ribbon', activePalette);
+        const radius = 90 + s * 70;
+        const pts = 36;
+        for (let i = 0; i <= pts; i++) {
+          const a = (i / pts) * Math.PI * 2;
+          const r = radius + Math.sin(a * 4 + s) * 28;
+          const x = centerX + Math.cos(a) * r;
+          const y = centerY + Math.sin(a) * r * 0.85;
+          strand.addNode(x, y, 12);
+        }
+        strands.push(strand);
+      }
+    }
+
+    // =========================================================================
+    // 7. Render Loop with Radial Mandala Symmetry & Trail Bloom
+    // =========================================================================
+    let globalTime = 0;
+
+    function render() {
+      globalTime += 0.018;
+
+      // Soft void persistence for luminous trailing bloom
+      ctx.fillStyle = 'rgba(4, 6, 10, 0.22)';
+      ctx.fillRect(0, 0, W, H);
+
+      // Micro cosmic stardust background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      for (let i = 0; i < 3; i++) {
+        const sx = (Math.sin(globalTime * 0.2 + i * 20) * 0.5 + 0.5) * W;
+        const sy = (Math.cos(globalTime * 0.3 + i * 30) * 0.5 + 0.5) * H;
+        ctx.fillRect(sx, sy, 1.2, 1.2);
+      }
+
+      // Update strands
+      for (let i = strands.length - 1; i >= 0; i--) {
+        const alive = strands[i].update(globalTime);
+        if (!alive) strands.splice(i, 1);
+      }
+
+      // Draw Strands
+      if (radialSymmetry) {
+        // 6-Fold Sacred Mandala Geometry
+        const cx = W / 2;
+        const cy = H / 2;
+        const folds = 6;
+        for (let f = 0; f < folds; f++) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate((f * Math.PI * 2) / folds);
+          ctx.translate(-cx, -cy);
+
+          strands.forEach(s => s.draw(ctx, globalTime));
+          renderQuantumEntanglement(ctx, globalTime);
+
+          ctx.restore();
+        }
+      } else {
+        strands.forEach(s => s.draw(ctx, globalTime));
+        renderQuantumEntanglement(ctx, globalTime);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    // Launch!
+    spawnInitialHarmony();
+    requestAnimationFrame(render);
+
+    // =========================================================================
+    // 8. Studio Dock Controls & Actions
+    // =========================================================================
+    // Brush buttons
+    document.querySelectorAll('.btn-mode').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeBrush = btn.dataset.brush;
+        playHarmonicTone(480, 0, 0.4);
+      });
+    });
+
+    // Palette change
+    document.getElementById('paletteSelect').addEventListener('change', (e) => {
+      activePalette = PALETTES[e.target.value] || PALETTES.opal;
+      // Recolor existing strands smoothly
+      strands.forEach(s => s.palette = activePalette);
+      playHarmonicTone(540, 0, 0.8);
+    });
+
+    // Symmetry toggle
+    const btnSymmetry = document.getElementById('btnSymmetry');
+    btnSymmetry.addEventListener('click', () => {
+      radialSymmetry = !radialSymmetry;
+      btnSymmetry.classList.toggle('active', radialSymmetry);
+      playHarmonicTone(radialSymmetry ? 660 : 330, 0, 0.9);
+    });
+
+    // Evolve action (Inject energetic harmonic impulses)
+    document.getElementById('btnEvolve').addEventListener('click', () => {
+      strands.forEach(s => {
+        s.undulationSpeed = 0.06;
+        s.nodes.forEach(n => {
+          n.vx += (Math.random() - 0.5) * 8;
+          n.vy += (Math.random() - 0.5) * 8;
+        });
+      });
+      playHarmonicTone(528, 0, 1.8);
+      setTimeout(() => {
+        strands.forEach(s => s.undulationSpeed = 0.025);
+      }, 2000);
+    });
+
+    // Dissolve action
+    document.getElementById('btnClear').addEventListener('click', () => {
+      strands.forEach(s => s.dissolving = true);
+      playHarmonicTone(220, 0, 1.5);
+    });
+
+    // Snapshot 4K Export
+    const flashOverlay = document.getElementById('flashOverlay');
+    document.getElementById('btnExport').addEventListener('click', () => {
+      flashOverlay.classList.add('flash');
+      playHarmonicTone(880, 0, 0.6);
+      setTimeout(() => flashOverlay.classList.remove('flash'), 50);
+
+      // Create high-res download
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = W * 2;
+      tempCanvas.height = H * 2;
+      const tCtx = tempCanvas.getContext('2d');
+      tCtx.scale(2, 2);
+
+      // Render pristine snapshot on deep void
+      tCtx.fillStyle = '#04060a';
+      tCtx.fillRect(0, 0, W, H);
+      strands.forEach(s => s.draw(tCtx, globalTime));
+      renderQuantumEntanglement(tCtx, globalTime);
+
+      const link = document.createElement('a');
+      link.download = `AETHER-WEAVE-${Date.now()}.png`;
+      link.href = tempCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // Philosophy & About modal
+    document.getElementById('btnInfo').addEventListener('click', () => {
+      alert(
+        "✦ AETHER-WEAVE: The Living Art Form ✦\n\n" +
+        "Conceived for MANO-LAB as an art form born from nothing:\n\n" +
+        "• Not pigment, but living light resonance.\n" +
+        "• Strokes behave as harmonic multi-dimensional ribbons that twist, breathe, and oscillate in zero gravity.\n" +
+        "• Thin-film optical dispersion creates iridescent rainbow birefringence that shifts with motion.\n" +
+        "• Crossing strands form magnetic gossamer bridges (Quantum Entanglement).\n" +
+        "• Procedural WebAudio sings in crystal frequencies as you weave.\n\n" +
+        "Controls:\n" +
+        "• Draw with mouse or touch.\n" +
+        "• Toggle 6-fold Mandala symmetry for sacred geometry.\n" +
+        "• Use Vortex to swirl space.\n" +
+        "• Export 4K for pristine digital canvas prints."
+      );
+    });
+
+  </script>
+</body>
+</html>

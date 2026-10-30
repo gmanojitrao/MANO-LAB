@@ -22,17 +22,20 @@ MANO-LAB focuses on high-utility tools and timeless arcade games:
 ### 🎙️ Flagship Application
 1. **Audio Transcription Studio (`apps/audio-transcription/`):** Enterprise-grade multilingual speech-to-text studio with automatic speaker diarization, bilingual Indic script preservation (Hindi, Bengali, Maithili), and instant dossier generation in Word (`.docx`), PDF, and Markdown.
 
+### ✨ Original Art Form (Born from Nothing)
+2. **Aether-Weave (`apps/aether-weave/`):** An original living art medium. Paint not with static pigment, but with multi-dimensional vibrating ribbons of refractive light that breathe, entangle with magnetic gossamer bridges, shift with thin-film optical dispersion, sing with 432Hz crystalline acoustic resonance, and export to pristine 4K wallpapers.
+
 ### 🎧 Acoustic Focus
-2. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
+3. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
 
 ### 🏎️ Racing & Typing Competition
-3. **Turbo Typist (`apps/turbo-typist/`):** High-speed typing racer on a 3D perspective speedway track. Accelerate your GT supercar by typing fast and accurately, trigger nitro exhaust flames on streaks, overtake AI rivals, and claim the championship podium with live WPM telemetry.
+4. **Turbo Typist (`apps/turbo-typist/`):** High-speed typing racer on a 3D perspective speedway track. Accelerate your GT supercar by typing fast and accurately, trigger nitro exhaust flames on streaks, overtake AI rivals, and claim the championship podium with live WPM telemetry.
 
 ### 🕹️ Classic Arcade Games
-4. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
-5. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
-6. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
-7. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
+5. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
+6. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
+7. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
+8. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
 
 ---
 

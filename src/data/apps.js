@@ -19,6 +19,20 @@ const MANO_APPS = [
     badge: "Flagship Application"
   },
   {
+    id: "aether-weave",
+    name: "Aether-Weave",
+    tagline: "The living art form: weave breathing harmonic light ribbons in void space",
+    description: "An original dynamic art medium born from nothing. Not paint on canvas, but multi-dimensional vibrating filaments of refractive light that undulate, intertwine with quantum gossamer bridges, shift with thin-film optical dispersion, and sing with crystalline acoustic resonance.",
+    category: "Creative & Art",
+    route: "apps/aether-weave/",
+    status: "Available",
+    featured: true,
+    emoji: "✨",
+    accentColor: "#ec4899",
+    tags: ["Living Art", "Light Weaving", "Generative", "4K Export"],
+    badge: "Original Art Form"
+  },
+  {
     id: "focus-ambient",
     name: "Focus Ambient",
     tagline: "Generative soundscapes & minimalist Pomodoro timer",
@@ -107,6 +121,7 @@ const MANO_APPS = [
 const MANO_CATEGORIES = [
   { id: "all", label: "All Items" },
   { id: "Speech & AI", label: "🎙️ Speech & AI" },
+  { id: "Creative & Art", label: "✨ Creative & Art" },
   { id: "Productivity", label: "🎧 Productivity" },
   { id: "Classic Games", label: "🕹️ Classic Games" }
 ];
