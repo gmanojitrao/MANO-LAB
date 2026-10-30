@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Ambient — MANO-LAB</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2238%22 fill=%22%23c8ff00%22/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #08090c;
+      color: #f5f5f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      height: 4rem;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0d0f14;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      background: #181b22;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #f5f5f0;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .back-btn:hover { background: #222630; border-color: #c8ff00; }
+    .main-grid {
+      max-width: 960px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; margin: 1.5rem auto; } }
+    
+    /* Timer Card */
+    .timer-card {
+      background: #12141a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .timer-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 4.5rem;
+      font-weight: 800;
+      color: #c8ff00;
+      line-height: 1;
+      margin: 1.5rem 0 2rem;
+      letter-spacing: -0.04em;
+    }
+    .timer-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .btn-act {
+      padding: 0.75rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.15s;
+    }
+    .btn-play { background: #c8ff00; color: #08090c; box-shadow: 0 4px 15px rgba(200, 255, 0, 0.3); }
+    .btn-play:hover { background: #d8ff33; transform: scale(1.03); }
+    .btn-reset { background: #1e222b; color: #a0a6b5; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-reset:hover { color: #fff; background: #282d38; }
+
+    /* Soundscapes Mixer */
+    .mixer-card {
+      background: #12141a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 2rem;
+    }
+    .mixer-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sound-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .sound-row:last-child { border-bottom: none; }
+    .sound-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-width: 130px;
+    }
+    .sound-slider {
+      flex: 1;
+      accent-color: #c8ff00;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="../../" class="back-btn">
+      <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+      <span>MANO-LAB</span>
+    </a>
+    <div style="font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="color: #c8ff00;">🎧</span>
+      <span>Focus Ambient Soundscapes</span>
+    </div>
+    <div style="font-size: 0.75rem; color: #7a8294; font-family: 'JetBrains Mono', monospace;">100% WebAudio • Zero Buffering</div>
+  </header>
+
+  <div class="main-grid">
+    <!-- Timer -->
+    <div class="timer-card">
+      <div style="font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; color: #7a8294;">
+        Deep Work Session
+      </div>
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div class="timer-actions">
+        <button class="btn-act btn-play" id="btnTimerToggle" onclick="toggleTimer()">
+          <i data-lucide="play" id="timerIcon" style="width: 18px; height: 18px;"></i>
+          <span id="timerText">Start Focus</span>
+        </button>
+        <button class="btn-act btn-reset" onclick="resetTimer()">
+          <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i>
+          <span>Reset</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mixer -->
+    <div class="mixer-card">
+      <div class="mixer-title">
+        <span>Acoustic Soundscapes</span>
+        <button onclick="toggleMasterAudio()" id="btnMasterAudio" style="font-size: 0.75rem; padding: 0.3rem 0.65rem; border-radius: 8px; background: #1e222b; border: 1px solid rgba(255,255,255,0.1); color: #c8ff00; cursor: pointer;">
+          Audio: Muted
+        </button>
+      </div>
+
+      <div class="sound-row">
+        <div class="sound-label">
+          <i data-lucide="cloud-rain" style="color: #38bdf8;"></i>
+          <span>Gentle Rain</span>
+        </div>
+        <input type="range" min="0" max="1" step="0.01" value="0.4" class="sound-slider" oninput="setGain('rain', this.value)">
+      </div>
+
+      <div class="sound-row">
+        <div class="sound-label">
+          <i data-lucide="flame" style="color: #f97316;"></i>
+          <span>Fireplace</span>
+        </div>
+        <input type="range" min="0" max="1" step="0.01" value="0.3" class="sound-slider" oninput="setGain('fire', this.value)">
+      </div>
+
+      <div class="sound-row">
+        <div class="sound-label">
+          <i data-lucide="waves" style="color: #06b6d4;"></i>
+          <span>Ocean Tide</span>
+        </div>
+        <input type="range" min="0" max="1" step="0.01" value="0.2" class="sound-slider" oninput="setGain('ocean', this.value)">
+      </div>
+
+      <div class="sound-row">
+        <div class="sound-label">
+          <i data-lucide="radio" style="color: #c8ff00;"></i>
+          <span>Binaural 40Hz</span>
+        </div>
+        <input type="range" min="0" max="1" step="0.01" value="0.25" class="sound-slider" oninput="setGain('binaural', this.value)">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+
+    // Timer logic
+    let timeLeft = 25 * 60;
+    let timerRunning = false;
+    let timerInterval = null;
+
+    function updateTimerUI() {
+      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const secs = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+    }
+
+    function toggleTimer() {
+      if (!timerRunning) {
+        timerRunning = true;
+        if (!masterPlaying) toggleMasterAudio();
+        document.getElementById('timerText').textContent = 'Pause';
+        document.getElementById('timerIcon').setAttribute('data-lucide', 'pause');
+        timerInterval = setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            updateTimerUI();
+          } else {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            alert("Focus session complete! Take a breather.");
+          }
+        }, 1000);
+      } else {
+        timerRunning = false;
+        clearInterval(timerInterval);
+        document.getElementById('timerText').textContent = 'Resume';
+        document.getElementById('timerIcon').setAttribute('data-lucide', 'play');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      timeLeft = 25 * 60;
+      updateTimerUI();
+      document.getElementById('timerText').textContent = 'Start Focus';
+      document.getElementById('timerIcon').setAttribute('data-lucide', 'play');
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // Procedural WebAudio Synthesizer
+    let audioCtx = null;
+    let masterGain = null;
+    let masterPlaying = false;
+    let gains = {};
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+      masterGain.connect(audioCtx.destination);
+
+      // Pink Noise Buffer for Rain
+      const bufferSize = audioCtx.sampleRate * 2;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        output[i] = (b0 + b1 + b2) * 0.11;
+      }
+
+      // Rain Node
+      const rainSource = audioCtx.createBufferSource();
+      rainSource.buffer = noiseBuffer;
+      rainSource.loop = true;
+      const rainFilter = audioCtx.createBiquadFilter();
+      rainFilter.type = 'lowpass';
+      rainFilter.frequency.value = 1200;
+      gains.rain = audioCtx.createGain();
+      gains.rain.gain.value = 0.4;
+      rainSource.connect(rainFilter);
+      rainFilter.connect(gains.rain);
+      gains.rain.connect(masterGain);
+      rainSource.start();
+
+      // Binaural Tone (200Hz + 240Hz for 40Hz gamma focus beat)
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      osc1.frequency.value = 196;
+      osc2.frequency.value = 236;
+      gains.binaural = audioCtx.createGain();
+      gains.binaural.gain.value = 0.08;
+      osc1.connect(gains.binaural);
+      osc2.connect(gains.binaural);
+      gains.binaural.connect(masterGain);
+      osc1.start();
+      osc2.start();
+    }
+
+    function toggleMasterAudio() {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      masterPlaying = !masterPlaying;
+      const btn = document.getElementById('btnMasterAudio');
+      if (masterPlaying) {
+        masterGain.gain.setTargetAtTime(1, audioCtx.currentTime, 0.3);
+        btn.textContent = 'Audio: Active 🔊';
+        btn.style.color = '#c8ff00';
+      } else {
+        masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.2);
+        btn.textContent = 'Audio: Muted 🔇';
+        btn.style.color = '#7a8294';
+      }
+    }
+
+    function setGain(name, val) {
+      if (gains[name]) {
+        gains[name].gain.value = parseFloat(val);
+      }
+    }
+  </script>
+</body>
+</html>

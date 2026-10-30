@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Studio — MANO-LAB</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2238%22 fill=%22%23c8ff00%22/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Fast client markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #090a0d;
+      color: #f5f5f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      height: 4rem;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0d0f14;
+      z-index: 10;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      background: #181b22;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #f5f5f0;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .back-btn:hover { background: #222630; border-color: #c8ff00; }
+    .action-btn {
+      padding: 0.4rem 0.8rem;
+      background: #181b22;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #f5f5f0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { background: #222630; border-color: #c8ff00; color: #c8ff00; }
+    .editor-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+    @media (max-width: 768px) { .editor-layout { grid-template-columns: 1fr; } }
+    .pane-editor {
+      background: #0d0f14;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    .editor-textarea {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      padding: 1.75rem;
+      color: #f5f5f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      resize: none;
+      outline: none;
+    }
+    .pane-preview {
+      background: #090a0d;
+      padding: 2rem 2.5rem;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+    .pane-preview h1 { font-size: 2rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
+    .pane-preview h2 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; }
+    .pane-preview p { margin-bottom: 1rem; color: #cbd5e1; }
+    .pane-preview ul { margin: 0 0 1rem 1.5rem; color: #cbd5e1; }
+    .pane-preview code { font-family: 'JetBrains Mono', monospace; background: #1a1e27; padding: 0.15rem 0.4rem; border-radius: 4px; color: #c8ff00; }
+    .pane-preview pre code { display: block; padding: 1rem; border-radius: 10px; overflow-x: auto; background: #12151c; }
+    .pane-preview blockquote { border-left: 3px solid #c8ff00; padding-left: 1rem; color: #94a3b8; margin-bottom: 1rem; font-style: italic; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="../../" class="back-btn">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>MANO-LAB</span>
+      </a>
+      <div style="font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: #c8ff00;">📝</span>
+        <span>Markdown Studio</span>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 0.6rem;">
+      <span id="wordStats" style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #7a8294; margin-right: 0.5rem;">0 words</span>
+      <button class="action-btn" onclick="copyMarkdown()">
+        <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+        <span>Copy MD</span>
+      </button>
+      <button class="action-btn" onclick="downloadFile()">
+        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+        <span>Download .md</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="editor-layout">
+    <div class="pane-editor">
+      <textarea id="editorText" class="editor-textarea" placeholder="Start typing markdown here..." oninput="updatePreview()"></textarea>
+    </div>
+    <div class="pane-preview" id="previewPane"></div>
+  </div>
+
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+
+    const editor = document.getElementById('editorText');
+    const preview = document.getElementById('previewPane');
+
+    const sample = `# Welcome to Markdown Studio 📝
+
+Write clean notes, technical docs, or creative stories with live preview.
+
+### ✨ What's Supported
+- **Bold text**, *italics*, and ~~strikethrough~~
+- Code snippets like \`console.log("Hello Lab!")\`
+- Task checklists:
+  - [x] Launch MANO-LAB
+  - [x] Build useful micro-apps
+  - [ ] Share with the world!
+
+> "Simplicity is prerequisite for reliability." — Edsger Dijkstra
+
+\`\`\`javascript
+// Live syntax blocks
+function createExperiment(name) {
+  return { name, status: "Active", delight: 100 };
+}
+\`\`\`
+`;
+
+    editor.value = sample;
+
+    function updatePreview() {
+      const val = editor.value;
+      preview.innerHTML = marked.parse(val);
+
+      const words = val.trim() ? val.trim().split(/\s+/).length : 0;
+      document.getElementById('wordStats').textContent = `${words} words • ${val.length} chars`;
+    }
+
+    function copyMarkdown() {
+      navigator.clipboard.writeText(editor.value).then(() => {
+        alert("Markdown copied to clipboard!");
+      });
+    }
+
+    function downloadFile() {
+      const blob = new Blob([editor.value], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'notes.md';
+      a.click();
+    }
+
+    updatePreview();
+  </script>
+</body>
+</html>
