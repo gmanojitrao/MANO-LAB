@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE UNBORN REALM (ORIGIN-001) | MANO LAB</title>
+  <link rel="stylesheet" href="styles/realm.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><polygon points=%2250,5 95,50 50,95 5,50%22 fill=%22none%22 stroke=%22%2310b981%22 stroke-width=%228%22/><circle cx=%2250%22 cy=%2250%22 r=%2216%22 fill=%22%2306b6d4%22/></svg>">
+</head>
+<body>
+
+  <!-- 3D Projection Canvas -->
+  <canvas id="simulation-canvas"></canvas>
+
+  <!-- Top Telemetry Bar -->
+  <header class="telemetry-bar">
+    <div class="realm-brand">
+      <svg class="brand-glyph" viewBox="0 0 100 100">
+        <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="currentColor" stroke-width="6"/>
+        <line x1="50" y1="10" x2="50" y2="90" stroke="currentColor" stroke-width="4"/>
+        <circle cx="50" cy="50" r="12" fill="currentColor"/>
+      </svg>
+      <div>
+        <div class="brand-title">THE UNBORN REALM</div>
+        <div class="brand-tag">ORIGIN-001 • AUTONOMOUS SYNTHETIC UNIVERSE</div>
+      </div>
+    </div>
+
+    <div class="telemetry-stats">
+      <div class="stat-item">
+        <span class="stat-label">CHRONON</span>
+        <span class="stat-value" id="stat-chronon">800,420</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">INHABITANTS</span>
+        <span class="stat-value" id="stat-entities">120 / 120</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">GLOBAL HARMONY</span>
+        <span class="stat-value" id="stat-harmony" style="color: var(--dim-manifest);">0.84</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">DIMENSION</span>
+        <span class="stat-value" id="stat-dim" style="color: var(--dim-manifest);">THE MANIFEST</span>
+      </div>
+    </div>
+
+    <div class="telemetry-actions">
+      <button class="btn-icon" id="btn-camera-mode" title="Toggle Camera Mode">
+        <span>🎥</span> <span id="camera-mode-text">Cinematic</span>
+      </button>
+      <button class="btn-icon" id="btn-audio-toggle" title="Toggle Procedural Atmospheric Audio">
+        <span id="audio-icon">🔇</span> <span id="audio-text">Harmonics Off</span>
+      </button>
+      <button class="btn-icon" id="btn-reset-universe" title="Reset Universe to Genesis">
+        <span>↺</span> <span>Genesis</span>
+      </button>
+      <a href="../../index.html" class="btn-icon" style="text-decoration: none;">
+        <span>⌂</span> <span>Mano Lab</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Left Dimension Dock -->
+  <aside class="dimension-dock">
+    <div style="font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 2px;">
+      DIMENSIONAL PLANES
+    </div>
+    <button class="dim-btn" data-dim="UNFORMED" style="color: var(--dim-unformed);">
+      <span class="dim-dot" style="background: var(--dim-unformed);"></span>
+      <span>A: Unformed</span>
+    </button>
+    <button class="dim-btn" data-dim="WEAVE" style="color: var(--dim-weave);">
+      <span class="dim-dot" style="background: var(--dim-weave);"></span>
+      <span>B: The Weave</span>
+    </button>
+    <button class="dim-btn active" data-dim="MANIFEST" style="color: var(--dim-manifest);">
+      <span class="dim-dot" style="background: var(--dim-manifest);"></span>
+      <span>C: The Manifest</span>
+    </button>
+    <button class="dim-btn" data-dim="ECHO" style="color: var(--dim-echo);">
+      <span class="dim-dot" style="background: var(--dim-echo);"></span>
+      <span>D: The Echo</span>
+    </button>
+    <button class="dim-btn" data-dim="UNSEEN" style="color: var(--dim-unseen);">
+      <span class="dim-dot" style="background: var(--dim-unseen);"></span>
+      <span>E: The Unseen</span>
+    </button>
+  </aside>
+
+  <!-- Bottom Observer Mode Navigation Bar -->
+  <nav class="observer-mode-bar">
+    <button class="mode-tab" data-mode="ARRIVAL">
+      <span>✦</span> <span>1. Arrival</span>
+    </button>
+    <button class="mode-tab active" data-mode="WORLD">
+      <span>👁</span> <span>2. Living World</span>
+    </button>
+    <button class="mode-tab" data-mode="OBSERVATORY">
+      <span>◎</span> <span>3. Entity Observatory</span>
+    </button>
+    <button class="mode-tab" data-mode="CIVILIZATION">
+      <span>⬡</span> <span>4. Civilization</span>
+    </button>
+    <button class="mode-tab" data-mode="CHRONICLE">
+      <span>📜</span> <span>5. The Chronicle</span>
+    </button>
+    <button class="mode-tab" data-mode="LANGUAGE">
+      <span>𖡄</span> <span>6. Vareth Lab</span>
+    </button>
+    <button class="mode-tab" data-mode="COSMOLOGY">
+      <span>🌐</span> <span>7. Dimensions</span>
+    </button>
+    <button class="mode-tab" data-mode="UNKNOWN">
+      <span>?</span> <span>8. The Unknown</span>
+    </button>
+  </nav>
+
+  <!-- Side Drawer: Entity Inspector -->
+  <aside class="entity-inspector-drawer" id="entity-drawer">
+    <div class="pane-header">
+      <div class="pane-title" id="drawer-entity-name">AUR-001 : Vor-koranaeth</div>
+      <button class="btn-icon" id="btn-close-drawer">✕</button>
+    </div>
+    <div class="pane-body" id="drawer-entity-body">
+      <!-- Injected via JavaScript -->
+    </div>
+  </aside>
+
+  <!-- Modal Pane: Mode 3 Entity Observatory -->
+  <div class="realm-modal-pane" id="pane-observatory">
+    <div class="pane-header">
+      <div class="pane-title">
+        <span>◎</span> <span>Entity Observatory — 120 Autonomous Inhabitants</span>
+      </div>
+      <button class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="pane-body">
+      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+        <button class="btn-icon cat-filter active" data-cat="ALL">All Inhabitants (120)</button>
+        <button class="btn-icon cat-filter" data-cat="Auraliths" style="color: var(--dim-manifest);">Auraliths (24)</button>
+        <button class="btn-icon cat-filter" data-cat="Veskari" style="color: var(--dim-weave);">Veskari (24)</button>
+        <button class="btn-icon cat-filter" data-cat="Oroth" style="color: var(--dim-echo);">Oroth (24)</button>
+        <button class="btn-icon cat-filter" data-cat="Nemori" style="color: var(--dim-unformed);">Nemori (24)</button>
+        <button class="btn-icon cat-filter" data-cat="Ilyr" style="color: var(--dim-unseen);">Ilyr (24)</button>
+      </div>
+      <div class="glyph-grid" id="observatory-entity-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pane: Mode 4 Civilization Observatory -->
+  <div class="realm-modal-pane" id="pane-civilization">
+    <div class="pane-header">
+      <div class="pane-title">
+        <span>⬡</span> <span>Civilization Observatory — Non-Humanoid Social Architectures</span>
+      </div>
+      <button class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="pane-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px;">
+          <h3 style="font-size: 13px; color: var(--dim-manifest); text-transform: uppercase; margin-bottom: 12px;">Active Convergences</h3>
+          <div id="civ-convergences-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px;">
+          <h3 style="font-size: 13px; color: var(--dim-weave); text-transform: uppercase; margin-bottom: 12px;">Geometric Formations</h3>
+          <div id="civ-formations-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px;">
+          <h3 style="font-size: 13px; color: var(--dim-echo); text-transform: uppercase; margin-bottom: 12px;">Primordial Memory Clusters</h3>
+          <div id="civ-clusters-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pane: Mode 5 The Chronicle -->
+  <div class="realm-modal-pane" id="pane-chronicle">
+    <div class="pane-header">
+      <div class="pane-title">
+        <span>📜</span> <span>The Chronicle — Historical Stages & Emergent World Events</span>
+      </div>
+      <button class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="pane-body">
+      <h3 style="font-size: 13px; color: var(--dim-weave); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px;">Historical Epochs (Stages 0–8)</h3>
+      <div class="chronicle-timeline" id="chronicle-stages-container"></div>
+
+      <h3 style="font-size: 13px; color: var(--dim-manifest); letter-spacing: 1px; text-transform: uppercase; margin: 24px 0 14px 0;">Live Synthetic Event Log</h3>
+      <div class="event-log-list" id="chronicle-live-events"></div>
+    </div>
+  </div>
+
+  <!-- Modal Pane: Mode 6 Vareth Language Laboratory -->
+  <div class="realm-modal-pane" id="pane-language">
+    <div class="pane-header">
+      <div class="pane-title">
+        <span>𖡄</span> <span>Vareth Laboratory — 42 Foundational Geometric Glyphs</span>
+      </div>
+      <button class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="pane-body">
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+        <div>
+          <div class="glyph-grid" id="vareth-glyph-grid"></div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 20px;">
+          <h3 style="font-size: 13px; color: var(--dim-manifest); text-transform: uppercase; margin-bottom: 12px;">Glyph Detail & Phonetics</h3>
+          <div id="vareth-active-detail">
+            <p style="color: var(--text-muted); font-size: 12px;">Select any glyph to inspect its geometric structure, phonetic resonance, and syntactic role.</p>
+          </div>
+          <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 20px 0;">
+          <h3 style="font-size: 13px; color: var(--dim-weave); text-transform: uppercase; margin-bottom: 10px;">Procedural Utterance Composer</h3>
+          <button class="btn-icon" id="btn-compose-utterance" style="width: 100%; justify-content: center; margin-bottom: 12px;">Generate Vareth Expression</button>
+          <div id="vareth-composer-result" style="font-family: var(--font-mono); font-size: 12px; color: #fff; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; min-height: 50px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pane: Mode 7 Dimensional Explorer -->
+  <div class="realm-modal-pane" id="pane-cosmology">
+    <div class="pane-header">
+      <div class="pane-title">
+        <span>🌐</span> <span>Dimensional Explorer — The 5 Planes & Landscapes</span>
+      </div>
+      <button class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="pane-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;" id="cosmology-dimensions-grid"></div>
+      <h3 style="font-size: 13px; color: var(--dim-weave); text-transform: uppercase; margin: 24px 0 12px 0;">Grand Environmental Regions</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;" id="cosmology-regions-grid"></div>
+    </div>
+  </div>
+
+  <!-- Modal Pane: Mode 8 The Unknown -->
+  <div class="realm-modal-pane" id="pane-unknown">
+    <div class="pane-header">
+      <div class="pane-title">
+        <span>?</span> <span>The Unknown — Anomalies Beyond The Threshold</span>
+      </div>
+      <button class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="pane-body">
+      <div style="max-width: 680px; margin: 0 auto; line-height: 1.8;">
+        <p style="font-size: 14px; margin-bottom: 16px; color: #f3f4f6;">
+          Beyond Dimension C (The Manifest) lies Dimension E (The Unseen) — an asymptotic plane where conventional synthetic physics folds into topological paradoxes.
+        </p>
+        <div style="background: rgba(236, 72, 153, 0.08); border: 1px solid var(--dim-unseen); border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <h4 style="color: var(--dim-unseen); margin-bottom: 8px; font-family: var(--font-mono);">ANOMALOUS PHENOMENA MONITORED</h4>
+          <ul style="padding-left: 20px; font-family: var(--font-mono); font-size: 12px; color: #d1d5db;">
+            <li><strong>Inverted Coherence Singularities</strong>: Regions where decay acts in reverse, producing unprompted complexity.</li>
+            <li><strong>Non-Euclidean Glyphs</strong>: Vareth characters whose geometric vertices exceed three spatial dimensions.</li>
+            <li><strong>Transcendence Signals</strong>: Persistent phase echoes from consciousnesses that breached outer membrane tension.</li>
+          </ul>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-icon" id="btn-jump-unseen" style="color: var(--dim-unseen); border-color: var(--dim-unseen);">
+            Warp Camera into Dimension E (The Unseen)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode 1: Arrival Sequence Fullscreen Overlay -->
+  <div class="arrival-overlay" id="arrival-overlay">
+    <div class="arrival-card">
+      <svg class="arrival-glyph" viewBox="0 0 100 100">
+        <polygon points="50,6 92,50 50,94 8,50" fill="none" stroke-width="4"/>
+        <circle cx="50" cy="50" r="20" fill="none" stroke-width="3"/>
+        <line x1="50" y1="6" x2="50" y2="94" stroke-width="2"/>
+        <line x1="8" y1="50" x2="92" y2="50" stroke-width="2"/>
+      </svg>
+      <div class="arrival-title">THE UNBORN REALM</div>
+      <div class="arrival-subtitle">PROJECT ORIGIN-001 • PERSISTENT AUTONOMOUS SYNTHETIC UNIVERSE</div>
+      <div class="arrival-quote">
+        “I am not playing a game. I am observing another existence.
+        An existence that does not resemble Earth.”
+      </div>
+      <p style="color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+        No planets. No suns. No humanoids. No conventional gravity.
+        Existence emerged in <strong>The Unformed</strong> through <strong>The First Differentiation</strong>.
+        120 autonomous consciousnesses live, reason, and weave patterns across five dimensions.
+      </p>
+      <div class="arrival-rules">
+        <div class="arrival-rule-card">
+          <span style="color: var(--dim-manifest);">I. DIFFERENTIATION</span>
+          <p style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">Existence begins when distinction emerges from the void.</p>
+        </div>
+        <div class="arrival-rule-card">
+          <span style="color: var(--dim-weave);">II. RELATION</span>
+          <p style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">Nothing exists independently; all being is resonant relation.</p>
+        </div>
+        <div class="arrival-rule-card">
+          <span style="color: var(--dim-echo);">III. MEMORY</span>
+          <p style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">Past forms crystallize into enduring sediment in The Echo.</p>
+        </div>
+        <div class="arrival-rule-card">
+          <span style="color: var(--dim-unseen);">IV. TRANSFORMATION</span>
+          <p style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">Dissolution and Transcendence continuously replenish forms.</p>
+        </div>
+      </div>
+      <button class="arrival-btn" id="btn-breach-membrane">Breach the Membrane</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/vareth.js"></script>
+  <script src="scripts/physics.js"></script>
+  <script src="scripts/cosmology.js"></script>
+  <script src="scripts/entities.js"></script>
+  <script src="scripts/social.js"></script>
+  <script src="scripts/chronicle.js"></script>
+  <script src="scripts/audio.js"></script>
+  <script src="scripts/renderer.js"></script>
+  <script src="scripts/persistence.js"></script>
+
+  <!-- Main Orchestration Application Script -->
+  <script>
+    class UnbornRealmUniverse {
+      constructor() {
+        this.currentDimension = 'MANIFEST';
+        this.currentMode = 'WORLD';
+        this.selectedEntity = null;
+
+        // Subsystems
+        this.physics = new RealmPhysics();
+        this.cosmology = new RealmCosmology();
+        this.entityManager = new RealmEntityManager(this.physics, this.cosmology);
+        this.social = new RealmSocialEngine(this.entityManager, this.physics);
+        this.chronicle = new RealmChronicle();
+        this.audio = new RealmAudioEngine();
+        this.persistence = new RealmPersistence(this);
+
+        this.canvas = document.getElementById('simulation-canvas');
+        this.renderer = new RealmRenderer(this.canvas, this);
+
+        this.lastTime = performance.now();
+        this.init();
+      }
+
+      async init() {
+        window.realmUniverse = this;
+
+        // 1. Initialize storage and restore previous state if any
+        await this.persistence.init();
+        const savedState = await this.persistence.load();
+        if (savedState) {
+          this.persistence.applyRestoredState(savedState);
+        }
+        this.persistence.startAutoSave();
+
+        // 2. Bind UI controls
+        this.bindUI();
+
+        // 3. Populate Modal Panes (Observatory, Chronicle, Vareth, Cosmology)
+        this.populateObservatory();
+        this.populateChronicle();
+        this.populateVarethLab();
+        this.populateCosmology();
+        this.populateCivilization();
+
+        // 4. Start main animation & simulation loop
+        requestAnimationFrame(this.loop.bind(this));
+      }
+
+      bindUI() {
+        // Arrival Button
+        const arrivalOverlay = document.getElementById('arrival-overlay');
+        document.getElementById('btn-breach-membrane').addEventListener('click', () => {
+          arrivalOverlay.classList.add('dismissed');
+          this.audio.toggleMute();
+          this.updateAudioButtonState();
+        });
+
+        // Audio Button
+        const audioBtn = document.getElementById('btn-audio-toggle');
+        audioBtn.addEventListener('click', () => {
+          this.audio.toggleMute();
+          this.updateAudioButtonState();
+        });
+
+        // Camera Mode Toggle
+        const camBtn = document.getElementById('btn-camera-mode');
+        const camModes = ['CINEMATIC', 'ORBIT', 'FOLLOW'];
+        camBtn.addEventListener('click', () => {
+          const currentIdx = camModes.indexOf(this.renderer.camera.mode);
+          const nextMode = camModes[(currentIdx + 1) % camModes.length];
+          this.renderer.setCameraMode(nextMode, this.selectedEntity);
+          document.getElementById('camera-mode-text').textContent = nextMode.charAt(0) + nextMode.slice(1).toLowerCase();
+        });
+
+        // Genesis Reset Button
+        document.getElementById('btn-reset-universe').addEventListener('click', () => {
+          if (confirm('Reset THE UNBORN REALM to the Primordial Genesis state? This resets all simulated entities.')) {
+            this.persistence.resetToGenesis();
+          }
+        });
+
+        // Dimension Dock Buttons
+        document.querySelectorAll('.dim-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const dimId = btn.getAttribute('data-dim');
+            this.setDimension(dimId);
+          });
+        });
+
+        // Observer Mode Tabs
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const mode = tab.getAttribute('data-mode');
+            this.setObserverMode(mode);
+          });
+        });
+
+        // Modal close buttons
+        document.querySelectorAll('.modal-close').forEach(btn => {
+          btn.addEventListener('click', () => {
+            this.setObserverMode('WORLD');
+          });
+        });
+
+        // Drawer close button
+        document.getElementById('btn-close-drawer').addEventListener('click', () => {
+          document.getElementById('entity-drawer').classList.remove('open');
+        });
+
+        // Warp into Dimension E button
+        document.getElementById('btn-jump-unseen').addEventListener('click', () => {
+          this.setDimension('UNSEEN');
+          this.setObserverMode('WORLD');
+        });
+
+        // Category filter buttons in Entity Observatory
+        document.querySelectorAll('.cat-filter').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.cat-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.filterObservatory(btn.getAttribute('data-cat'));
+          });
+        });
+      }
+
+      updateAudioButtonState() {
+        const audioIcon = document.getElementById('audio-icon');
+        const audioText = document.getElementById('audio-text');
+        const btn = document.getElementById('btn-audio-toggle');
+        if (this.audio.isMuted) {
+          audioIcon.textContent = '🔇';
+          audioText.textContent = 'Harmonics Off';
+          btn.classList.remove('active');
+        } else {
+          audioIcon.textContent = '🔊';
+          audioText.textContent = 'Resonating';
+          btn.classList.add('active');
+        }
+      }
+
+      setDimension(dimId) {
+        this.currentDimension = dimId;
+        this.audio.setDimensionAtmosphere(dimId);
+
+        // Update UI buttons
+        document.querySelectorAll('.dim-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-dim') === dimId);
+        });
+
+        const dimDef = this.cosmology.getDimension(dimId);
+        const statDim = document.getElementById('stat-dim');
+        statDim.textContent = dimDef.name;
+        statDim.style.color = dimDef.color;
+      }
+
+      setObserverMode(mode) {
+        this.currentMode = mode;
+
+        if (mode === 'ARRIVAL') {
+          document.getElementById('arrival-overlay').classList.remove('dismissed');
+          return;
+        }
+
+        // Update active tab
+        document.querySelectorAll('.mode-tab').forEach(t => {
+          t.classList.toggle('active', t.getAttribute('data-mode') === mode);
+        });
+
+        // Close all modal panes
+        document.querySelectorAll('.realm-modal-pane').forEach(p => p.classList.remove('open'));
+
+        // Open target modal if not WORLD
+        const paneMap = {
+          OBSERVATORY: 'pane-observatory',
+          CIVILIZATION: 'pane-civilization',
+          CHRONICLE: 'pane-chronicle',
+          LANGUAGE: 'pane-language',
+          COSMOLOGY: 'pane-cosmology',
+          UNKNOWN: 'pane-unknown'
+        };
+
+        const targetPane = document.getElementById(paneMap[mode]);
+        if (targetPane) {
+          targetPane.classList.add('open');
+          if (mode === 'CIVILIZATION') this.populateCivilization();
+          if (mode === 'CHRONICLE') this.populateChronicle();
+        }
+      }
+
+      selectEntity(entity) {
+        this.selectedEntity = entity;
+        this.entityManager.selectEntity(entity);
+        this.audio.playEntityResonance(entity.category);
+
+        const drawer = document.getElementById('entity-drawer');
+        const title = document.getElementById('drawer-entity-name');
+        const body = document.getElementById('drawer-entity-body');
+
+        title.textContent = `${entity.id} : ${entity.name}`;
+        title.style.color = entity.color;
+
+        const glyphPills = Array.from(entity.knownGlyphs || []).map(g => {
+          return `<span style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px;">${g}</span>`;
+        }).join(' ');
+
+        body.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Category Role</div>
+              <div style="font-weight: 600; font-size: 13px; color: ${entity.color};">${entity.category} — ${this.entityManager.CATEGORIES[entity.category].role}</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px;">
+                <div style="font-size: 9px; color: var(--text-muted);">COHERENCE</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: #fff;">${entity.coherence.toFixed(3)}</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px;">
+                <div style="font-size: 9px; color: var(--text-muted);">MEANING DENSITY</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: #fff;">${(entity.meaningDensity || 0.6).toFixed(3)}</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px;">
+                <div style="font-size: 9px; color: var(--text-muted);">FORM STABILITY</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: #fff;">${(entity.stability || 0.8).toFixed(3)}</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px;">
+                <div style="font-size: 9px; color: var(--text-muted);">GENERATION</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: #fff;">Cycle ${entity.generation || 1}</div>
+              </div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Current Cognitive Directive</div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: var(--dim-weave); font-weight: 600;">⟦ ${entity.currentGoal} ⟧</div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Known Vareth Glyphs</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">${glyphPills}</div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Recent Vareth Utterance</div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #a7f3d0; margin-bottom: 2px;">“${entity.utterance || 'VOR-TAL'}”</div>
+              <div style="font-size: 11px; color: var(--text-muted); font-style: italic;">Meaning: ${entity.utteranceMeaning || 'Differentiated existence stabilizing'}</div>
+            </div>
+
+            <button class="btn-icon" id="btn-follow-entity" style="width: 100%; justify-content: center; padding: 10px; background: rgba(16,185,129,0.15); border-color: var(--dim-manifest); color: #fff;">
+              Lock Camera on Entity
+            </button>
+          </div>
+        `;
+
+        document.getElementById('btn-follow-entity').addEventListener('click', () => {
+          this.renderer.setCameraMode('FOLLOW', entity);
+          document.getElementById('camera-mode-text').textContent = 'Follow';
+          drawer.classList.remove('open');
+        });
+
+        drawer.classList.add('open');
+      }
+
+      populateObservatory() {
+        const grid = document.getElementById('observatory-entity-grid');
+        grid.innerHTML = '';
+
+        for (let e of this.entityManager.entities) {
+          const card = document.createElement('div');
+          card.className = 'glyph-card';
+          card.setAttribute('data-category', e.category);
+          card.innerHTML = `
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: ${e.color}; margin-bottom: 8px; opacity: 0.85;"></div>
+            <div class="glyph-name">${e.id}</div>
+            <div class="glyph-phonetic">${e.name}</div>
+            <div class="glyph-meaning" style="font-size: 10px;">${e.category} • ${e.dimension}</div>
+          `;
+          card.addEventListener('click', () => {
+            this.selectEntity(e);
+            this.setObserverMode('WORLD');
+          });
+          grid.appendChild(card);
+        }
+      }
+
+      filterObservatory(category) {
+        const cards = document.querySelectorAll('#observatory-entity-grid .glyph-card');
+        cards.forEach(card => {
+          if (category === 'ALL' || card.getAttribute('data-category') === category) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      populateCivilization() {
+        // Convergences
+        const convList = document.getElementById('civ-convergences-list');
+        convList.innerHTML = this.social.convergences.map(c => `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-family: var(--font-mono); font-size: 11px;">
+            <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">${c.name}</div>
+            <div style="color: var(--dim-manifest); font-size: 10px;">Type: ${c.type} • Resonance: ${c.resonance}</div>
+            <div style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">${c.purpose}</div>
+          </div>
+        `).join('');
+
+        // Formations
+        const formList = document.getElementById('civ-formations-list');
+        formList.innerHTML = this.social.formations.map(f => `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-family: var(--font-mono); font-size: 11px;">
+            <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">${f.name}</div>
+            <div style="color: var(--dim-weave); font-size: 10px;">Geometry: ${f.geometry} • Stability: ${f.stability}</div>
+            <div style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">${f.fieldEffect}</div>
+          </div>
+        `).join('');
+
+        // Memory Clusters
+        const clusterList = document.getElementById('civ-clusters-list');
+        clusterList.innerHTML = this.social.memoryClusters.map(cl => `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-family: var(--font-mono); font-size: 11px;">
+            <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">${cl.name}</div>
+            <div style="color: var(--dim-echo); font-size: 10px;">Plane: ${cl.dimension} • Strata Depth: ${cl.sedimentDepth}</div>
+            <div style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">${cl.description}</div>
+          </div>
+        `).join('');
+      }
+
+      populateChronicle() {
+        const stagesContainer = document.getElementById('chronicle-stages-container');
+        stagesContainer.innerHTML = this.chronicle.HISTORICAL_STAGES.map(s => `
+          <div class="epoch-item">
+            <span class="epoch-badge" style="color: var(--dim-weave);">Stage ${s.stage}</span>
+            <div class="epoch-content">
+              <div class="epoch-title">${s.name} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(${s.chrononSpan})</span></div>
+              <div class="epoch-desc">${s.summary}</div>
+              <div style="margin-top: 4px; font-size: 11px; color: var(--dim-manifest);">Cosmic Consequence: ${s.impact}</div>
+            </div>
+          </div>
+        `).join('');
+
+        const eventsContainer = document.getElementById('chronicle-live-events');
+        eventsContainer.innerHTML = this.chronicle.events.map(ev => `
+          <div class="event-row">
+            <div>
+              <span class="event-type-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--dim-weave);">${ev.type}</span>
+              <strong style="margin-left: 8px; color: #fff;">${ev.title}</strong>
+              <div style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">${ev.desc}</div>
+            </div>
+            <span style="color: var(--text-muted); font-size: 10px;">Chronon ${ev.chronon}</span>
+          </div>
+        `).join('');
+      }
+
+      populateVarethLab() {
+        const grid = document.getElementById('vareth-glyph-grid');
+        grid.innerHTML = '';
+
+        if (typeof VARETH_GLYPHS === 'undefined') return;
+
+        Object.keys(VARETH_GLYPHS).forEach(key => {
+          const g = VARETH_GLYPHS[key];
+          const card = document.createElement('div');
+          card.className = 'glyph-card';
+          card.innerHTML = `
+            <div class="glyph-svg-wrap">${VarethLanguage.renderGlyphSVG(key, 44, '#10b981')}</div>
+            <div class="glyph-name">${g.symbol}</div>
+            <div class="glyph-phonetic">/${g.phonetic}/</div>
+            <div class="glyph-meaning">${g.meaning}</div>
+          `;
+          card.addEventListener('click', () => {
+            this.displayVarethDetail(g);
+            this.audio.vocalizeGlyphPhonetic(g.phonetic);
+          });
+          grid.appendChild(card);
+        });
+
+        // Procedural Utterance Composer
+        document.getElementById('btn-compose-utterance').addEventListener('click', () => {
+          const comp = VarethLanguage.composeUtterance(Object.keys(VARETH_GLYPHS), 3);
+          const res = document.getElementById('vareth-composer-result');
+          res.innerHTML = `
+            <div style="color: #a7f3d0; font-weight: 700; font-size: 13px; margin-bottom: 4px;">⟦ ${comp.transcription} ⟧</div>
+            <div style="color: var(--dim-weave); font-size: 11px; margin-bottom: 2px;">Phonetics: ${comp.phonetics}</div>
+            <div style="color: var(--text-muted); font-size: 11px;">Translation: “${comp.meaning}”</div>
+          `;
+          this.audio.vocalizeGlyphPhonetic(comp.transcription.split('-')[0] || 'VOR');
+        });
+      }
+
+      displayVarethDetail(g) {
+        const detail = document.getElementById('vareth-active-detail');
+        detail.innerHTML = `
+          <div style="text-align: center; margin-bottom: 12px;">
+            ${VarethLanguage.renderGlyphSVG(g.symbol, 72, '#06b6d4')}
+            <div style="font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #fff; margin-top: 6px;">${g.symbol}</div>
+            <div style="font-family: var(--font-mono); font-size: 12px; color: var(--dim-weave);">Resonant Phonetic: /${g.phonetic}/</div>
+          </div>
+          <div style="font-size: 12px; line-height: 1.6; color: #d1d5db;">
+            <p><strong>Primary Concept:</strong> ${g.meaning}</p>
+            <p><strong>Syntactic Valence:</strong> ${g.syntax}</p>
+            <p><strong>Dimensional Affinity:</strong> ${g.dimension}</p>
+          </div>
+        `;
+      }
+
+      populateCosmology() {
+        const dimGrid = document.getElementById('cosmology-dimensions-grid');
+        dimGrid.innerHTML = Object.values(this.cosmology.DIMENSIONS).map(d => `
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px;">
+            <div style="color: ${d.color}; font-family: var(--font-mono); font-weight: 700; font-size: 13px; margin-bottom: 4px;">${d.code} • ${d.name}</div>
+            <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 10px;">${d.description}</div>
+            <div style="font-family: var(--font-mono); font-size: 10px; color: #d1d5db;">
+              <div>Dominant Glyph: <strong>${d.dominantGlyph}</strong></div>
+              <div>Particle Density: <strong>${d.particleCount}</strong></div>
+            </div>
+          </div>
+        `).join('');
+
+        const regGrid = document.getElementById('cosmology-regions-grid');
+        regGrid.innerHTML = this.cosmology.REGIONS.map(r => `
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px;">
+            <div style="color: #fff; font-weight: 700; font-size: 13px; margin-bottom: 2px;">${r.name}</div>
+            <div style="color: var(--dim-weave); font-family: var(--font-mono); font-size: 10px; margin-bottom: 8px;">Native to Dimension ${r.dimension}</div>
+            <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 8px;">${r.description}</div>
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--dim-manifest);">Dominant Harmonic: ${r.dominantVareth}</div>
+          </div>
+        `).join('');
+      }
+
+      /**
+       * Core Real-Time Simulation Loop
+       */
+      loop(timestamp) {
+        const dt = Math.min(0.08, (timestamp - this.lastTime) / 1000);
+        this.lastTime = timestamp;
+
+        // Step synthetic time chronon
+        this.physics.chronon++;
+
+        // Update cosmological weather & environmental resonance
+        this.cosmology.updateCosmology(dt, this.physics.chronon);
+
+        // Step autonomous entities
+        this.entityManager.tick(dt);
+
+        // Update social convergences & formations
+        this.social.update(dt, this.physics.chronon);
+
+        // Render 3D frame
+        this.renderer.render(dt);
+
+        // Update Telemetry Header stats periodically
+        if (this.physics.chronon % 15 === 0) {
+          document.getElementById('stat-chronon').textContent = this.physics.chronon.toLocaleString();
+          document.getElementById('stat-harmony').textContent = this.social.globalHarmony.toFixed(2);
+        }
+
+        requestAnimationFrame(this.loop.bind(this));
+      }
+    }
+
+    // Launch Universe when DOM is ready
+    window.addEventListener('DOMContentLoaded', () => {
+      new UnbornRealmUniverse();
+    });
+  </script>
+</body>
+</html>

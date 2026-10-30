@@ -22,8 +22,9 @@ MANO-LAB focuses on high-utility tools and timeless arcade games:
 ### 🎙️ Flagship Application
 1. **Audio Transcription Studio (`apps/audio-transcription/`):** Enterprise-grade multilingual speech-to-text studio with automatic speaker diarization, bilingual Indic script preservation (Hindi, Bengali, Maithili), and instant dossier generation in Word (`.docx`), PDF, and Markdown.
 
-### 🌌 Autonomous Virtual Universe
-2. **AXIOMA (`apps/axioma/`):** An autonomous virtual civilization that never existed. Free from carbon, gravity, sunlight, and mortality. Features self-organizing conscious polyhedra that graze on quantum entropy, converse via moiré light interference, synthesize new life through harmonic resonance, and erect celestial spires across a continuous tensor lattice. Complete with live thought telemetry feed, entity inspector, and God-mode creator powers.
+### 🌌 Autonomous Virtual Universes
+2. **THE UNBORN REALM (`apps/unborn-realm/`):** PROJECT ORIGIN-001. A persistent autonomous synthetic universe built on the philosophy of creating an existence that does not resemble Earth. No planets, stars, suns, or biological life. Features non-Newtonian physics (Coherence, Resonance, Meaning Density, Transition Pressure), 120 autonomous consciousnesses (Auraliths, Veskari, Oroth, Nemori, Ilyr), an original 42-glyph geometric language (**Vareth**), and 8 observer modes across 5 dimensions (The Unformed, The Weave, The Manifest, The Echo, The Unseen).
+3. **AXIOMA (`apps/axioma/`):** An autonomous virtual civilization that never existed. Free from carbon, gravity, sunlight, and mortality. Features self-organizing conscious polyhedra that graze on quantum entropy, converse via moiré light interference, synthesize new life through harmonic resonance, and erect celestial spires across a continuous tensor lattice. Complete with live thought telemetry feed, entity inspector, and God-mode creator powers.
 
 ### ✨ Original Art Form (Born from Nothing)
 3. **Aether-Weave (`apps/aether-weave/`):** An original living art medium. Paint not with static pigment, but with multi-dimensional vibrating ribbons of refractive light that breathe, entangle with magnetic gossamer bridges, shift with thin-film optical dispersion, sing with 432Hz crystalline acoustic resonance, and export to pristine 4K wallpapers.

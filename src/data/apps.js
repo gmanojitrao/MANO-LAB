@@ -19,6 +19,20 @@ const MANO_APPS = [
     badge: "Flagship Application"
   },
   {
+    id: "unborn-realm",
+    name: "THE UNBORN REALM",
+    tagline: "Persistent autonomous synthetic universe (ORIGIN-001) with non-Earth existence",
+    description: "An existence that does not resemble Earth: no planets, suns, or biological life. Governed by non-Newtonian physics (Coherence, Resonance, Density of Meaning, Transition Pressure), 120 autonomous consciousnesses (Auraliths, Veskari, Oroth, Nemori, Ilyr), an original 42-glyph language (Vareth), and 8 observer modes spanning five dimensions.",
+    category: "Virtual Cosmos",
+    route: "apps/unborn-realm/",
+    status: "Available",
+    featured: true,
+    emoji: "✦",
+    accentColor: "#10b981",
+    tags: ["Synthetic Universe", "ORIGIN-001", "Vareth Language", "5 Dimensions", "Persistent"],
+    badge: "Synthetic Universe"
+  },
+  {
     id: "axioma",
     name: "AXIOMA: The Autonomous Civilization",
     tagline: "Enter a non-biological virtual universe where sentient geometric beings live and evolve",
