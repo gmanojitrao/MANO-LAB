@@ -25,11 +25,14 @@ MANO-LAB focuses on high-utility tools and timeless arcade games:
 ### 🎧 Acoustic Focus
 2. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
 
+### 🏎️ Racing & Typing Competition
+3. **Turbo Typist (`apps/turbo-typist/`):** High-speed typing racer on a 3D perspective speedway track. Accelerate your GT supercar by typing fast and accurately, trigger nitro exhaust flames on streaks, overtake AI rivals, and claim the championship podium with live WPM telemetry.
+
 ### 🕹️ Classic Arcade Games
-3. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
-4. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
-5. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
-6. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
+4. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
+5. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
+6. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
+7. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
 
 ---
 

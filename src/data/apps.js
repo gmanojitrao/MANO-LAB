@@ -33,6 +33,20 @@ const MANO_APPS = [
     badge: "Acoustic Tool"
   },
   {
+    id: "turbo-typist",
+    name: "Turbo Typist",
+    tagline: "High-speed typing competition on a 3D speedway track",
+    description: "Floor the gas pedal with your keyboard! Type with speed and accuracy to accelerate your GT supercar, ignite nitro flames, overtake AI rivals, and claim the championship podium.",
+    category: "Classic Games",
+    route: "apps/turbo-typist/",
+    status: "Available",
+    featured: true,
+    emoji: "🏎️",
+    accentColor: "#ef4444",
+    tags: ["Typing Racer", "WPM Speedometer", "Nitro Boost", "Championship"],
+    badge: "New Racing Game"
+  },
+  {
     id: "snake",
     name: "Classic Snake",
     tagline: "The iconic retro grid arcade game",
