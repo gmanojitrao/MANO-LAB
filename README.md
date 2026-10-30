@@ -15,30 +15,21 @@ MANO-LAB is built on a **static-first, modular micro-app framework** deployable 
 
 ---
 
-## 🔬 Applications & Interactive Wonders (13 Online)
+## 🔬 Curated Application Suite
 
-MANO-LAB includes a diverse suite of productivity tools, audio experiments, creative studios, meditative wonders, and retro arcade games:
+MANO-LAB focuses on high-utility tools and timeless arcade games:
 
-### ✨ Featured Kinetic Wonder
-1. **The Wheel of Time (`apps/zen-sand/`):** Meditative kinetic sand garden inspired by the law of patience. Carve scars, scoop craters, or pour sand—the rotating brass rake arm of time gently smooths every wound, recarving sacred concentric ripples round by round. Complete with procedural sand crunch audio, normal-mapped 3D lighting, and Tibetan singing bowl resonance.
+### 🎙️ Flagship Application
+1. **Audio Transcription Studio (`apps/audio-transcription/`):** Enterprise-grade multilingual speech-to-text studio with automatic speaker diarization, bilingual Indic script preservation (Hindi, Bengali, Maithili), and instant dossier generation in Word (`.docx`), PDF, and Markdown.
 
-### 🎮 Arcade & Games
-2. **Cyber Snake (`apps/cyber-snake/`):** 60FPS neon snake arcade with food particle bursts, speed combos, on-screen mobile D-pad, and high-score memory.
-3. **Neon Breakout (`apps/neon-breakout/`):** Brick breaker with responsive paddle, ball motion trails, bouncy particle physics, and retro sound FX.
-4. **2048 Neon (`apps/game-2048/`):** Glowing neon sliding number puzzle with swipe gestures, keyboard arrow controls, merge audio, and best score tracking.
-5. **Cyber Flap (`apps/cyber-flap/`):** Addictive 1-tap reaction flyer. Hit Space or tap to fire thrusters, dodge cyber gates, and set new high scores.
+### 🎧 Acoustic Focus
+2. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
 
-### 🎙️ Audio & Productivity
-6. **Audio Transcription Studio (`apps/audio-transcription/`):** Flagship AI speech-to-text studio with speaker diarization, bilingual native script translation, and PDF/DOCX dossier export.
-7. **SynthPad (`apps/synth-pad/`):** Interactive musical keyboard (A-K keys) and 4 punchy drum pads with live 60FPS oscilloscope waveforms.
-8. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with Pomodoro focus timer.
-9. **Markdown Studio (`apps/markdown-studio/`):** Split-view distraction-free markdown note editor with live preview, word counter, and `.md` file export.
-
-### 🛠️ Creative & Utilities
-10. **Palette Studio (`apps/palette-studio/`):** Spacebar-shuffle harmonic color palette generator with hex locking and click-to-copy.
-11. **Image Forge (`apps/image-forge/`):** 100% private client-side image resizer, crop, and WebP/PNG/JPEG compressor.
-12. **QR Studio (`apps/qr-studio/`):** Vector QR code designer with instant PNG export.
-13. **Text Morph (`apps/text-tools/`):** JSON beautifier, line deduplicator, Base64 encoder/decoder, and text transformation utility.
+### 🕹️ Classic Arcade Games
+3. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
+4. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
+5. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
+6. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
 
 ---
 
