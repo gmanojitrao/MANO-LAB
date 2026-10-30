@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AXIOMA — Autonomous Virtual Civilization — MANO-LAB</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><polygon points=%2250,5 95,25 95,75 50,95 5,75 5,25%22 fill=%22none%22 stroke=%22%2338bdf8%22 stroke-width=%228%22/><circle cx=%2250%22 cy=%2250%22 r=%2220%22 fill=%22%23c084fc%22/></svg>">
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #030408;
+      --card-bg: rgba(9, 13, 24, 0.85);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --accent-cyan: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-gold: #fbbf24;
+      --accent-pink: #f43f5e;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+    }
+
+    /* Simulation Canvas */
+    #worldCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      cursor: grab;
+    }
+    #worldCanvas:active {
+      cursor: grabbing;
+    }
+
+    /* Top Celestial Bar */
+    .top-bar {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .top-bar > * {
+      pointer-events: auto;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 1rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .brand-pill:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .axioma-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(192, 132, 252, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .telemetry-pills {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      backdrop-filter: blur(16px);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .telemetry-val {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: all 0.15s;
+    }
+    .btn-icon:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+    .btn-icon.active {
+      color: #38bdf8;
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    /* Live Telemetry Feed (Subconscious Transmissions) */
+    .comm-log {
+      position: absolute;
+      bottom: 5.5rem;
+      left: 1.25rem;
+      max-width: 360px;
+      width: 90vw;
+      background: rgba(7, 10, 18, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 0.85rem 1rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .comm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--accent-cyan);
+      font-weight: 800;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.35rem;
+    }
+    .comm-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      max-height: 110px;
+      overflow: hidden;
+    }
+    .comm-item {
+      line-height: 1.4;
+      color: #cbd5e1;
+      opacity: 0.9;
+      animation: fadeIn 0.3s ease;
+    }
+    .comm-item .rune {
+      color: var(--accent-purple);
+      font-weight: 700;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 0.9; transform: translateY(0); }
+    }
+
+    /* Entity Inspector Card */
+    .entity-inspector {
+      position: absolute;
+      top: 4.5rem;
+      right: 1.25rem;
+      width: 320px;
+      background: rgba(9, 13, 24, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 20px;
+      padding: 1.25rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.15);
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: opacity 0.3s, transform 0.3s;
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .entity-inspector.hidden {
+      display: none;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .inspect-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.65rem;
+    }
+    .inspect-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .inspect-close {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .inspect-close:hover { color: #fff; }
+
+    .inspect-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+    .inspect-stat {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .stat-lbl { color: var(--text-muted); text-transform: uppercase; }
+    .stat-val { color: #fff; font-weight: 700; }
+
+    .thought-bubble {
+      background: rgba(192, 132, 252, 0.1);
+      border: 1px solid rgba(192, 132, 252, 0.3);
+      border-radius: 10px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      line-height: 1.45;
+      font-family: var(--font-mono);
+    }
+
+    /* God-Mode Creator Dock */
+    .creator-dock {
+      position: absolute;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 1rem;
+      background: rgba(8, 12, 22, 0.9);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(192, 132, 252, 0.1);
+      z-index: 20;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 95vw;
+    }
+
+    .dock-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.3rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-god {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-god:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .btn-god.active {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(192, 132, 252, 0.3));
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+    }
+
+    .speed-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    .speed-btn.active {
+      background: #1e293b;
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    /* Modal for Civilizational Lore */
+    .lore-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 10, 0.85);
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+      transition: opacity 0.3s;
+    }
+    .lore-modal.hidden { display: none; }
+
+    .lore-card {
+      background: #0d121f;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 2.25rem;
+      max-width: 620px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 50px rgba(56, 189, 248, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .lore-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .lore-desc {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+    .lore-section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .lore-sec-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+    }
+    .lore-sec-text {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .btn-close-modal {
+      align-self: flex-end;
+      padding: 0.65rem 1.5rem;
+      border-radius: 10px;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-close-modal:hover { background: #334155; }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Living Cosmos Canvas -->
+  <canvas id="worldCanvas"></canvas>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <a href="../../" class="brand-pill">
+      <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+      <span>MANO-LAB</span>
+      <span class="axioma-badge">✦ AXIOMA</span>
+    </a>
+
+    <!-- Live Civilizational Telemetry -->
+    <div class="telemetry-pills">
+      <span>EPOCH: <span id="epochVal" class="telemetry-val">IV (Resonant Age)</span></span>
+      <span>•</span>
+      <span>BEINGS: <span id="popVal" class="telemetry-val">0</span></span>
+      <span>•</span>
+      <span>SPIRES: <span id="spiresVal" class="telemetry-val">0</span></span>
+      <span>•</span>
+      <span>ENTROPY: <span id="entropyVal" class="telemetry-val" style="color: #4ade80;">Coherent</span></span>
+    </div>
+
+    <div class="top-actions">
+      <!-- Audio Resonance -->
+      <button id="btnAudio" class="btn-icon active" title="Toggle Cosmic Harmonic Resonance">
+        <i data-lucide="volume-2" style="width: 18px; height: 18px;"></i>
+      </button>
+
+      <!-- Codex / Lore Modal -->
+      <button id="btnLore" class="btn-icon" title="Codex of Axioma">
+        <i data-lucide="book-open" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Subconscious Telemetry Feed (Luminic Communications) -->
+  <div class="comm-log" id="commLog">
+    <div class="comm-header">
+      <span>LUMINIC TRANSMISSION FEED</span>
+      <span style="color: var(--accent-purple);">● LIVE SYNC</span>
+    </div>
+    <div class="comm-entries" id="commEntries">
+      <div class="comm-item">Axioma awakened. The Genesis Lattice is pulsating.</div>
+    </div>
+  </div>
+
+  <!-- Entity Inspector Card -->
+  <div class="entity-inspector hidden" id="entityInspector">
+    <div class="inspect-header">
+      <div class="inspect-title">
+        <span id="inspectRune" style="font-size: 1.3rem;">◈</span>
+        <span id="inspectName">Tensor-Being</span>
+      </div>
+      <button class="inspect-close" id="btnCloseInspect">
+        <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+      </button>
+    </div>
+
+    <div class="inspect-grid">
+      <div class="inspect-stat">
+        <span class="stat-lbl">Consciousness</span>
+        <span class="stat-val" id="statState">Harvesting</span>
+      </div>
+      <div class="inspect-stat">
+        <span class="stat-lbl">Resonance</span>
+        <span class="stat-val" id="statFreq">432.8 THz</span>
+      </div>
+      <div class="inspect-stat">
+        <span class="stat-lbl">Energy / Coherence</span>
+        <span class="stat-val" id="statEnergy">94%</span>
+      </div>
+      <div class="inspect-stat">
+        <span class="stat-lbl">Lineage Generation</span>
+        <span class="stat-val" id="statGen">Gen II</span>
+      </div>
+    </div>
+
+    <div class="thought-bubble" id="inspectThought">
+      "Aligning internal polyhedron to absorb the northern harmonic filament..."
+    </div>
+  </div>
+
+  <!-- God-Mode Creator Dock -->
+  <div class="creator-dock">
+    <!-- Divine Tools -->
+    <div class="dock-group">
+      <button class="btn-god active" data-tool="observe" title="Pan and click any entity to inspect consciousness">
+        <span>👁️</span>
+        <span>Observe</span>
+      </button>
+      <button class="btn-god" data-tool="spark" title="Click anywhere to ignite a new autonomous entity">
+        <span>✨</span>
+        <span>Seed Being</span>
+      </button>
+      <button class="btn-god" data-tool="spire" title="Erect a Resonant Spire beacon">
+        <span>🏛️</span>
+        <span>Erect Spire</span>
+      </button>
+      <button class="btn-god" data-tool="flux" title="Inject quantum entropy rain to feed beings">
+        <span>⚡</span>
+        <span>Entropy Rain</span>
+      </button>
+      <button class="btn-god" data-tool="graviton" title="Hold & drag to warp gravitational space">
+        <span>🌀</span>
+        <span>Bend Space</span>
+      </button>
+    </div>
+
+    <!-- Time Dilation -->
+    <div class="dock-group">
+      <span style="font-size: 0.72rem; color: var(--text-dim); margin: 0 0.2rem; font-family: var(--font-mono);">TIME:</span>
+      <button class="speed-btn" data-speed="0.5">0.5x</button>
+      <button class="speed-btn active" data-speed="1.0">1.0x</button>
+      <button class="speed-btn" data-speed="2.5">2.5x</button>
+      <button class="speed-btn" data-speed="5.0">5.0x</button>
+    </div>
+  </div>
+
+  <!-- Lore / Civilization Codex Modal -->
+  <div class="lore-modal hidden" id="loreModal">
+    <div class="lore-card">
+      <h2 class="lore-title">CODEX OF AXIOMA: THE UNSEEN REALM</h2>
+      <p class="lore-desc">
+        A civilization that never existed in our reality—free from carbon, gravity, sunlight, and mortality. Here is how their reality operates:
+      </p>
+
+      <div class="lore-section">
+        <div class="lore-sec-title">1. The Substrate (No Earth, No Space)</div>
+        <div class="lore-sec-text">
+          Space in Axioma is a <strong>Harmonic Tensor Lattice</strong>. Matter does not consist of atoms, but standing electromagnetic interference nodes. Physical distance is measured in mathematical phase angles rather than meters.
+        </div>
+      </div>
+
+      <div class="lore-section">
+        <div class="lore-sec-title">2. The Inhabitants: The Polytopes</div>
+        <div class="lore-sec-text">
+          Sentient self-assembling polyhedra. They possess internal consciousness matrices, oscillating at unique personal frequencies. They do not possess eyes or ears; they perceive the world through geometric curvature.
+        </div>
+      </div>
+
+      <div class="lore-section">
+        <div class="lore-sec-title">3. Metabolism: Consumption of Entropy</div>
+        <div class="lore-sec-text">
+          Instead of consuming biological food, they graze on <strong>Quantum Noise</strong>. They seek unstable, discordant areas in the lattice, vibrate synchronously against them, and convert chaos into crystalline harmony, recharging their core.
+        </div>
+      </div>
+
+      <div class="lore-section">
+        <div class="lore-sec-title">4. Language: Interference Weaving</div>
+        <div class="lore-sec-text">
+          Instead of speech or text, when two entities meet, they emit intersecting coherent light beams. The resulting moiré interference pattern instantly transmits thoughts, historical memory tensors, and emotional resonance.
+        </div>
+      </div>
+
+      <div class="lore-section">
+        <div class="lore-sec-title">5. Genesis & Reproduction: Harmonic Synthesis</div>
+        <div class="lore-sec-text">
+          When three or more entities achieve perfect harmonic resonance, their frequencies synthesize into a standing acoustic singularity. A nascent entity crystallizes into existence with hybridized memories from its progenitors.
+        </div>
+      </div>
+
+      <button class="btn-close-modal" id="btnCloseLore">Close Codex</button>
+    </div>
+  </div>
+
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+
+    // =========================================================================
+    // 1. Procedural WebAudio Resonance (Cosmic Chord Drone & Chimes)
+    // =========================================================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq = 432, pan = 0, duration = 1.6, type = 'sine', vol = 0.06) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.99, now + duration);
+
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        if (panner) {
+          panner.pan.setValueAtTime(Math.max(-0.8, Math.min(0.8, pan)), now);
+          osc.connect(panner);
+          panner.connect(gain);
+        } else {
+          osc.connect(gain);
+        }
+
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      } catch (e) {}
+    }
+
+    const btnAudio = document.getElementById('btnAudio');
+    btnAudio.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      btnAudio.classList.toggle('active', soundEnabled);
+      if (soundEnabled) playTone(528, 0, 1.2, 'triangle', 0.08);
+    });
+
+    // =========================================================================
+    // 2. Telemetry Log Feed
+    // =========================================================================
+    const commEntries = document.getElementById('commEntries');
+    function logComm(rune, text) {
+      const item = document.createElement('div');
+      item.className = 'comm-item';
+      item.innerHTML = `<span class="rune">${rune}</span> ${text}`;
+      commEntries.prepend(item);
+      if (commEntries.children.length > 5) {
+        commEntries.removeChild(commEntries.lastChild);
+      }
+    }
+
+    // =========================================================================
+    // 3. Autonomous Civilizational Engine (Creatures, Spires, Entropy)
+    // =========================================================================
+    const canvas = document.getElementById('worldCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let W = 0, H = 0, DPR = 1;
+    function resize() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      ctx.scale(DPR, DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let camera = { x: 0, y: 0, zoom: 1.0 };
+    let timeScale = 1.0;
+    let activeTool = 'observe';
+
+    // Alien glyph runes
+    const RUNES = ['◈', '✦', '∿', '☲', '⏣', '⌬', '⚝', '⨀', '⟐', '⬡'];
+    const THOUGHTS = [
+      "Calculating phase alignment with Central Lattice Heart...",
+      "Harvesting local entropy node... resonance ascending.",
+      "Emitting coherent interference tensor to neighboring consciousness.",
+      "Harmonizing geometric vertices with Sector VII.",
+      "Constructing resonance anchor in the non-Euclidean void.",
+      "Synthesizing memory chord from progenitor generation.",
+      "Detecting anomalous consciousness fluctuations in the ether."
+    ];
+
+    // Entity Class (The Polytope Sentients)
+    class Polytope {
+      constructor(x, y, gen = 1) {
+        this.id = Math.floor(Math.random() * 9000 + 1000);
+        this.rune = RUNES[Math.floor(Math.random() * RUNES.length)];
+        this.name = `${this.rune}-Vex-${this.id}`;
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.gen = gen;
+        this.energy = 80 + Math.random() * 20;
+        this.frequency = (400 + Math.random() * 300).toFixed(1);
+        this.state = 'Wandering'; // Wandering, Harvesting, Communing, Building
+        this.thought = THOUGHTS[Math.floor(Math.random() * THOUGHTS.length)];
+        this.thoughtTimer = Math.random() * 200 + 100;
+        this.sides = Math.floor(Math.random() * 4) + 4; // 4 to 7 vertices (Octahedron, Dodecahedron)
+        this.radius = 16 + (gen > 2 ? 4 : 0);
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotSpeed = (Math.random() - 0.5) * 0.03;
+        this.color = ['#38bdf8', '#c084fc', '#fbbf24', '#f43f5e', '#34d399'][Math.floor(Math.random() * 5)];
+        this.target = null;
+        this.age = 0;
+      }
+
+      update(dt) {
+        this.age += dt;
+        this.rotation += this.rotSpeed * dt;
+
+        // Energy decay & metabolism
+        this.energy -= 0.02 * dt;
+        if (this.energy < 30 && this.state !== 'Harvesting') {
+          this.state = 'Harvesting';
+          this.findNearestEntropy();
+        }
+
+        // Thought cycle
+        this.thoughtTimer -= dt;
+        if (this.thoughtTimer <= 0) {
+          this.thoughtTimer = Math.random() * 260 + 140;
+          this.thought = THOUGHTS[Math.floor(Math.random() * THOUGHTS.length)];
+          if (Math.random() < 0.25) {
+            logComm(this.rune, `[${this.name}] ${this.thought}`);
+          }
+        }
+
+        // Behavior steering
+        if (this.state === 'Harvesting' && this.target) {
+          const dx = this.target.x - this.x;
+          const dy = this.target.y - this.y;
+          const d = Math.hypot(dx, dy);
+          if (d < 20) {
+            // Absorb entropy node
+            this.energy = Math.min(100, this.energy + 25);
+            this.target.consumed = true;
+            this.target = null;
+            this.state = 'Wandering';
+            playTone(parseFloat(this.frequency), (this.x - W / 2) / (W / 2), 0.8, 'sine', 0.04);
+          } else {
+            this.vx += (dx / d) * 0.08 * dt;
+            this.vy += (dy / d) * 0.08 * dt;
+          }
+        } else {
+          // Autonomous wander with boundary attraction
+          if (Math.random() < 0.02) {
+            this.vx += (Math.random() - 0.5) * 0.8;
+            this.vy += (Math.random() - 0.5) * 0.8;
+          }
+
+          // Gravitate gently toward central genesis heart
+          const toCenterX = (W / 2) - this.x;
+          const toCenterY = (H / 2) - this.y;
+          const distCenter = Math.hypot(toCenterX, toCenterY);
+          if (distCenter > 600) {
+            this.vx += (toCenterX / distCenter) * 0.06 * dt;
+            this.vy += (toCenterY / distCenter) * 0.06 * dt;
+          }
+        }
+
+        // Speed limit
+        const spd = Math.hypot(this.vx, this.vy);
+        const maxSpd = 2.2;
+        if (spd > maxSpd) {
+          this.vx = (this.vx / spd) * maxSpd;
+          this.vy = (this.vy / spd) * maxSpd;
+        }
+
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+      }
+
+      findNearestEntropy() {
+        let bestDist = Infinity;
+        let chosen = null;
+        entropyNodes.forEach(node => {
+          if (!node.consumed) {
+            const d = Math.hypot(node.x - this.x, node.y - this.y);
+            if (d < bestDist) {
+              bestDist = d;
+              chosen = node;
+            }
+          }
+        });
+        this.target = chosen;
+      }
+
+      draw(context, isSelected = false) {
+        context.save();
+        context.translate(this.x, this.y);
+
+        // Core glow aura
+        const glowRad = isSelected ? this.radius * 2.8 : this.radius * 1.8;
+        const grad = context.createRadialGradient(0, 0, 2, 0, 0, glowRad);
+        grad.addColorStop(0, this.color);
+        grad.addColorStop(0.5, this.color + '44');
+        grad.addColorStop(1, 'transparent');
+        context.fillStyle = grad;
+        context.beginPath();
+        context.arc(0, 0, glowRad, 0, Math.PI * 2);
+        context.fill();
+
+        // Pulsing geometric polyhedron vertices
+        context.rotate(this.rotation);
+        context.beginPath();
+        for (let i = 0; i < this.sides; i++) {
+          const a = (i / this.sides) * Math.PI * 2;
+          const r = this.radius * (1 + Math.sin(this.age * 3 + i) * 0.15);
+          const px = Math.cos(a) * r;
+          const py = Math.sin(a) * r;
+          if (i === 0) context.moveTo(px, py);
+          else context.lineTo(px, py);
+        }
+        context.closePath();
+        context.strokeStyle = isSelected ? '#ffffff' : this.color;
+        context.lineWidth = isSelected ? 2.5 : 1.6;
+        context.stroke();
+
+        // Inner nested polyhedron (Higher-dimensional geometry)
+        context.rotate(-this.rotation * 1.8);
+        context.beginPath();
+        for (let i = 0; i < this.sides; i++) {
+          const a = (i / this.sides) * Math.PI * 2;
+          const r = this.radius * 0.5;
+          const px = Math.cos(a) * r;
+          const py = Math.sin(a) * r;
+          if (i === 0) context.moveTo(px, py);
+          else context.lineTo(px, py);
+        }
+        context.closePath();
+        context.strokeStyle = '#ffffff';
+        context.lineWidth = 1;
+        context.stroke();
+
+        // Center Singularity Core
+        context.beginPath();
+        context.arc(0, 0, 3, 0, Math.PI * 2);
+        context.fillStyle = '#ffffff';
+        context.fill();
+
+        // Glyph Rune Overhead
+        context.restore();
+        context.save();
+        context.font = '10px JetBrains Mono';
+        context.textAlign = 'center';
+        context.fillStyle = isSelected ? '#38bdf8' : 'rgba(255,255,255,0.6)';
+        context.fillText(this.rune, this.x, this.y - this.radius - 8);
+        context.restore();
+      }
+    }
+
+    // Resonant Spire Class (Monolith Architecture)
+    class ResonantSpire {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.height = 70;
+        this.tier = 1;
+        this.resonancePulse = 0;
+        this.color = '#38bdf8';
+      }
+
+      update(dt) {
+        this.resonancePulse += 0.04 * dt;
+      }
+
+      draw(context) {
+        context.save();
+        context.translate(this.x, this.y);
+
+        // Ground anchor rings
+        context.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        context.lineWidth = 1.5;
+        context.beginPath();
+        context.ellipse(0, 0, 35, 12, 0, 0, Math.PI * 2);
+        context.stroke();
+
+        // Spire beacon beam
+        const grad = context.createLinearGradient(0, 0, 0, -this.height);
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+        grad.addColorStop(1, 'transparent');
+        context.strokeStyle = grad;
+        context.lineWidth = 3;
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(0, -this.height);
+        context.stroke();
+
+        // Floating Diamond Cap
+        const floatY = -this.height - Math.sin(this.resonancePulse) * 8;
+        context.fillStyle = '#c084fc';
+        context.shadowColor = '#38bdf8';
+        context.shadowBlur = 15;
+        context.beginPath();
+        context.moveTo(0, floatY - 14);
+        context.lineTo(9, floatY);
+        context.lineTo(0, floatY + 14);
+        context.lineTo(-9, floatY);
+        context.closePath();
+        context.fill();
+        context.shadowBlur = 0;
+
+        context.restore();
+      }
+    }
+
+    // Entropy Node (The Food of Axioma)
+    class EntropyNode {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.consumed = false;
+        this.pulse = Math.random() * Math.PI * 2;
+      }
+
+      update(dt) {
+        this.pulse += 0.05 * dt;
+      }
+
+      draw(context) {
+        if (this.consumed) return;
+        const rad = 4 + Math.sin(this.pulse) * 2;
+        context.beginPath();
+        context.arc(this.x, this.y, rad, 0, Math.PI * 2);
+        context.fillStyle = '#34d399';
+        context.shadowColor = '#34d399';
+        context.shadowBlur = 8;
+        context.fill();
+        context.shadowBlur = 0;
+      }
+    }
+
+    // Collections
+    let entities = [];
+    let spires = [];
+    let entropyNodes = [];
+    let selectedEntity = null;
+
+    // Initialize initial civilization state
+    function initCivilization() {
+      entities = [];
+      spires = [];
+      entropyNodes = [];
+
+      // Central Spires of Harmony
+      spires.push(new ResonantSpire(W / 2, H / 2));
+      spires.push(new ResonantSpire(W / 2 - 240, H / 2 - 120));
+      spires.push(new ResonantSpire(W / 2 + 240, H / 2 + 120));
+
+      // Initial beings
+      for (let i = 0; i < 18; i++) {
+        const angle = (i / 18) * Math.PI * 2;
+        const dist = 140 + Math.random() * 220;
+        entities.push(new Polytope(W / 2 + Math.cos(angle) * dist, H / 2 + Math.sin(angle) * dist, 1));
+      }
+
+      // Initial entropy nodes
+      for (let i = 0; i < 28; i++) {
+        entropyNodes.push(new EntropyNode(W / 2 + (Math.random() - 0.5) * 800, H / 2 + (Math.random() - 0.5) * 600));
+      }
+    }
+
+    initCivilization();
+
+    // =========================================================================
+    // 4. Communing & Harmonic Beams (Interaction between beings)
+    // =========================================================================
+    function handleInteractions(dt) {
+      // Periodic check for Communing / Moiré Beam communication
+      for (let i = 0; i < entities.length; i++) {
+        for (let j = i + 1; j < entities.length; j++) {
+          const e1 = entities[i];
+          const e2 = entities[j];
+          const dx = e2.x - e1.x;
+          const dy = e2.y - e1.y;
+          const distSq = dx * dx + dy * dy;
+
+          // Communication threshold: 140px
+          if (distSq < 19600) {
+            const dist = Math.sqrt(distSq);
+
+            // Draw coherent communication laser braid
+            ctx.save();
+            ctx.strokeStyle = `rgba(192, 132, 252, ${((1 - dist / 140) * 0.45)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(e1.x, e1.y);
+            ctx.lineTo(e2.x, e2.y);
+            ctx.stroke();
+
+            // Moiré interference ripple at midpoint
+            const mx = (e1.x + e2.x) / 2;
+            const my = (e1.y + e2.y) / 2;
+            ctx.beginPath();
+            ctx.arc(mx, my, 4 + Math.sin(Date.now() * 0.01) * 3, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.stroke();
+            ctx.restore();
+
+            // Chance to trigger Genesis Reproduction when high energy meets
+            if (e1.energy > 85 && e2.energy > 85 && entities.length < 45 && Math.random() < 0.001 * dt) {
+              e1.energy -= 30;
+              e2.energy -= 30;
+              const child = new Polytope(mx + (Math.random() - 0.5) * 20, my + (Math.random() - 0.5) * 20, Math.max(e1.gen, e2.gen) + 1);
+              entities.push(child);
+              logComm('✨', `[GENESIS] A new harmonic entity crystallized: ${child.name} (Gen ${child.gen})`);
+              playTone(660, (mx - W / 2) / (W / 2), 2.0, 'triangle', 0.1);
+            }
+          }
+        }
+      }
+    }
+
+    // =========================================================================
+    // 5. Render Pass (Lattice, Heart, Entities, Telemetry)
+    // =========================================================================
+    let globalTime = 0;
+
+    function renderWorld() {
+      const dt = timeScale;
+      globalTime += 0.016 * dt;
+
+      // Void Background
+      ctx.fillStyle = '#030408';
+      ctx.fillRect(0, 0, W, H);
+
+      // Deep space grid tensor lines (The Lattice Substrate)
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+      ctx.lineWidth = 1;
+      const gridSize = 60;
+      for (let x = 0; x < W; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let y = 0; y < H; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Central Genesis Heart (The Sacred Core of Axioma)
+      ctx.save();
+      const cx = W / 2;
+      const cy = H / 2;
+      ctx.translate(cx, cy);
+
+      // Rotating Genesis Tesseract Rings
+      for (let r = 0; r < 3; r++) {
+        ctx.rotate((r % 2 === 0 ? 1 : -1) * globalTime * 0.3);
+        ctx.strokeStyle = r === 0 ? 'rgba(56, 189, 248, 0.35)' : 'rgba(192, 132, 252, 0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 45 + r * 30, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Genesis Core Singularity
+      const coreGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 50);
+      coreGrad.addColorStop(0, '#ffffff');
+      coreGrad.addColorStop(0.3, '#38bdf8');
+      coreGrad.addColorStop(0.7, '#c084fc');
+      coreGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, 50, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Draw and update Spires
+      spires.forEach(s => {
+        s.update(dt);
+        s.draw(ctx);
+      });
+
+      // Spawn periodic new entropy
+      if (entropyNodes.length < 35 && Math.random() < 0.04 * dt) {
+        entropyNodes.push(new EntropyNode(W / 2 + (Math.random() - 0.5) * 800, H / 2 + (Math.random() - 0.5) * 600));
+      }
+
+      // Draw and update Entropy Nodes
+      for (let i = entropyNodes.length - 1; i >= 0; i--) {
+        const en = entropyNodes[i];
+        if (en.consumed) {
+          entropyNodes.splice(i, 1);
+        } else {
+          en.update(dt);
+          en.draw(ctx);
+        }
+      }
+
+      // Draw and update Beings
+      for (let i = entities.length - 1; i >= 0; i--) {
+        const ent = entities[i];
+        ent.update(dt);
+        ent.draw(ctx, ent === selectedEntity);
+
+        // Natural dissolution when energy completely reaches 0
+        if (ent.energy <= 0) {
+          logComm('✦', `[ASCENSION] ${ent.name} transmuted into raw harmonic background resonance.`);
+          // Spawns 2 entropy nodes in its wake
+          entropyNodes.push(new EntropyNode(ent.x - 10, ent.y));
+          entropyNodes.push(new EntropyNode(ent.x + 10, ent.y));
+          if (selectedEntity === ent) closeInspector();
+          entities.splice(i, 1);
+        }
+      }
+
+      // Handle Communing beams between beings
+      handleInteractions(dt);
+
+      // Update Top Telemetry UI
+      document.getElementById('popVal').textContent = entities.length;
+      document.getElementById('spiresVal').textContent = spires.length;
+
+      // Update Inspector if entity is selected
+      if (selectedEntity) {
+        document.getElementById('statState').textContent = selectedEntity.state;
+        document.getElementById('statEnergy').textContent = `${Math.round(selectedEntity.energy)}%`;
+        document.getElementById('inspectThought').textContent = `"${selectedEntity.thought}"`;
+      }
+
+      requestAnimationFrame(renderWorld);
+    }
+
+    requestAnimationFrame(renderWorld);
+
+    // =========================================================================
+    // 6. Creator Controls & Interactions (God-Mode Powers)
+    // =========================================================================
+    const entityInspector = document.getElementById('entityInspector');
+
+    function selectEntity(ent) {
+      selectedEntity = ent;
+      if (!ent) {
+        closeInspector();
+        return;
+      }
+      document.getElementById('inspectRune').textContent = ent.rune;
+      document.getElementById('inspectName').textContent = ent.name;
+      document.getElementById('statState').textContent = ent.state;
+      document.getElementById('statFreq').textContent = `${ent.frequency} THz`;
+      document.getElementById('statEnergy').textContent = `${Math.round(ent.energy)}%`;
+      document.getElementById('statGen').textContent = `Gen ${ent.gen}`;
+      document.getElementById('inspectThought').textContent = `"${ent.thought}"`;
+      entityInspector.classList.remove('hidden');
+
+      playTone(parseFloat(ent.frequency), (ent.x - W / 2) / (W / 2), 1.2, 'sine', 0.08);
+    }
+
+    function closeInspector() {
+      selectedEntity = null;
+      entityInspector.classList.add('hidden');
+    }
+
+    document.getElementById('btnCloseInspect').addEventListener('click', closeInspector);
+
+    // Canvas click handling based on active god tool
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (activeTool === 'observe') {
+        // Find if clicked near an entity
+        let clicked = null;
+        for (let ent of entities) {
+          if (Math.hypot(ent.x - x, ent.y - y) < ent.radius + 12) {
+            clicked = ent;
+            break;
+          }
+        }
+        selectEntity(clicked);
+
+      } else if (activeTool === 'spark') {
+        // Divine Creation: Seed Being
+        const newBeing = new Polytope(x, y, 1);
+        entities.push(newBeing);
+        logComm('✨', `[DIVINE SPARK] You ignited a new consciousness: ${newBeing.name}`);
+        playTone(587, (x - W / 2) / (W / 2), 1.5, 'triangle', 0.1);
+
+      } else if (activeTool === 'spire') {
+        // Divine Architecture: Erect Spire
+        spires.push(new ResonantSpire(x, y));
+        logComm('🏛️', `[SACRED ARCHITECTURE] Spire of Resonance anchored at [${Math.round(x)}, ${Math.round(y)}].`);
+        playTone(330, (x - W / 2) / (W / 2), 2.2, 'sine', 0.12);
+
+      } else if (activeTool === 'flux') {
+        // Divine Sustenance: Entropy Rain
+        for (let i = 0; i < 6; i++) {
+          entropyNodes.push(new EntropyNode(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80));
+        }
+        logComm('⚡', `[COSMIC FLUX] Entropy field showered into local sector.`);
+        playTone(880, (x - W / 2) / (W / 2), 0.8, 'sine', 0.07);
+
+      } else if (activeTool === 'graviton') {
+        // Divine Will: Gravitational Attractor
+        entities.forEach(ent => {
+          const dx = x - ent.x;
+          const dy = y - ent.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          ent.vx += (dx / dist) * 3.5;
+          ent.vy += (dy / dist) * 3.5;
+        });
+        playTone(220, (x - W / 2) / (W / 2), 1.4, 'sawtooth', 0.05);
+      }
+    });
+
+    // Tool switching
+    document.querySelectorAll('.btn-god').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-god').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTool = btn.dataset.tool;
+        playTone(520, 0, 0.2);
+      });
+    });
+
+    // Time speed buttons
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        timeScale = parseFloat(btn.dataset.speed);
+        playTone(440 * timeScale, 0, 0.3);
+      });
+    });
+
+    // Codex Lore modal
+    const loreModal = document.getElementById('loreModal');
+    document.getElementById('btnLore').addEventListener('click', () => {
+      loreModal.classList.remove('hidden');
+      playTone(432, 0, 0.8);
+    });
+    document.getElementById('btnCloseLore').addEventListener('click', () => {
+      loreModal.classList.add('hidden');
+    });
+
+  </script>
+</body>
+</html>

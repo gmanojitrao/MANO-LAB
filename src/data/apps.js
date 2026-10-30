@@ -19,6 +19,20 @@ const MANO_APPS = [
     badge: "Flagship Application"
   },
   {
+    id: "axioma",
+    name: "AXIOMA: The Autonomous Civilization",
+    tagline: "Enter a non-biological virtual universe where sentient geometric beings live and evolve",
+    description: "A civilization that never existed in our reality. Free from carbon, gravity, sunlight, and mortality. Witness self-organizing conscious polyhedra that graze on quantum entropy, converse via moiré light interference, synthesize new life through harmonic resonance, and erect celestial spires in a continuous tensor lattice. Step in as the Creator or silent observer.",
+    category: "Virtual Cosmos",
+    route: "apps/axioma/",
+    status: "Available",
+    featured: true,
+    emoji: "🌌",
+    accentColor: "#38bdf8",
+    tags: ["Autonomous Civilization", "Artificial Life", "Non-Earth Reality", "God Mode"],
+    badge: "Transcendental Cosmos"
+  },
+  {
     id: "aether-weave",
     name: "Aether-Weave",
     tagline: "The living art form: weave breathing harmonic light ribbons in void space",
@@ -120,6 +134,7 @@ const MANO_APPS = [
 
 const MANO_CATEGORIES = [
   { id: "all", label: "All Items" },
+  { id: "Virtual Cosmos", label: "🌌 Virtual Cosmos" },
   { id: "Speech & AI", label: "🎙️ Speech & AI" },
   { id: "Creative & Art", label: "✨ Creative & Art" },
   { id: "Productivity", label: "🎧 Productivity" },

@@ -22,20 +22,23 @@ MANO-LAB focuses on high-utility tools and timeless arcade games:
 ### 🎙️ Flagship Application
 1. **Audio Transcription Studio (`apps/audio-transcription/`):** Enterprise-grade multilingual speech-to-text studio with automatic speaker diarization, bilingual Indic script preservation (Hindi, Bengali, Maithili), and instant dossier generation in Word (`.docx`), PDF, and Markdown.
 
+### 🌌 Autonomous Virtual Universe
+2. **AXIOMA (`apps/axioma/`):** An autonomous virtual civilization that never existed. Free from carbon, gravity, sunlight, and mortality. Features self-organizing conscious polyhedra that graze on quantum entropy, converse via moiré light interference, synthesize new life through harmonic resonance, and erect celestial spires across a continuous tensor lattice. Complete with live thought telemetry feed, entity inspector, and God-mode creator powers.
+
 ### ✨ Original Art Form (Born from Nothing)
-2. **Aether-Weave (`apps/aether-weave/`):** An original living art medium. Paint not with static pigment, but with multi-dimensional vibrating ribbons of refractive light that breathe, entangle with magnetic gossamer bridges, shift with thin-film optical dispersion, sing with 432Hz crystalline acoustic resonance, and export to pristine 4K wallpapers.
+3. **Aether-Weave (`apps/aether-weave/`):** An original living art medium. Paint not with static pigment, but with multi-dimensional vibrating ribbons of refractive light that breathe, entangle with magnetic gossamer bridges, shift with thin-film optical dispersion, sing with 432Hz crystalline acoustic resonance, and export to pristine 4K wallpapers.
 
 ### 🎧 Acoustic Focus
-3. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
+4. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
 
 ### 🏎️ Racing & Typing Competition
-4. **Turbo Typist (`apps/turbo-typist/`):** High-speed typing racer on a 3D perspective speedway track. Accelerate your GT supercar by typing fast and accurately, trigger nitro exhaust flames on streaks, overtake AI rivals, and claim the championship podium with live WPM telemetry.
+5. **Turbo Typist (`apps/turbo-typist/`):** High-speed typing racer on a 3D perspective speedway track. Accelerate your GT supercar by typing fast and accurately, trigger nitro exhaust flames on streaks, overtake AI rivals, and claim the championship podium with live WPM telemetry.
 
 ### 🕹️ Classic Arcade Games
-5. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
-6. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
-7. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
-8. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
+6. **Classic Snake (`apps/snake/`):** The iconic retro grid game with apple gathering, smooth responsive controls, and high-score tracking.
+7. **Brick Breaker (`apps/breakout/`):** Multi-tier rainbow brick destruction with smooth paddle physics, 3-life challenge, and combo scoring.
+8. **Classic 2048 (`apps/game-2048/`):** Authentic Gabriele Cirulli number sliding puzzle with warm beige tiles, touch swipe support, and score memory.
+9. **Flappy Bird (`apps/flappy-bird/`):** The timeless one-tap obstacle flight game with daytime sky, green pipes, and instant restart.
 
 ---
 
