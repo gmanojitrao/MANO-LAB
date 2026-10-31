@@ -1141,10 +1141,10 @@
     }
 
     async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '') {
-      let mimeType = file.type || 'audio/mp3';
+      let mimeType = (file.type || 'audio/mp3').split(';')[0].trim();
       if (!mimeType || mimeType === 'application/octet-stream') {
         const ext = file.name.split('.').pop().toLowerCase();
-        mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : 'audio/mp3'));
+        mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : (ext === 'webm' ? 'audio/webm' : 'audio/mp3')));
       }
 
       const activeKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
@@ -1194,9 +1194,9 @@ SPEAKER RULES:
    - If only ONE person is speaking in the audio:
    - Output the pure verbatim text directly.
    - DO NOT prefix with "Interviewer:", "Interviewee:", "Speaker 1:", or any speaker tags. Just provide the clean spoken words.
-2. MULTIPLE SPEAKERS (Actual Conversation / Interview):
+2. MULTIPLE SPEAKERS (Actual Conversation / Dialogue):
    - ONLY if two or more distinct people are genuinely conversing or taking turns speaking:
-   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:" (or "Interviewer:", "${artisanHint || 'Artisan'}:" if an actual interview conversation is taking place).
+   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:".
 
 REQUIRED OUTPUT FIELDS (JSON):
 1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script বাংলা লিপি for Bengali, etc.). No timestamps.
@@ -1205,17 +1205,13 @@ REQUIRED OUTPUT FIELDS (JSON):
    - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
 3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
 4. "is_multi_speaker": boolean (true if 2+ speakers conversing; false if single speaker).
-5. "confirmed_artisan_name": verified speaker name or "${artisanHint || ''}".
-6. "confirmed_section": "${sectionHint || 'General'}".
-7. "confidence": 0.99
+5. "title": A clean short title (e.g. "Voice Recording", "English Memo", or speaker name if stated).
 
 Output STRICTLY a JSON object with this structure:
 {
   "detected_language": "English",
   "is_multi_speaker": false,
-  "confirmed_artisan_name": "${artisanHint || ''}",
-  "confirmed_section": "${sectionHint || 'General'}",
-  "confidence": 0.99,
+  "title": "Voice Recording",
   "native_transcript": "...",
   "english_transcript": "..."
 }
@@ -1349,30 +1345,34 @@ Output ONLY the exact translated English text:`;
           progressBarFill.style.width = `${pct}%`;
 
           let artisanHint = '';
-          let sectionHint = '';
+          let sectionHint = 'General';
           const stem = filename.replace(/\.[^/.]+$/, '').trim();
-          const m = stem.match(/^(?:Section[-_ ]*[A-Za-z0-9]+)\s*[-_ :]*\s*(.*)$/i);
-          if (m && m[1]) {
-            artisanHint = m[1].trim();
-            const secMatch = stem.match(/^(Section[-_ ]*[A-Za-z0-9]+)/i);
-            sectionHint = secMatch ? secMatch[1].replace(/[-_ ]+/g, ' ').trim() : `Section ${i + 1}`;
-          } else {
-            artisanHint = stem;
-            sectionHint = `Section ${i + 1}`;
+          const isGenericRecording = stem.toLowerCase().startsWith('recording') || stem.toLowerCase().startsWith('voice') || stem.toLowerCase().startsWith('live');
+          if (!isGenericRecording) {
+            const m = stem.match(/^(?:Section[-_ ]*[A-Za-z0-9]+)\s*[-_ :]*\s*(.*)$/i);
+            if (m && m[1]) {
+              artisanHint = m[1].trim();
+              const secMatch = stem.match(/^(Section[-_ ]*[A-Za-z0-9]+)/i);
+              sectionHint = secMatch ? secMatch[1].replace(/[-_ ]+/g, ' ').trim() : `Section ${i + 1}`;
+            } else {
+              artisanHint = stem;
+              sectionHint = `Audio ${i + 1}`;
+            }
           }
 
           try {
             const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint);
+            const title = parsed.title || parsed.confirmed_artisan_name || (artisanHint || (isGenericRecording ? 'Voice Recording' : stem));
             results.push({
               filename: filename,
               duration_seconds: 0,
               duration_formatted: "Standard",
-              language_detected: parsed.detected_language || "Hindi / Indic",
-              confidence: parsed.confidence || 0.98,
+              language_detected: parsed.detected_language || "English",
+              confidence: parsed.confidence || 0.99,
               native_text: parsed.native_transcript || "",
               english_text: parsed.english_transcript || "",
               romanized_text: "",
-              artisan_name: parsed.confirmed_artisan_name || artisanHint,
+              artisan_name: title,
               section_name: parsed.confirmed_section || sectionHint,
               segments: [],
               chunks_info: [],
@@ -1886,11 +1886,11 @@ Output ONLY the exact translated English text:`;
       const art = batchArtisans[artisanName];
 
       document.getElementById('dialogueModal').classList.remove('hidden');
-      document.getElementById('modalArtisanTitle').textContent = `${artisanName} - Field Dossier`;
-      document.getElementById('modalArtisanAvatar').textContent = getInitials(artisanName);
+      document.getElementById('modalArtisanTitle').textContent = `${artisanName} — Transcription`;
+      document.getElementById('modalArtisanAvatar').textContent = '🎙️';
 
       document.getElementById('modalArtisanSubtitle').textContent = 
-        `${art ? art.sections_count : sections.length} Section(s) • ${art ? art.total_duration_formatted : ''} • Side-by-Side Bilingual Dialogue`;
+        `${art ? art.sections_count : sections.length} Recording(s) • Side-by-Side Verbatim Transcript & English Translation`;
 
       const dlBox = document.getElementById('modalDownloadLinks');
       dlBox.innerHTML = '';
@@ -1940,29 +1940,29 @@ Output ONLY the exact translated English text:`;
 
     function formatDialogueToHTML(text, artisanName) {
       if (!text || !text.trim()) {
-        return '<p class="italic text-slate-400">(No spoken dialogue recorded)</p>';
+        return '<p class="italic text-slate-400">(No spoken audio detected)</p>';
       }
 
       const lines = text.split('\n').filter(l => l.trim().length > 0);
       let html = '';
 
       lines.forEach(line => {
-        const colonIdx = line.indexOf(':');
-        if (colonIdx > 0 && colonIdx < 35) {
-          const speaker = line.substring(0, colonIdx).trim();
-          const dialogue = line.substring(colonIdx + 1).trim();
-          const isInterviewer = /interviewer|question|प्रश्नकर्ता|सवाल/i.test(speaker);
+        const speakerMatch = line.match(/^(Speaker\s*\d+|Interviewer|Interviewee|Question|Answer|[A-Z][a-z]+ [A-Z][a-z]+)\s*:\s*(.*)$/i);
+        if (speakerMatch) {
+          const speaker = speakerMatch[1].trim();
+          const dialogue = speakerMatch[2].trim();
+          const isInterviewer = /interviewer|question|speaker\s*1/i.test(speaker);
           const speakerClass = isInterviewer ? 'speaker-interviewer' : 'speaker-artisan';
 
           html += `
-            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs">
+            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs mb-2">
               <span class="${speakerClass}">${escapeHTML(speaker)}:</span>
-              <span class="text-slate-800 dark:text-slate-200 ml-1">${escapeHTML(dialogue)}</span>
+              <span class="text-slate-800 dark:text-slate-200 ml-1.5 leading-relaxed">${escapeHTML(dialogue)}</span>
             </div>
           `;
         } else {
           html += `
-            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs text-slate-800 dark:text-slate-200 leading-relaxed">
+            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs text-slate-800 dark:text-slate-200 leading-relaxed font-normal text-sm mb-2">
               ${escapeHTML(line)}
             </div>
           `;
@@ -2302,7 +2302,7 @@ Output ONLY the exact translated English text:`;
 
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '_');
       const ext = (lastRecordedBlob.type && lastRecordedBlob.type.includes('mp4')) ? 'mp4' : 'webm';
-      const filename = `Live_Interview_${timestamp}.${ext}`;
+      const filename = `Voice_Recording_${timestamp}.${ext}`;
 
       const recFile = new File([lastRecordedBlob], filename, {
         type: lastRecordedBlob.type || 'audio/webm',
@@ -2318,7 +2318,7 @@ Output ONLY the exact translated English text:`;
 
       renderSelectedFiles();
       closeRecordModal();
-      alert(`Recorded interview "${filename}" added to your queue! Click "Start Smart Batch Transcription" to transcribe and translate.`);
+      alert(`Audio recording "${filename}" added to your queue! Click "Start Smart Batch Transcription" to transcribe.`);
     }
 
     function updateEngineBadge() {

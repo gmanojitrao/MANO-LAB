@@ -203,6 +203,7 @@ class GeminiAudioEngine(BaseEngine):
             audio_bytes = f.read()
 
         b64_audio = base64.b64encode(audio_bytes).decode("utf-8")
+        clean_hint = artisan_hint if artisan_hint and not any(artisan_hint.lower().startswith(p) for p in ("live_", "recording_", "voice_", "sample_")) else ""
 
         prompt = f"""You are a precise, professional verbatim audio transcription and translation engine.
 Listen carefully to the provided audio file.
@@ -219,9 +220,9 @@ SPEAKER RULES:
    - If only ONE person is speaking in the audio:
    - Output the pure verbatim text directly.
    - DO NOT prefix with "Interviewer:", "Interviewee:", "Speaker 1:", or any speaker tags. Just provide the clean spoken words.
-2. MULTIPLE SPEAKERS (Actual Conversation / Interview):
+2. MULTIPLE SPEAKERS (Actual Conversation / Dialogue):
    - ONLY if two or more distinct people are genuinely conversing or taking turns speaking:
-   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:" (or "Interviewer:", "{artisan_hint or 'Artisan'}:" if an actual interview conversation is taking place).
+   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:".
 
 REQUIRED OUTPUT FIELDS (JSON):
 1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script বাংলা লিপি for Bengali, etc.). No timestamps.
@@ -230,16 +231,14 @@ REQUIRED OUTPUT FIELDS (JSON):
    - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
 3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
 4. "is_multi_speaker": boolean (true if 2+ speakers conversing; false if single speaker).
-5. "confirmed_artisan_name": verified speaker name or "{artisan_hint or ''}".
-6. "confirmed_section": "{section_hint or 'General'}".
-7. "confidence": 0.99
+5. "title": A clean short title (e.g. "{clean_hint or 'Voice Recording'}").
+6. "confidence": 0.99
 
 Output STRICTLY a JSON object with this structure:
 {{
   "detected_language": "English",
   "is_multi_speaker": false,
-  "confirmed_artisan_name": "{artisan_hint or ''}",
-  "confirmed_section": "{section_hint or 'General'}",
+  "title": "{clean_hint or 'Voice Recording'}",
   "confidence": 0.99,
   "native_transcript": "...",
   "english_transcript": "..."
