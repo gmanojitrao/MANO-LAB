@@ -244,9 +244,8 @@ Output STRICTLY a JSON object with EXACTLY these keys:
 Output only the valid JSON without any other conversational commentary."""
 
         fallback_models = [
-            "gemini-3.5-flash-lite",
-            "gemini-3.5-flash",
-            "gemini-3.8-flash",
+            "gemini-flash-lite-latest",
+            "gemini-3-flash-preview",
             "gemini-flash-latest"
         ]
         
