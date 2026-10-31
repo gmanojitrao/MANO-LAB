@@ -10,8 +10,9 @@ class StoryStudioApp {
     const AudStudio = (typeof AudioStudio !== 'undefined' ? AudioStudio : window.AudioStudio);
     const ScnDirector = (typeof SceneDirector !== 'undefined' ? SceneDirector : window.SceneDirector);
 
-    this.char1 = new CharRig('SHESHANAGA');
-    this.char2 = new CharRig('VASUKI');
+    // Default to modern neutral characters
+    this.char1 = new CharRig('ALEX');
+    this.char2 = new CharRig('MAYA');
     this.audioStudio = new AudStudio();
     this.director = new ScnDirector(this.canvas, this.char1, this.audioStudio, this.char2);
 
@@ -22,171 +23,176 @@ class StoryStudioApp {
     this.recordedChunks = [];
     this.isRecordingVideo = false;
 
-    // Curated Cinematic Stories
+    this.activeCharToEdit = 1; // 1 or 2
+
+    // Curated Neutral Modern Story Presets
     this.storyPresets = {
-      'SHESHANAGA_VASUKI': {
-        title: 'Sheshanaga & Vasuki (Cosmic Ocean)',
-        char1Archetype: 'SHESHANAGA',
-        char2Archetype: 'VASUKI',
-        castName: 'Sheshanaga & Vasuki',
-        worldName: 'Himalayan Summit & Cosmic Void',
-        avatar: '🐍',
+      'TECH_PODCAST': {
+        title: 'AI & Human Creativity',
+        char1Archetype: 'ALEX',
+        char2Archetype: 'MAYA',
+        castName: 'Alex & Maya',
+        worldName: 'Podcast Studio',
+        avatar: '🎙️',
         scenes: [
           {
-            env: 'HIMALAYAN_SUMMIT',
+            env: 'PODCAST_STUDIO',
             speaker: 0,
-            speakerName: 'Sheshanaga',
-            text: 'एक ही माँ के दो अमर पुत्र... शेषनाग और वासुकि!',
-            char1TargetX: -90,
-            char2TargetX: 90,
-            shot: 'WIDE_ESTABLISHING',
-            duration: 5.5
-          },
-          {
-            env: 'COSMIC_VOID',
-            speaker: 1,
-            speakerName: 'Vasuki',
-            text: 'क्षीर सागर के मंथन में मैंने मंदराचल को थामा, और तुमने अनंत शय्या बनाई।',
-            char1TargetX: -70,
-            char2TargetX: 70,
-            shot: 'MEDIUM_ACTION',
-            duration: 6.5
-          },
-          {
-            env: 'GOLDEN_TEMPLE',
-            speaker: 0,
-            speakerName: 'Sheshanaga',
-            text: 'जब तक धर्म रहेगा, नागवंश का यह त्याग सृष्टि याद रखेगी!',
-            char1TargetX: -40,
-            char2TargetX: 40,
-            shot: 'HERO_CLOSEUP',
-            duration: 5.5
-          }
-        ]
-      },
-      'RUDRA_RISHI': {
-        title: 'Rudra & Sage (Secret of Time)',
-        char1Archetype: 'RUDRA',
-        char2Archetype: 'RISHI',
-        castName: 'Rudra & Rishi',
-        worldName: 'Sacred Ashrama & Kailash',
-        avatar: '👑',
-        scenes: [
-          {
-            env: 'SACRED_ASHRAMA',
-            speaker: 1,
-            speakerName: 'Rishi',
-            text: 'हे महादेव! सृष्टि और महाप्रलय के मध्य काल का क्या रहस्य है?',
-            char1TargetX: -100,
-            char2TargetX: 90,
-            shot: 'DUTCH_LOW_ANGLE',
-            duration: 5.5
-          },
-          {
-            env: 'ROYAL_DARBAR',
-            speaker: 0,
-            speakerName: 'Rudra',
-            text: 'काल वह चक्र है मुनिवर, जो न प्रारंभ जानता है न अंत। सब मुझमें विलीन है।',
-            char1TargetX: -60,
-            char2TargetX: 100,
-            shot: 'HERO_CLOSEUP',
-            duration: 6.5
-          },
-          {
-            env: 'HIMALAYAN_SUMMIT',
-            speaker: 0,
-            speakerName: 'Rudra',
-            text: 'जब तांडव शांत होगा, तब केवल शून्य और विशुद्ध चेतना शेष रहेगी।',
-            char1TargetX: 0,
-            char2TargetX: 110,
-            shot: 'WIDE_ESTABLISHING',
-            duration: 5.5
-          }
-        ]
-      },
-      'ARJUNA_KARNA': {
-        title: 'Arjuna & Karna (Vow of Honor)',
-        char1Archetype: 'ARJUNA',
-        char2Archetype: 'KARNA',
-        castName: 'Arjuna & Karna',
-        worldName: 'Kurukshetra War & Cosmic Realm',
-        avatar: '🏹',
-        scenes: [
-          {
-            env: 'KURUKSHETRA_BATTLEFIELD',
-            speaker: 0,
-            speakerName: 'Arjuna',
-            text: 'कर्ण! आज कुरुक्षेत्र की भूमि पर हमारे धर्म और पराक्रम का अंतिम निर्णय होगा!',
-            char1TargetX: -100,
-            char2TargetX: 100,
-            shot: 'DUTCH_LOW_ANGLE',
-            duration: 6.0
-          },
-          {
-            env: 'VOLCANIC_WAR',
-            speaker: 1,
-            speakerName: 'Karna',
-            text: 'पार्थ, विजय किसी की भी हो, दानवीर कर्ण अपने वचनों से कभी पीछे नहीं हटा!',
+            speakerName: 'Alex',
+            text: 'Welcome back! Today we are discussing: can AI expand human imagination?',
             char1TargetX: -80,
+            char2TargetX: 80,
+            shot: 'WIDE_ESTABLISHING',
+            duration: 5.5
+          },
+          {
+            env: 'PODCAST_STUDIO',
+            speaker: 1,
+            speakerName: 'Maya',
+            text: 'Technology does not replace the artist. It removes friction and amplifies great ideas.',
+            char1TargetX: -65,
+            char2TargetX: 65,
+            shot: 'HERO_CLOSEUP',
+            duration: 6.0
+          },
+          {
+            env: 'PODCAST_STUDIO',
+            speaker: 0,
+            speakerName: 'Alex',
+            text: 'Exactly. The best stories will always come from genuine human feelings and truth.',
+            char1TargetX: -45,
+            char2TargetX: 45,
+            shot: 'MEDIUM_ACTION',
+            duration: 5.5
+          }
+        ]
+      },
+
+      'COFFEE_CHAT': {
+        title: 'The Morning Routine',
+        char1Archetype: 'SAM',
+        char2Archetype: 'PRIYA',
+        castName: 'Sam & Priya',
+        worldName: 'Cozy Coffee Shop',
+        avatar: '☕',
+        scenes: [
+          {
+            env: 'COFFEE_SHOP',
+            speaker: 0,
+            speakerName: 'Sam',
+            text: 'I used to think waking up at 5 AM was the only way to be productive.',
+            char1TargetX: -85,
+            char2TargetX: 85,
+            shot: 'WIDE_ESTABLISHING',
+            duration: 5.2
+          },
+          {
+            env: 'COFFEE_SHOP',
+            speaker: 1,
+            speakerName: 'Priya',
+            text: 'Honestly, starting your morning with a quiet coffee and zero notifications is 10 times better!',
+            char1TargetX: -60,
             char2TargetX: 70,
             shot: 'HERO_CLOSEUP',
             duration: 6.0
           },
           {
-            env: 'COSMIC_VOID',
+            env: 'COFFEE_SHOP',
             speaker: 0,
-            speakerName: 'Arjuna',
-            text: 'युद्ध इतिहास लिखता है, किंतु त्याग अमर गाथा बन जाता है!',
+            speakerName: 'Sam',
+            text: 'Could not agree more. Protecting your morning peace is the best life hack.',
             char1TargetX: -40,
             char2TargetX: 40,
+            shot: 'MEDIUM_ACTION',
+            duration: 5.5
+          }
+        ]
+      },
+
+      'CAREER_LEAP': {
+        title: 'Taking the Next Leap',
+        char1Archetype: 'DAVID',
+        char2Archetype: 'ELENA',
+        castName: 'David & Elena',
+        worldName: 'City Sunset',
+        avatar: '🌆',
+        scenes: [
+          {
+            env: 'CITY_SUNSET',
+            speaker: 1,
+            speakerName: 'Elena',
+            text: 'I have been thinking about launching my own creative project for months.',
+            char1TargetX: -90,
+            char2TargetX: 90,
             shot: 'WIDE_ESTABLISHING',
+            duration: 5.5
+          },
+          {
+            env: 'CITY_SUNSET',
+            speaker: 0,
+            speakerName: 'David',
+            text: 'The best time to start was yesterday. The next best time is right now.',
+            char1TargetX: -60,
+            char2TargetX: 60,
+            shot: 'HERO_CLOSEUP',
+            duration: 5.5
+          },
+          {
+            env: 'CITY_SUNSET',
+            speaker: 1,
+            speakerName: 'Elena',
+            text: 'You are right. No more waiting for perfection—let us take the leap!',
+            char1TargetX: -35,
+            char2TargetX: 35,
+            shot: 'MEDIUM_ACTION',
             duration: 5.0
           }
         ]
       },
-      'DEVI_YAKSHI': {
-        title: 'Devi & Yakshi (Enchanted Grove)',
-        char1Archetype: 'DEVI',
-        char2Archetype: 'YAKSHI',
-        castName: 'Devi & Yakshi',
-        worldName: 'Enchanted Forest & Golden Temple',
-        avatar: '🌸',
+
+      'SCIENCE_HABITS': {
+        title: 'Curiosity & Small Wins',
+        char1Archetype: 'ROHAN',
+        char2Archetype: 'ZOE',
+        castName: 'Rohan & Zoe',
+        worldName: 'Minimalist Stage',
+        avatar: '💡',
         scenes: [
           {
-            env: 'ENCHANTED_FOREST',
-            speaker: 1,
-            speakerName: 'Yakshi',
-            text: 'देवी! इस पावन अरण्य के वृक्ष और पुष्प आपके चरण स्पर्श से धन्य हुए।',
-            char1TargetX: -90,
-            char2TargetX: 90,
-            shot: 'MEDIUM_ACTION',
-            duration: 5.5
-          },
-          {
-            env: 'GOLDEN_TEMPLE',
+            env: 'MINIMALIST_STAGE',
             speaker: 0,
-            speakerName: 'Devi',
-            text: 'प्रकृति और शक्ति एक ही सत्य के दो रूप हैं, कल्याणी।',
-            char1TargetX: -50,
+            speakerName: 'Rohan',
+            text: 'Did you know improving just one percent every day makes you 37 times better in a year?',
+            char1TargetX: -80,
             char2TargetX: 80,
-            shot: 'HERO_CLOSEUP',
-            duration: 5.0
+            shot: 'WIDE_ESTABLISHING',
+            duration: 5.8
           },
           {
-            env: 'SACRED_ASHRAMA',
+            env: 'MINIMALIST_STAGE',
+            speaker: 1,
+            speakerName: 'Zoe',
+            text: 'Compounding habits! Consistent small efforts always beat occasional heroic bursts.',
+            char1TargetX: -60,
+            char2TargetX: 60,
+            shot: 'HERO_CLOSEUP',
+            duration: 5.8
+          },
+          {
+            env: 'MINIMALIST_STAGE',
             speaker: 0,
-            speakerName: 'Devi',
-            text: 'जहाँ करुणा और भक्ति है, वहीं संपूर्ण जगत का कल्याण निहित है।',
-            char1TargetX: 0,
-            char2TargetX: 100,
-            shot: 'WIDE_ESTABLISHING',
-            duration: 5.5
+            speakerName: 'Rohan',
+            text: 'Stay curious, stay consistent, and let time do the heavy lifting.',
+            char1TargetX: -40,
+            char2TargetX: 40,
+            shot: 'MEDIUM_ACTION',
+            duration: 5.2
           }
         ]
       }
     };
 
-    this.currentStoryKey = 'SHESHANAGA_VASUKI';
+    this.currentStoryKey = 'TECH_PODCAST';
     this.currentSceneIndex = 0;
     this.activeScriptScenes = [];
     this.sceneTimer = null;
@@ -197,19 +203,34 @@ class StoryStudioApp {
   init() {
     this.bindEvents();
 
-    // Default to Dual Mode so both characters are staged immediately
+    // Default staging: Dual Mode face-to-face in Podcast Studio
     this.director.setDualMode(true);
-    this.director.setEnvironment('HIMALAYAN_SUMMIT');
+    this.director.setEnvironment('PODCAST_STUDIO');
 
-    // Force first render so character is immediately 100% visible
+    // Force first render
     this.director.render(0.016);
+
+    // Sync UI with initial character states
+    this.syncCharacterInspector();
 
     // Start continuous animation loop
     requestAnimationFrame(this.renderLoop.bind(this));
   }
 
   bindEvents() {
-    // 1. Preset Story Chips
+    // 1. Navigation Tab Switching (Story / Characters / Worlds)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        const target = document.getElementById(tabId);
+        if (target) target.classList.add('active');
+      });
+    });
+
+    // 2. Preset Story Chips
     document.querySelectorAll('.preset-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
@@ -219,30 +240,32 @@ class StoryStudioApp {
       });
     });
 
-    // 2. Main "Create Video" / Generate Button
+    // 3. Main "Create Video" / Generate Button
     const genBtn = document.getElementById('btn-generate-topic-story');
     if (genBtn) {
       genBtn.addEventListener('click', () => {
         const topic = document.getElementById('input-story-topic')?.value?.trim();
         if (!topic) {
-          alert('Please enter a story topic or idea!');
+          this.showToast('Please enter a conversation or story topic!');
           return;
         }
         this.generateAndPlayStory(topic);
       });
     }
 
-    // 3. Play / Pause Button
+    // 4. Play / Pause Button
     const playBtn = document.getElementById('btn-play-pause');
     if (playBtn) {
       playBtn.addEventListener('click', () => {
         if (this.isPlaying || this.isStorySequencePlaying) {
           this.pause();
         } else {
-          // Play current story preset
           const preset = this.storyPresets[this.currentStoryKey];
-          if (preset) {
+          if (preset && this.activeScriptScenes.length === 0) {
             this.playMultiSceneStory(preset);
+          } else if (this.activeScriptScenes.length > 0) {
+            this.isStorySequencePlaying = true;
+            this.executeStoryScene(this.currentSceneIndex);
           } else {
             this.playActiveLine();
           }
@@ -250,45 +273,134 @@ class StoryStudioApp {
       });
     }
 
-    // 4. Surprise Me (Randomize Cast)
+    // 5. Surprise Me (Randomize Cast)
     const randBtn = document.getElementById('btn-randomize-char');
     if (randBtn) {
       randBtn.addEventListener('click', () => {
         const p1 = this.char1.randomizeNewCharacter();
         const p2 = this.char2.randomizeNewCharacter();
+        this.syncCharacterInspector();
+
         const castElem = document.getElementById('cast-display-name');
-        if (castElem) castElem.textContent = `Custom Cast: ${p1.name} & ${p2.name}`;
-        this.showToast(`🎲 Generated unique characters: ${p1.name} & ${p2.name}!`);
+        if (castElem) castElem.textContent = `Cast: ${p1.name.split(':')[0]} & ${p2.name.split(':')[0]}`;
+        this.showToast(`Generated: ${p1.name.split(':')[0]} & ${p2.name.split(':')[0]}!`);
       });
     }
 
-    // 5. Hero Archetype Dropdown
-    const selectHero = document.getElementById('select-hero-archetype');
-    if (selectHero) {
-      selectHero.addEventListener('change', (e) => {
-        this.char1.setArchetype(e.target.value);
-        this.showToast(`Hero updated to: ${this.char1.profile.name}`);
-      });
-    }
-
-    // 6. Background World Dropdown
-    const selectEnv = document.getElementById('select-env');
-    if (selectEnv) {
-      selectEnv.addEventListener('change', (e) => {
-        this.director.setEnvironment(e.target.value);
-        this.showToast(`Transitioning world to: ${e.target.options[e.target.selectedIndex].text}`);
-      });
-    }
-
-    // 7. Subtitle Input Box
+    // 6. Subtitle Input Box
     const subtitleInput = document.getElementById('input-subtitle-text');
     if (subtitleInput) {
       subtitleInput.addEventListener('input', (e) => {
-        this.director.setSubtitle(e.target.value, this.char1.profile.name);
+        const speaker = this.director.activeSpeakerIndex === 1 ? this.char2.profile.name : this.char1.profile.name;
+        this.director.setSubtitle(e.target.value, speaker);
       });
     }
 
-    // 8. Microphone Recording
+    // 7. World Selector Cards
+    document.querySelectorAll('.env-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.env-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const envKey = card.getAttribute('data-env');
+        this.director.setEnvironment(envKey);
+        const worldElem = document.getElementById('world-display-name');
+        if (worldElem) worldElem.textContent = `World: ${card.querySelector('.env-card-title')?.textContent || envKey}`;
+        this.showToast(`Environment set to: ${card.querySelector('.env-card-title')?.textContent || envKey}`);
+      });
+    });
+
+    // 8. Character Customizer: Char 1 vs Char 2 toggle
+    const btnChar1 = document.getElementById('btn-toggle-char1');
+    const btnChar2 = document.getElementById('btn-toggle-char2');
+    if (btnChar1 && btnChar2) {
+      btnChar1.addEventListener('click', () => {
+        btnChar1.classList.add('active');
+        btnChar2.classList.remove('active');
+        this.activeCharToEdit = 1;
+        this.syncCharacterInspector();
+      });
+      btnChar2.addEventListener('click', () => {
+        btnChar2.classList.add('active');
+        btnChar1.classList.remove('active');
+        this.activeCharToEdit = 2;
+        this.syncCharacterInspector();
+      });
+    }
+
+    // 9. Character Customizer Controls
+    const getActiveRig = () => (this.activeCharToEdit === 1 ? this.char1 : this.char2);
+
+    const charArchetypeSelect = document.getElementById('char-archetype-select');
+    if (charArchetypeSelect) {
+      charArchetypeSelect.addEventListener('change', (e) => {
+        getActiveRig().setArchetype(e.target.value);
+        this.syncCharacterInspector();
+        this.showToast(`Loaded archetype: ${getActiveRig().profile.name}`);
+      });
+    }
+
+    const charNameInput = document.getElementById('char-name-input');
+    if (charNameInput) {
+      charNameInput.addEventListener('input', (e) => {
+        getActiveRig().setName(e.target.value);
+      });
+    }
+
+    const charOutfitSelect = document.getElementById('char-outfit-select');
+    if (charOutfitSelect) {
+      charOutfitSelect.addEventListener('change', (e) => {
+        getActiveRig().setOutfit(e.target.value);
+        this.showToast(`Outfit updated: ${e.target.value}`);
+      });
+    }
+
+    const charOutfitColorInput = document.getElementById('char-outfit-color');
+    if (charOutfitColorInput) {
+      charOutfitColorInput.addEventListener('input', (e) => {
+        getActiveRig().setOutfit(null, e.target.value, '#ffffff');
+      });
+    }
+
+    const charHairSelect = document.getElementById('char-hair-select');
+    if (charHairSelect) {
+      charHairSelect.addEventListener('change', (e) => {
+        getActiveRig().setHair(e.target.value);
+      });
+    }
+
+    const charHairColorInput = document.getElementById('char-hair-color');
+    if (charHairColorInput) {
+      charHairColorInput.addEventListener('input', (e) => {
+        getActiveRig().setHair(null, e.target.value);
+      });
+    }
+
+    const charSkinSelect = document.getElementById('char-skin-select');
+    if (charSkinSelect) {
+      charSkinSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const skinMap = {
+          FAIR: { base: '#f7d7c4', highlight: '#fff0e5', shadow: '#e0b89f' },
+          WHEATISH: { base: '#d4a373', highlight: '#faedcd', shadow: '#996633' },
+          HONEY: { base: '#e6a66b', highlight: '#fed7aa', shadow: '#9a5c2d' },
+          BRONZE: { base: '#b46e45', highlight: '#d98e64', shadow: '#784325' },
+          RICH_BROWN: { base: '#7c533e', highlight: '#a27054', shadow: '#4d2d1f' },
+          DEEP_ESPRESSO: { base: '#4a2c1d', highlight: '#70422c', shadow: '#2d180e' }
+        };
+        const s = skinMap[val] || skinMap.WHEATISH;
+        getActiveRig().setSkinTone(s.base, s.highlight, s.shadow);
+      });
+    }
+
+    const charAccessorySelect = document.getElementById('char-accessory-select');
+    if (charAccessorySelect) {
+      charAccessorySelect.addEventListener('change', (e) => {
+        getActiveRig().setAccessory(e.target.value);
+        this.showToast(`Accessory updated: ${e.target.value}`);
+      });
+    }
+
+    // 10. Microphone Recording
     const micBtn = document.getElementById('btn-record-mic');
     if (micBtn) {
       micBtn.addEventListener('click', async () => {
@@ -308,7 +420,7 @@ class StoryStudioApp {
       });
     }
 
-    // 9. Custom Audio Upload
+    // 11. Custom Audio Upload
     const audioUpload = document.getElementById('input-upload-audio');
     if (audioUpload) {
       audioUpload.addEventListener('change', async (e) => {
@@ -321,7 +433,7 @@ class StoryStudioApp {
       });
     }
 
-    // 10. Video Recording & Export
+    // 12. Video Recording & Export
     const recordVideoBtn = document.getElementById('btn-record-video');
     if (recordVideoBtn) {
       recordVideoBtn.addEventListener('click', () => {
@@ -334,6 +446,32 @@ class StoryStudioApp {
     }
   }
 
+  syncCharacterInspector() {
+    const rig = this.activeCharToEdit === 1 ? this.char1 : this.char2;
+    const p = rig.profile;
+
+    const nameInput = document.getElementById('char-name-input');
+    if (nameInput) nameInput.value = p.name || '';
+
+    const archetypeSelect = document.getElementById('char-archetype-select');
+    if (archetypeSelect && p.id) archetypeSelect.value = p.id;
+
+    const outfitSelect = document.getElementById('char-outfit-select');
+    if (outfitSelect && p.torso?.type) outfitSelect.value = p.torso.type;
+
+    const outfitColor = document.getElementById('char-outfit-color');
+    if (outfitColor && p.torso?.main) outfitColor.value = p.torso.main.startsWith('#') ? p.torso.main : '#1e293b';
+
+    const hairSelect = document.getElementById('char-hair-select');
+    if (hairSelect && p.hair?.style) hairSelect.value = p.hair.style;
+
+    const hairColor = document.getElementById('char-hair-color');
+    if (hairColor && p.hair?.color) hairColor.value = p.hair.color.startsWith('#') ? p.hair.color : '#18181b';
+
+    const accessorySelect = document.getElementById('char-accessory-select');
+    if (accessorySelect) accessorySelect.value = p.accessories || 'NONE';
+  }
+
   selectStoryPreset(key) {
     this.currentStoryKey = key;
     const preset = this.storyPresets[key];
@@ -341,11 +479,9 @@ class StoryStudioApp {
 
     // Update Banner
     const castElem = document.getElementById('cast-display-name');
-    if (castElem) castElem.textContent = `Active Cast: ${preset.castName}`;
+    if (castElem) castElem.textContent = `Cast: ${preset.castName}`;
     const worldElem = document.getElementById('world-display-name');
     if (worldElem) worldElem.textContent = `World: ${preset.worldName}`;
-    const avatarElem = document.getElementById('cast-avatar-icon');
-    if (avatarElem) avatarElem.textContent = preset.avatar || '👑';
 
     // Update Topic Input
     const topicInput = document.getElementById('input-story-topic');
@@ -354,6 +490,7 @@ class StoryStudioApp {
     // Configure Characters & Environment
     this.char1.setArchetype(preset.char1Archetype);
     this.char2.setArchetype(preset.char2Archetype);
+    this.syncCharacterInspector();
 
     const firstScene = preset.scenes[0];
     if (firstScene) {
@@ -368,14 +505,14 @@ class StoryStudioApp {
 
   playActiveLine() {
     const line = document.getElementById('input-subtitle-text')?.value || this.director.activeSubtitle;
-    const speaker = this.char1.profile.name || 'Hero';
+    const speaker = this.director.activeSpeakerIndex === 1 ? this.char2.profile.name : this.char1.profile.name;
     this.director.setSubtitle(line, speaker);
 
     this.isPlaying = true;
     const playBtn = document.getElementById('btn-play-pause');
     if (playBtn) playBtn.textContent = '⏸ Pause';
 
-    this.audioStudio.speakText(line, { pitch: 0.95, rate: 0.95, lang: 'hi-IN' }, () => {
+    this.audioStudio.speakText(line, { pitch: 1.0, rate: 1.0, lang: 'en-US' }, () => {
       this.isPlaying = false;
       if (playBtn) playBtn.textContent = '▶ Play Animated Story';
     });
@@ -399,6 +536,7 @@ class StoryStudioApp {
 
     if (storyData.char1Archetype) this.char1.setArchetype(storyData.char1Archetype);
     if (storyData.char2Archetype) this.char2.setArchetype(storyData.char2Archetype);
+    this.syncCharacterInspector();
 
     this.director.setDualMode(true);
     this.activeScriptScenes = storyData.scenes || [];
@@ -426,8 +564,10 @@ class StoryStudioApp {
     // 1. Transition Environment
     if (scene.env) {
       this.director.setEnvironment(scene.env);
-      const selectEnv = document.getElementById('select-env');
-      if (selectEnv) selectEnv.value = scene.env;
+      document.querySelectorAll('.env-card').forEach(c => {
+        if (c.getAttribute('data-env') === scene.env) c.classList.add('active');
+        else c.classList.remove('active');
+      });
     }
 
     // 2. Camera Shot
@@ -435,12 +575,12 @@ class StoryStudioApp {
       this.director.setShotMode(scene.shot);
     }
 
-    // 3. Move characters into position with natural walking kinematics
+    // 3. Move characters into position
     if (scene.char1TargetX !== undefined) {
-      this.char1.moveTo(scene.char1TargetX, 130);
+      this.char1.moveTo(scene.char1TargetX, 120);
     }
     if (scene.char2TargetX !== undefined) {
-      this.char2.moveTo(scene.char2TargetX, 130);
+      this.char2.moveTo(scene.char2TargetX, 120);
     }
 
     // 4. Set Active Speaker & Subtitle
@@ -451,108 +591,126 @@ class StoryStudioApp {
     const subInput = document.getElementById('input-subtitle-text');
     if (subInput) subInput.value = scene.text;
 
-    // 5. Play Spoken Dialogue with Lip-Sync
-    this.audioStudio.speakText(scene.text, {
-      pitch: speakerIdx === 0 ? 0.90 : 1.08,
-      rate: 0.94,
-      lang: 'hi-IN'
-    }, () => {
-      // Scene finished, transition to next scene after 1s
+    // 5. Speech Synthesis
+    const voiceOpts = {
+      pitch: speakerIdx === 0 ? 0.95 : 1.15,
+      rate: 1.0,
+      lang: 'en-US'
+    };
+
+    this.audioStudio.speakText(scene.text, voiceOpts, () => {
       if (this.isStorySequencePlaying) {
         this.sceneTimer = setTimeout(() => {
           this.executeStoryScene(index + 1);
-        }, 1100);
+        }, 1200);
       }
     });
   }
 
   /**
-   * One-Click AI Story Generation from Prompt
+   * Smart Natural Story Generator for ANY topic typed by user
    */
   async generateAndPlayStory(topic) {
     const btn = document.getElementById('btn-generate-topic-story');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span>⚡</span> <span>Directing...</span>';
+      btn.innerHTML = '<span>⏳</span> <span>Writing Story...</span>';
     }
 
-    const tLower = topic.toLowerCase();
-    let env1 = 'GOLDEN_TEMPLE';
-    let env2 = 'SACRED_ASHRAMA';
-    let env3 = 'COSMIC_VOID';
-    let c1 = 'RUDRA';
-    let c2 = 'RISHI';
+    this.showToast(`✨ Generating dialogue for "${topic}"...`);
+    await new Promise(r => setTimeout(r, 600));
 
-    if (tLower.includes('war') || tLower.includes('battle') || tLower.includes('yuddha') || tLower.includes('fight')) {
-      env1 = 'KURUKSHETRA_BATTLEFIELD';
-      env2 = 'VOLCANIC_WAR';
-      env3 = 'COSMIC_VOID';
-      c1 = 'ARJUNA';
-      c2 = 'KARNA';
-    } else if (tLower.includes('forest') || tLower.includes('tree') || tLower.includes('nature') || tLower.includes('beauty')) {
-      env1 = 'ENCHANTED_FOREST';
-      env2 = 'SACRED_ASHRAMA';
-      env3 = 'GOLDEN_TEMPLE';
-      c1 = 'DEVI';
-      c2 = 'YAKSHI';
-    } else if (tLower.includes('serpent') || tLower.includes('snake') || tLower.includes('nag') || tLower.includes('ocean')) {
-      env1 = 'HIMALAYAN_SUMMIT';
-      env2 = 'COSMIC_VOID';
-      env3 = 'GOLDEN_TEMPLE';
-      c1 = 'SHESHANAGA';
-      c2 = 'VASUKI';
-    } else if (tLower.includes('wisdom') || tLower.includes('meditation') || tLower.includes('sage') || tLower.includes('guru')) {
-      env1 = 'SACRED_ASHRAMA';
-      env2 = 'HIMALAYAN_SUMMIT';
-      env3 = 'ROYAL_DARBAR';
-      c1 = 'RISHI';
-      c2 = 'SHISHYA';
+    const tLower = topic.toLowerCase();
+
+    // Smart contextual environment and theme detection
+    let env = 'PODCAST_STUDIO';
+    let c1 = 'ALEX';
+    let c2 = 'MAYA';
+    let n1 = 'Alex';
+    let n2 = 'Maya';
+
+    if (tLower.includes('coffee') || tLower.includes('cafe') || tLower.includes('food') || tLower.includes('tea') || tLower.includes('morning')) {
+      env = 'COFFEE_SHOP';
+      c1 = 'SAM';
+      c2 = 'PRIYA';
+      n1 = 'Sam';
+      n2 = 'Priya';
+    } else if (tLower.includes('nature') || tLower.includes('park') || tLower.includes('walk') || tLower.includes('sun') || tLower.includes('outdoor')) {
+      env = 'SUNNY_PARK';
+      c1 = 'ELENA';
+      c2 = 'SAM';
+      n1 = 'Elena';
+      n2 = 'Sam';
+    } else if (tLower.includes('career') || tLower.includes('work') || tLower.includes('job') || tLower.includes('office') || tLower.includes('meeting')) {
+      env = 'MODERN_OFFICE';
+      c1 = 'DAVID';
+      c2 = 'MAYA';
+      n1 = 'David';
+      n2 = 'Maya';
+    } else if (tLower.includes('tech') || tLower.includes('code') || tLower.includes('ai') || tLower.includes('future') || tLower.includes('cyber')) {
+      env = 'PODCAST_STUDIO';
+      c1 = 'ALEX';
+      c2 = 'MAYA';
+      n1 = 'Alex';
+      n2 = 'Maya';
+    } else if (tLower.includes('city') || tLower.includes('dream') || tLower.includes('sunset') || tLower.includes('travel')) {
+      env = 'CITY_SUNSET';
+      c1 = 'DAVID';
+      c2 = 'ELENA';
+      n1 = 'David';
+      n2 = 'Elena';
+    } else {
+      env = 'COZY_LOUNGE';
+      c1 = 'ALEX';
+      c2 = 'SAM';
+      n1 = 'Alex';
+      n2 = 'Sam';
     }
 
     const autoStory = {
       title: topic,
       char1Archetype: c1,
       char2Archetype: c2,
-      castName: `${c1} & ${c2}`,
-      worldName: `${env1.replace(/_/g, ' ')} & ${env2.replace(/_/g, ' ')}`,
-      avatar: '✨',
+      castName: `${n1} & ${n2}`,
+      worldName: env.replace(/_/g, ' '),
+      avatar: '🎬',
       scenes: [
         {
-          env: env1,
+          env: env,
           speaker: 0,
-          speakerName: c1,
-          text: `प्राचीन गाथाओं में वर्णित है... ${topic}!`,
-          char1TargetX: -100,
-          char2TargetX: 100,
+          speakerName: n1,
+          text: `Have you ever thought deeply about this: ${topic}?`,
+          char1TargetX: -75,
+          char2TargetX: 75,
           shot: 'WIDE_ESTABLISHING',
-          duration: 5.5
+          duration: 5.2
         },
         {
-          env: env2,
+          env: env,
           speaker: 1,
-          speakerName: c2,
-          text: `समय के इस पावन मोड़ पर, सत्य और पराक्रम की परीक्षा होगी।`,
-          char1TargetX: -70,
-          char2TargetX: 70,
+          speakerName: n2,
+          text: `That is such an interesting perspective. Most people overlook how much it shapes our daily decisions.`,
+          char1TargetX: -55,
+          char2TargetX: 55,
           shot: 'HERO_CLOSEUP',
           duration: 6.0
         },
         {
-          env: env3,
+          env: env,
           speaker: 0,
-          speakerName: c1,
-          text: `और इसी प्रकार ब्रह्मांड ने अपने सनातन धर्म को पुनः स्थापित किया!`,
+          speakerName: n1,
+          text: `Exactly! When you look at it clearly, everything connects and makes complete sense.`,
           char1TargetX: -35,
           char2TargetX: 35,
           shot: 'MEDIUM_ACTION',
-          duration: 5.5
+          duration: 5.2
         }
       ]
     };
 
     // Update banner
     const castElem = document.getElementById('cast-display-name');
-    if (castElem) castElem.textContent = `Active Cast: ${autoStory.castName}`;
+    if (castElem) castElem.textContent = `Cast: ${autoStory.castName}`;
     const worldElem = document.getElementById('world-display-name');
     if (worldElem) worldElem.textContent = `World: ${autoStory.worldName}`;
 
@@ -570,45 +728,40 @@ class StoryStudioApp {
   startVideoRecording() {
     try {
       const stream = this.canvas.captureStream(30);
-      if (this.audioStudio.destinationNode) {
-        const audioTracks = this.audioStudio.destinationNode.stream.getAudioTracks();
-        if (audioTracks.length > 0) stream.addTrack(audioTracks[0]);
-      }
-
-      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm';
+      const mimeTypes = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'];
+      let selectedMime = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
 
       this.recordedChunks = [];
-      this.mediaRecorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4000000 });
+      this.mediaRecorder = new MediaRecorder(stream, { mimeType: selectedMime });
 
       this.mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) this.recordedChunks.push(e.data);
+        if (e.data && e.data.size > 0) this.recordedChunks.push(e.data);
       };
 
       this.mediaRecorder.onstop = () => {
-        const blob = new Blob(this.recordedChunks, { type: mime });
+        const blob = new Blob(this.recordedChunks, { type: selectedMime });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `ManoLab_Visual_Story_${Date.now()}.webm`;
+        a.download = `StoryStudio_${Date.now()}.webm`;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
-        this.showToast('✅ 9:16 Video downloaded to your device!');
+        document.body.removeChild(a);
+        this.showToast('✅ Video exported successfully!');
       };
 
       this.mediaRecorder.start();
       this.isRecordingVideo = true;
 
-      const recBadge = document.getElementById('recording-badge');
-      if (recBadge) recBadge.classList.add('visible');
+      const badge = document.getElementById('recording-badge');
+      if (badge) badge.style.display = 'flex';
+      const recordBtn = document.getElementById('btn-record-video');
+      if (recordBtn) recordBtn.innerHTML = '<span>⏹</span> <span>Stop & Save Video</span>';
 
-      const btn = document.getElementById('btn-record-video');
-      if (btn) btn.innerHTML = '<span>⏹</span> <span>Stop Recording & Save</span>';
-
-      this.showToast('🔴 Recording 9:16 video...');
-    } catch (e) {
-      alert('Video recording error: ' + e.message);
+      this.showToast('🎥 Recording 9:16 video...');
+    } catch (err) {
+      console.error(err);
+      this.showToast('Recording error. Browser might not support canvas capture.');
     }
   }
 
@@ -617,35 +770,36 @@ class StoryStudioApp {
       this.mediaRecorder.stop();
       this.isRecordingVideo = false;
 
-      const recBadge = document.getElementById('recording-badge');
-      if (recBadge) recBadge.classList.remove('visible');
-
-      const btn = document.getElementById('btn-record-video');
-      if (btn) btn.innerHTML = '<span>⬇</span> <span>Export 9:16 Video (MP4 / WebM)</span>';
+      const badge = document.getElementById('recording-badge');
+      if (badge) badge.style.display = 'none';
+      const recordBtn = document.getElementById('btn-record-video');
+      if (recordBtn) recordBtn.innerHTML = '<span>⬇</span> <span>Export 9:16 Video</span>';
     }
+  }
+
+  renderLoop(now) {
+    const dt = Math.min(0.1, (now - this.lastTime) / 1000);
+    this.lastTime = now;
+
+    this.director.render(dt);
+    requestAnimationFrame(this.renderLoop.bind(this));
   }
 
   showToast(msg) {
     const toast = document.getElementById('toast-notice');
     if (!toast) return;
     toast.textContent = msg;
-    toast.classList.add('visible');
-    setTimeout(() => {
-      toast.classList.remove('visible');
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.style.display = 'none'; }, 300);
     }, 2800);
-  }
-
-  renderLoop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
-    this.lastTime = timestamp;
-
-    this.director.render(dt);
-
-    requestAnimationFrame(this.renderLoop.bind(this));
   }
 }
 
-// Initialize on page load
+// Instantiate App when DOM is loaded
 window.addEventListener('DOMContentLoaded', () => {
-  window.storyStudioApp = new StoryStudioApp();
+  window.storyStudio = new StoryStudioApp();
 });

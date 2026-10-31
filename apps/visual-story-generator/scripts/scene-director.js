@@ -15,7 +15,7 @@ class SceneDirector {
       this.characters.push(characterRig2);
     } else {
       // Create second character defaulting to MYSTIC_SAGE
-      const char2 = new CharacterRig('MYSTIC_SAGE');
+      const char2 = new CharacterRig('MAYA');
       char2.worldX = 110;
       char2.targetX = 110;
       char2.facing = -1; // Facing left towards char1
@@ -50,18 +50,18 @@ class SceneDirector {
       targetRot: 0
     };
 
-    // Environment Engine: 8 Atmospheric Living Worlds
-    // 'GOLDEN_TEMPLE', 'SACRED_ASHRAMA', 'COSMIC_VOID', 'VOLCANIC_WAR', 
-    // 'HIMALAYAN_SUMMIT', 'ROYAL_DARBAR', 'KURUKSHETRA_BATTLEFIELD', 'ENCHANTED_FOREST'
-    this.currentEnv = 'GOLDEN_TEMPLE';
+    // Environment Engine: 8 Modern Neutral & Relatable Worlds
+    // 'PODCAST_STUDIO', 'COZY_LOUNGE', 'CITY_SUNSET', 'SUNNY_PARK',
+    // 'MODERN_OFFICE', 'COFFEE_SHOP', 'MINIMALIST_STAGE', 'CYBER_TECH'
+    this.currentEnv = 'PODCAST_STUDIO';
     this.targetEnv = null;
     this.envTransitionProgress = 1.0;
     this.envTransitionSpeed = 1.5; // seconds
 
     // Subtitle & Dialogue State
-    this.activeSpeakerName = 'Rudra';
-    this.activeSubtitle = 'एक ही माँ के दो बेटे... शेषनाग और वासुकि!';
-    this.highlightWords = ['एक', 'ही', 'माँ', 'के', 'दो', 'बेटे...', 'शेषनाग', 'और', 'वासुकि!'];
+    this.activeSpeakerName = 'Alex';
+    this.activeSubtitle = 'Welcome to StoryStudio! Let\'s create something amazing together.';
+    this.highlightWords = ['Welcome', 'to', 'StoryStudio!', 'Let\'s', 'create', 'something', 'amazing', 'together.'];
     this.activeWordIndex = 0;
     this.subtitleProgress = 0;
 
@@ -316,6 +316,33 @@ class SceneDirector {
     const h = this.height;
 
     switch (theme) {
+      // Modern Neutral Environments
+      case 'PODCAST_STUDIO':
+        this.renderPodcastStudioEnv(ctx, w, h);
+        break;
+      case 'COZY_LOUNGE':
+        this.renderCozyLoungeEnv(ctx, w, h);
+        break;
+      case 'CITY_SUNSET':
+        this.renderCitySunsetEnv(ctx, w, h);
+        break;
+      case 'SUNNY_PARK':
+        this.renderSunnyParkEnv(ctx, w, h);
+        break;
+      case 'MODERN_OFFICE':
+        this.renderModernOfficeEnv(ctx, w, h);
+        break;
+      case 'COFFEE_SHOP':
+        this.renderCoffeeShopEnv(ctx, w, h);
+        break;
+      case 'MINIMALIST_STAGE':
+        this.renderMinimalistStageEnv(ctx, w, h);
+        break;
+      case 'CYBER_TECH':
+        this.renderCyberTechEnv(ctx, w, h);
+        break;
+
+      // Legacy Environments
       case 'SACRED_ASHRAMA':
         this.renderAshramaEnv(ctx, w, h);
         break;
@@ -339,10 +366,481 @@ class SceneDirector {
         break;
       case 'GOLDEN_TEMPLE':
       default:
-        this.renderGoldenTempleEnv(ctx, w, h);
+        this.renderPodcastStudioEnv(ctx, w, h);
         break;
     }
   }
+
+  // --- MODERN NEUTRAL ENVIRONMENTS ---
+
+  // 1. Modern Podcast / Creator Studio
+  renderPodcastStudioEnv(ctx, w, h) {
+    // Deep slate modern studio backdrop
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#0a0f1d');
+    grad.addColorStop(0.5, '#0f172a');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Warm Ambient Neon Backlight Tube
+    const neonGrad = ctx.createRadialGradient(w / 2, h * 0.38, 20, w / 2, h * 0.38, 240);
+    neonGrad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
+    neonGrad.addColorStop(0.5, 'rgba(99, 102, 241, 0.14)');
+    neonGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = neonGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Acoustic Sound Hexagon Panels on Wall
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.65)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+
+    const hexRadius = 32;
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 7; c++) {
+        const hx = c * 85 + (r % 2 === 0 ? 0 : 42);
+        const hy = 160 + r * 68;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          const px = hx + Math.cos(a) * hexRadius;
+          const py = hy + Math.sin(a) * hexRadius;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    // Studio Desk (Modern Walnut / Charcoal)
+    const deskY = h * 0.72;
+    const deskGrad = ctx.createLinearGradient(0, deskY, 0, h);
+    deskGrad.addColorStop(0, '#1e293b');
+    deskGrad.addColorStop(0.15, '#0f172a');
+    deskGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = deskGrad;
+    ctx.fillRect(0, deskY, w, h - deskY);
+
+    // Beveled Desk Top Edge
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, deskY);
+    ctx.lineTo(w, deskY);
+    ctx.stroke();
+
+    // Broadcast Microphone Silhouette with Red On-Air LED
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.roundRect(w * 0.48 - 14, deskY - 95, 28, 55, 12);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2.0;
+    ctx.stroke();
+
+    // Red ON-AIR Tally Glow
+    ctx.fillStyle = '#ef4444';
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(w * 0.48, deskY - 80, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // 2. Cozy Modern Living Room / Lounge
+  renderCozyLoungeEnv(ctx, w, h) {
+    // Warm interior wall
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#1c1917');
+    grad.addColorStop(0.5, '#292524');
+    grad.addColorStop(1, '#0c0a09');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Large Urban Window (Twilight Sky & City Bokeh Lights)
+    const winX = w * 0.12;
+    const winY = h * 0.16;
+    const winW = w * 0.76;
+    const winH = h * 0.45;
+
+    // Window twilight sky
+    const skyGrad = ctx.createLinearGradient(winX, winY, winX, winY + winH);
+    skyGrad.addColorStop(0, '#0f172a');
+    skyGrad.addColorStop(0.6, '#1e1b4b');
+    skyGrad.addColorStop(1, '#312e81');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(winX, winY, winW, winH);
+
+    // City skyline silhouettes & glowing bokeh lights
+    ctx.fillStyle = 'rgba(254, 240, 138, 0.45)';
+    const bokehCoords = [
+      [winX + 40, winY + 80, 4], [winX + 90, winY + 120, 3], [winX + 160, winY + 60, 5],
+      [winX + 220, winY + 140, 3.5], [winX + 280, winY + 95, 4.5], [winX + 340, winY + 130, 3]
+    ];
+    for (let [bx, by, br] of bokehCoords) {
+      ctx.beginPath();
+      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Window Frame
+    ctx.strokeStyle = '#44403c';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(winX, winY, winW, winH);
+    ctx.beginPath();
+    ctx.moveTo(winX + winW / 2, winY);
+    ctx.lineTo(winX + winW / 2, winY + winH);
+    ctx.moveTo(winX, winY + winH * 0.55);
+    ctx.lineTo(winX + winW, winY + winH * 0.55);
+    ctx.stroke();
+
+    // Modern Floor Lamp (Warm Golden Conical Light)
+    const lampX = w * 0.88;
+    const lampGrad = ctx.createRadialGradient(lampX, h * 0.38, 10, lampX, h * 0.55, 180);
+    lampGrad.addColorStop(0, 'rgba(254, 240, 138, 0.35)');
+    lampGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = lampGrad;
+    ctx.beginPath();
+    ctx.arc(lampX, h * 0.55, 180, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Lamp Stem
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lampX, h * 0.38);
+    ctx.lineTo(lampX, h * 0.85);
+    ctx.stroke();
+
+    // Wooden Floor
+    const floorY = h * 0.76;
+    const floorGrad = ctx.createLinearGradient(0, floorY, 0, h);
+    floorGrad.addColorStop(0, '#451a03');
+    floorGrad.addColorStop(1, '#1c1917');
+    ctx.fillStyle = floorGrad;
+    ctx.fillRect(0, floorY, w, h - floorY);
+  }
+
+  // 3. City Skyline Sunset
+  renderCitySunsetEnv(ctx, w, h) {
+    // Golden hour sky gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#1e1b4b');
+    grad.addColorStop(0.3, '#6d28d9');
+    grad.addColorStop(0.55, '#db2777');
+    grad.addColorStop(0.75, '#f59e0b');
+    grad.addColorStop(0.9, '#fef08a');
+    grad.addColorStop(1, '#1e293b');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Glowing Sunset Sun
+    const sunY = h * 0.58;
+    const sunGrad = ctx.createRadialGradient(w * 0.5, sunY, 15, w * 0.5, sunY, 120);
+    sunGrad.addColorStop(0, '#ffffff');
+    sunGrad.addColorStop(0.3, '#fef08a');
+    sunGrad.addColorStop(0.7, 'rgba(245, 158, 11, 0.4)');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(w * 0.5, sunY, 120, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Modern Skyscraper Silhouettes
+    ctx.fillStyle = '#0f172a';
+    const buildings = [
+      [20, 220, 60], [70, 320, 75], [135, 180, 50], [175, 360, 80],
+      [245, 260, 65], [300, 390, 85], [375, 200, 55], [420, 310, 70], [480, 240, 55]
+    ];
+    for (let [bx, bh, bw] of buildings) {
+      ctx.fillRect(bx, h * 0.72 - bh, bw, bh);
+      // Window lights
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.6)';
+      for (let wy = h * 0.72 - bh + 15; wy < h * 0.72 - 10; wy += 22) {
+        ctx.fillRect(bx + 10, wy, 8, 8);
+        if (bw > 60) ctx.fillRect(bx + 30, wy, 8, 8);
+      }
+      ctx.fillStyle = '#0f172a';
+    }
+
+    // Street / Rooftop Floor
+    const groundY = h * 0.72;
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, groundY, w, h - groundY);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(0, groundY, w, 4);
+  }
+
+  // 4. Sunny Park / Green Nature
+  renderSunnyParkEnv(ctx, w, h) {
+    // Bright daytime blue sky
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.65);
+    skyGrad.addColorStop(0, '#0284c7');
+    skyGrad.addColorStop(0.5, '#38bdf8');
+    skyGrad.addColorStop(1, '#bae6fd');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Warm Sun in Corner
+    const sunGrad = ctx.createRadialGradient(w * 0.82, h * 0.18, 10, w * 0.82, h * 0.18, 90);
+    sunGrad.addColorStop(0, '#ffffff');
+    sunGrad.addColorStop(0.4, '#fef08a');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(w * 0.82, h * 0.18, 90, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Soft Drifting Clouds
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.beginPath();
+    ctx.arc(100, 140, 35, 0, Math.PI * 2);
+    ctx.arc(140, 130, 45, 0, Math.PI * 2);
+    ctx.arc(180, 140, 35, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Distant Green Hills
+    ctx.fillStyle = '#16a34a';
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.65);
+    ctx.quadraticCurveTo(w * 0.35, h * 0.52, w * 0.7, h * 0.62);
+    ctx.quadraticCurveTo(w * 0.88, h * 0.58, w, h * 0.64);
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Lush Foreground Lawn Hill
+    const lawnGrad = ctx.createLinearGradient(0, h * 0.65, 0, h);
+    lawnGrad.addColorStop(0, '#15803d');
+    lawnGrad.addColorStop(0.5, '#166534');
+    lawnGrad.addColorStop(1, '#14532d');
+    ctx.fillStyle = lawnGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.74);
+    ctx.quadraticCurveTo(w * 0.5, h * 0.68, w, h * 0.73);
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Framing Green Trees with Dappled Leaves
+    ctx.fillStyle = '#14532d';
+    ctx.beginPath();
+    ctx.arc(0, h * 0.2, 110, 0, Math.PI * 2);
+    ctx.arc(w, h * 0.25, 120, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 5. Modern Minimalist Office / Workspace
+  renderModernOfficeEnv(ctx, w, h) {
+    // Clean corporate glass workspace
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(0.6, '#1e293b');
+    grad.addColorStop(1, '#090d16');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Floor-to-ceiling glass wall view
+    const winX = w * 0.08;
+    const winY = h * 0.12;
+    const winW = w * 0.84;
+    const winH = h * 0.52;
+
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(winX, winY, winW, winH);
+
+    // Distant corporate towers
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.fillRect(winX + 30, winY + 80, 80, winH - 80);
+    ctx.fillRect(winX + 130, winY + 40, 110, winH - 40);
+    ctx.fillRect(winX + 260, winY + 100, 90, winH - 100);
+
+    // Frosted glass horizontal design bands
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.fillRect(winX, winY + winH * 0.45, winW, 14);
+    ctx.fillRect(winX, winY + winH * 0.52, winW, 8);
+
+    // Glass frame mullions
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 3.5;
+    ctx.strokeRect(winX, winY, winW, winH);
+    ctx.beginPath();
+    ctx.moveTo(winX + winW * 0.33, winY);
+    ctx.lineTo(winX + winW * 0.33, winY + winH);
+    ctx.moveTo(winX + winW * 0.66, winY);
+    ctx.lineTo(winX + winW * 0.66, winY + winH);
+    ctx.stroke();
+
+    // Office Floor (Polished Charcoal Tile)
+    const floorY = h * 0.72;
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, floorY, w, h - floorY);
+
+    // Floor reflections
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.0;
+    for (let ty = floorY; ty < h; ty += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, ty);
+      ctx.lineTo(w, ty);
+      ctx.stroke();
+    }
+  }
+
+  // 6. Cozy Coffee Shop / Urban Café
+  renderCoffeeShopEnv(ctx, w, h) {
+    // Warm rustic brick wall
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#271b16');
+    grad.addColorStop(0.5, '#3e2723');
+    grad.addColorStop(1, '#1b120c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Exposed Brick Lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.lineWidth = 1.5;
+    for (let by = 80; by < h * 0.72; by += 26) {
+      ctx.beginPath();
+      ctx.moveTo(0, by);
+      ctx.lineTo(w, by);
+      ctx.stroke();
+    }
+
+    // Chalkboard Coffee Menu in Center Wall
+    ctx.fillStyle = '#18181b';
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 4;
+    const mbW = 180;
+    const mbH = 110;
+    ctx.strokeRect(w / 2 - mbW / 2, 150, mbW, mbH);
+    ctx.fillRect(w / 2 - mbW / 2, 150, mbW, mbH);
+
+    // Menu text hints
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = '600 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('COFFEE & CONVERSATION', w / 2, 180);
+    ctx.font = '400 10px sans-serif';
+    ctx.fillText('Espresso • Pour Over • Matcha', w / 2, 210);
+
+    // Vintage Hanging Edison Bulb Pendants
+    const bulbs = [w * 0.22, w * 0.78];
+    for (let bx of bulbs) {
+      // Cord
+      ctx.strokeStyle = '#09090b';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(bx, 0);
+      ctx.lineTo(bx, 240);
+      ctx.stroke();
+
+      // Warm radial glow
+      const bulbGlow = ctx.createRadialGradient(bx, 248, 4, bx, 248, 65);
+      bulbGlow.addColorStop(0, '#ffffff');
+      bulbGlow.addColorStop(0.3, '#fde047');
+      bulbGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.35)');
+      bulbGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = bulbGlow;
+      ctx.beginPath();
+      ctx.arc(bx, 248, 65, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glass bulb
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(bx, 246, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Espresso Bar Counter Floor
+    const barY = h * 0.74;
+    const barGrad = ctx.createLinearGradient(0, barY, 0, h);
+    barGrad.addColorStop(0, '#593019');
+    barGrad.addColorStop(1, '#1b120c');
+    ctx.fillStyle = barGrad;
+    ctx.fillRect(0, barY, w, h - barY);
+  }
+
+  // 7. Minimalist Studio Stage (Clean & Universal)
+  renderMinimalistStageEnv(ctx, w, h) {
+    // Deep modern studio gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#030712');
+    grad.addColorStop(0.4, '#0f172a');
+    grad.addColorStop(0.8, '#1e293b');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Overhead Spotlight Cone Illuminating Floor
+    const spotX = w / 2;
+    const spotGrad = ctx.createRadialGradient(spotX, h * 0.65, 30, spotX, h * 0.65, 260);
+    spotGrad.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+    spotGrad.addColorStop(0.4, 'rgba(56, 189, 248, 0.12)');
+    spotGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = spotGrad;
+    ctx.beginPath();
+    ctx.ellipse(spotX, h * 0.68, 240, 80, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Studio Stage Floor Line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.74);
+    ctx.lineTo(w, h * 0.74);
+    ctx.stroke();
+  }
+
+  // 8. Modern Cyber Tech Space
+  renderCyberTechEnv(ctx, w, h) {
+    // Dark futuristic cyber backdrop
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#020617');
+    grad.addColorStop(0.5, '#0b0f19');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Perspective digital floor grid
+    const gridY = h * 0.65;
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+    ctx.lineWidth = 1.5;
+
+    // Horizontal receding grid lines
+    for (let gy = gridY; gy < h; gy += 25) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(w, gy);
+      ctx.stroke();
+    }
+
+    // Perspective vertical fan rays
+    for (let x = -100; x <= w + 100; x += 55) {
+      ctx.beginPath();
+      ctx.moveTo(w / 2, gridY - 40);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+
+    // Cyber Cyan / Magenta Ambient Neon Orbs
+    const orbGrad = ctx.createRadialGradient(w * 0.5, gridY - 60, 10, w * 0.5, gridY - 60, 200);
+    orbGrad.addColorStop(0, 'rgba(6, 182, 212, 0.28)');
+    orbGrad.addColorStop(0.6, 'rgba(168, 85, 247, 0.12)');
+    orbGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = orbGrad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // --- HISTORICAL & FANTASY ENVIRONMENTS (PRESERVED) ---
 
   // 1. GOLDEN TEMPLE
   renderGoldenTempleEnv(ctx, w, h) {
@@ -695,32 +1193,34 @@ class SceneDirector {
       p.phase += dt * 2.0;
 
       // Behavior tuned to active environment
-      if (this.currentEnv === 'HIMALAYAN_SUMMIT') {
-        // Snowflakes falling down
+      if (this.currentEnv === 'SUNNY_PARK') {
+        // Gentle golden sunlight specks
+        p.y += p.speedY * 0.4;
+        p.x += Math.sin(p.phase) * 0.5;
+        if (p.y > this.height) { p.y = -10; p.x = Math.random() * this.width; }
+        ctx.fillStyle = `rgba(254, 240, 138, ${p.alpha * 0.35})`;
+      } else if (this.currentEnv === 'CITY_SUNSET') {
+        // Floating warm dusk particles
+        p.y -= p.speedY * 0.5;
+        p.x += Math.sin(p.phase) * 0.5;
+        if (p.y < -10) { p.y = this.height + 10; p.x = Math.random() * this.width; }
+        ctx.fillStyle = `rgba(251, 146, 60, ${p.alpha * 0.35})`;
+      } else if (this.currentEnv === 'CYBER_TECH') {
+        // Digital data particles
+        p.y -= p.speedY * 0.8;
+        if (p.y < -10) { p.y = this.height + 10; p.x = Math.random() * this.width; }
+        ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha * 0.5})`;
+      } else if (this.currentEnv === 'HIMALAYAN_SUMMIT') {
         p.y += p.speedY * 1.5;
         p.x += Math.sin(p.phase) * 1.2;
         if (p.y > this.height) { p.y = -10; p.x = Math.random() * this.width; }
         ctx.fillStyle = `rgba(241, 245, 249, ${p.alpha * 0.8})`;
-      } else if (this.currentEnv === 'ENCHANTED_FOREST') {
-        // Glowing Turquoise Fireflies drifting upwards
-        p.y -= p.speedY * 0.6;
-        p.x += Math.cos(p.phase) * 0.8;
-        if (p.y < -10) { p.y = this.height + 10; p.x = Math.random() * this.width; }
-        const pulse = 0.4 + Math.sin(p.phase * 2.0) * 0.4;
-        ctx.fillStyle = `rgba(45, 212, 191, ${pulse})`;
-      } else if (this.currentEnv === 'COSMIC_VOID') {
-        // Cosmic stardust drifting
-        p.y -= p.speedY * 0.4;
-        p.x += Math.sin(p.phase) * 0.5;
-        if (p.y < -10) { p.y = this.height + 10; p.x = Math.random() * this.width; }
-        ctx.fillStyle = `rgba(192, 132, 252, ${p.alpha * 0.7})`;
       } else {
-        // Rising divine golden or crimson embers
-        p.y -= p.speedY * 1.4;
-        p.x += Math.sin(p.phase) * 0.8;
+        // Soft, non-distracting ambient dust specks in indoor light
+        p.y -= p.speedY * 0.25;
+        p.x += Math.sin(p.phase) * 0.3;
         if (p.y < -10) { p.y = this.height + 10; p.x = Math.random() * this.width; }
-        const color = this.currentEnv === 'VOLCANIC_WAR' ? 'rgba(239, 68, 68, ' : 'rgba(250, 204, 21, ';
-        ctx.fillStyle = color + p.alpha + ')';
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.16})`;
       }
 
       ctx.beginPath();

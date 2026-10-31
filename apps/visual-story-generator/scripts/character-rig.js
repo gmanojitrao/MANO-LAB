@@ -3,19 +3,181 @@
  * character-rig.js - Parametric 2.5D Rigged Character Engine with Articulated Limbs & Locomotion
  * 
  * Features:
- * - Parametric Archetype System (12+ Epic Indian Mythological & Historical Characters + Infinite Random Generation)
- * - Articulated Limbs: Thighs, Knees, Shins, Feet/Sandals, Biceps, Forearms, Expressive Hands
+ * - Neutral & Modern Everyday Archetypes (Creator, Professional, Casual, Student, Artist, Host) + Mythic/Fantasy Presets
+ * - Full Customization: Outfits (Hoodie, Blazer, T-Shirt, Sweater, Shirt, Jacket), Hair, Skin, Eyes, Accessories
+ * - Articulated Limbs: Thighs, Knees, Shins, Modern Sneakers/Shoes, Biceps, Forearms, Expressive Hands
  * - Walking Locomotion: Natural forward/backward leg cycle, hip sway, and foot planting across stage coordinates
  * - Expressive Head, Jaw & Phoneme Lip-Sync (A, O, E, REST, FIERCE)
- * - Dynamic customizable parameters: Skin tone, eye size/shape/glow, hair styles, headgear, attire, ornaments
- * - Secondary physics (spring-damper) for cloth, hair sway, cape, and jewels
+ * - Modern Accessories: Stylish Glasses, Studio Headphones, Smartwatches
  */
 
-// 12 Iconic Archetype Profiles
+// Universal Archetype Profiles
 const CHARACTER_PROFILES = {
+  // --- Modern & Neutral Everyday Archetypes (Default) ---
+  ALEX: {
+    id: 'ALEX',
+    name: 'Alex: Creator',
+    role: 'Tech Creator & Storyteller',
+    emoji: '🎙️',
+    gender: 'M',
+    skin: { base: '#d4a373', highlight: '#faedcd', shadow: '#996633', rim: '#ffffff' },
+    eyes: { size: 1.05, shape: 'ROUND_EXPRESSIVE', iris: '#3e2723', glow: '#451a03', thirdEye: false },
+    hair: { color: '#18181b', style: 'MODERN_FADE', sway: 0.5 },
+    facialHair: 'SHORT_STUBBLE',
+    headgear: 'NONE',
+    accessories: 'STUDIO_HEADPHONES',
+    torso: { type: 'CASUAL_HOODIE', main: '#1e293b', highlight: '#334155', shadow: '#0f172a', trim: '#38bdf8' },
+    legs: { type: 'SLIM_JEANS', color: '#1e293b', trim: '#f8fafc' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'SMART_WATCH' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  MAYA: {
+    id: 'MAYA',
+    name: 'Maya: Product Lead',
+    role: 'Strategist & Product Lead',
+    emoji: '💼',
+    gender: 'F',
+    skin: { base: '#b46e45', highlight: '#d98e64', shadow: '#784325', rim: '#fed7aa' },
+    eyes: { size: 1.15, shape: 'ALMOND_DIVINE', iris: '#1e3a8a', glow: '#3b82f6', thirdEye: false },
+    hair: { color: '#09090b', style: 'SLEEK_BOB', sway: 0.7 },
+    facialHair: 'NONE',
+    headgear: 'NONE',
+    accessories: 'STYLISH_GLASSES',
+    torso: { type: 'SMART_BLAZER', main: '#0f172a', highlight: '#1e293b', shadow: '#020617', trim: '#f43f5e' },
+    legs: { type: 'CHINO_TROUSERS', color: '#334155', trim: '#e2e8f0' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'SILVER_PENDANT', earrings: 'PEARL_STUDS', wrists: 'NONE' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  SAM: {
+    id: 'SAM',
+    name: 'Sam: Everyday',
+    role: 'Friendly Neighbor & Host',
+    emoji: '☕',
+    gender: 'M',
+    skin: { base: '#e6a66b', highlight: '#fed7aa', shadow: '#9a5c2d', rim: '#ffedd5' },
+    eyes: { size: 1.05, shape: 'WIDE_INNOCENT', iris: '#78350f', glow: '#d97706', thirdEye: false },
+    hair: { color: '#451a03', style: 'TEXTURED_CROP', sway: 0.5 },
+    facialHair: 'NONE',
+    headgear: 'NONE',
+    accessories: 'NONE',
+    torso: { type: 'COTTON_TSHIRT', main: '#0284c7', highlight: '#38bdf8', shadow: '#0369a1', trim: '#ffffff' },
+    legs: { type: 'SLIM_JEANS', color: '#1e3a8a', trim: '#f8fafc' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'NONE' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  PRIYA: {
+    id: 'PRIYA',
+    name: 'Priya: Designer',
+    role: 'Creative Designer & Storyteller',
+    emoji: '🎨',
+    gender: 'F',
+    skin: { base: '#c08552', highlight: '#ddb892', shadow: '#7f5539', rim: '#ede0d4' },
+    eyes: { size: 1.2, shape: 'ALMOND_DIVINE', iris: '#15803d', glow: '#22c55e', thirdEye: false },
+    hair: { color: '#171717', style: 'LONG_WAVES', sway: 1.1 },
+    facialHair: 'NONE',
+    headgear: 'NONE',
+    accessories: 'NONE',
+    torso: { type: 'COZY_SWEATER', main: '#d97706', highlight: '#f59e0b', shadow: '#b45309', trim: '#fef3c7' },
+    legs: { type: 'CASUAL_SKIRT', color: '#1e293b', trim: '#f1f5f9' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'SILVER_PENDANT', earrings: 'GOLD_HOOPS', wrists: 'NONE' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  DAVID: {
+    id: 'DAVID',
+    name: 'David: Speaker',
+    role: 'Analyst & Keynote Speaker',
+    emoji: '📊',
+    gender: 'M',
+    skin: { base: '#7c533e', highlight: '#a27054', shadow: '#4d2d1f', rim: '#d6a284' },
+    eyes: { size: 1.0, shape: 'SERENE_MEDITATIVE', iris: '#1f2937', glow: '#374151', thirdEye: false },
+    hair: { color: '#0a0a0a', style: 'SIDE_PART', sway: 0.4 },
+    facialHair: 'SHORT_STUBBLE',
+    headgear: 'NONE',
+    accessories: 'STYLISH_GLASSES',
+    torso: { type: 'CLASSIC_SHIRT', main: '#f8fafc', highlight: '#ffffff', shadow: '#cbd5e1', trim: '#0284c7' },
+    legs: { type: 'CHINO_TROUSERS', color: '#18181b', trim: '#3f3f46' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'SMART_WATCH' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  ELENA: {
+    id: 'ELENA',
+    name: 'Elena: Explorer',
+    role: 'Traveler & Documentarian',
+    emoji: '🧭',
+    gender: 'F',
+    skin: { base: '#e0a96d', highlight: '#eed7a1', shadow: '#9c6f44', rim: '#fff1d0' },
+    eyes: { size: 1.15, shape: 'ROUND_EXPRESSIVE', iris: '#0891b2', glow: '#22d3ee', thirdEye: false },
+    hair: { color: '#7c2d12', style: 'PONYTAIL', sway: 1.2 },
+    facialHair: 'NONE',
+    headgear: 'NONE',
+    accessories: 'NONE',
+    torso: { type: 'JACKET', main: '#059669', highlight: '#10b981', shadow: '#047857', trim: '#fef08a' },
+    legs: { type: 'SLIM_JEANS', color: '#1e293b', trim: '#f8fafc' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'SMART_WATCH' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  ROHAN: {
+    id: 'ROHAN',
+    name: 'Rohan: Student',
+    role: 'Curious Learner & Coder',
+    emoji: '💻',
+    gender: 'M',
+    skin: { base: '#b46e45', highlight: '#d98e64', shadow: '#784325', rim: '#fed7aa' },
+    eyes: { size: 1.1, shape: 'WIDE_INNOCENT', iris: '#3e2723', glow: '#78350f', thirdEye: false },
+    hair: { color: '#18181b', style: 'TEXTURED_CROP', sway: 0.7 },
+    facialHair: 'NONE',
+    headgear: 'NONE',
+    accessories: 'STYLISH_GLASSES',
+    torso: { type: 'CASUAL_HOODIE', main: '#4f46e5', highlight: '#6366f1', shadow: '#3730a3', trim: '#f8fafc' },
+    legs: { type: 'SLIM_JEANS', color: '#111827', trim: '#ffffff' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'NONE' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  ZOE: {
+    id: 'ZOE',
+    name: 'Zoe: Podcaster',
+    role: 'Show Host & Cultural Critic',
+    emoji: '🎧',
+    gender: 'F',
+    skin: { base: '#5c3d2e', highlight: '#855842', shadow: '#3a241b', rim: '#b5856b' },
+    eyes: { size: 1.25, shape: 'ALMOND_DIVINE', iris: '#d97706', glow: '#fbbf24', thirdEye: false },
+    hair: { color: '#0a0a0a', style: 'CURLY_VOLUME', sway: 1.0 },
+    facialHair: 'NONE',
+    headgear: 'NONE',
+    accessories: 'STUDIO_HEADPHONES',
+    torso: { type: 'COZY_SWEATER', main: '#e11d48', highlight: '#f43f5e', shadow: '#be123c', trim: '#fef08a' },
+    legs: { type: 'CHINO_TROUSERS', color: '#18181b', trim: '#ffffff' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'SILVER_PENDANT', earrings: 'GOLD_HOOPS', wrists: 'NONE' },
+    markings: 'NONE',
+    aura: false
+  },
+
+  // --- Historical & Mythological Presets (Preserved for full variety) ---
   RUDRA: {
     id: 'RUDRA',
-    name: 'Rudra: Mahadeva',
+    name: 'Rudra: Yogi',
     role: 'Divine Destroyer & Yogi',
     emoji: '🔱',
     skin: { base: '#3b5368', highlight: '#5c7d99', shadow: '#1e2c38', rim: '#93c5fd' },
@@ -27,7 +189,8 @@ const CHARACTER_PROFILES = {
     legs: { type: 'YOGIC_DHOTI', color: '#c2410c', trim: '#facc15' },
     cape: { enabled: true, color: '#1e293b', trim: '#38bdf8' },
     ornaments: { necklace: 'RUDRAKSHA_COBRA', earrings: 'KUNDALAS', wrists: 'RUDRAKSHA' },
-    markings: 'TRIPUNDRA_CHANDAN'
+    markings: 'TRIPUNDRA_CHANDAN',
+    aura: true
   },
 
   RISHI: {
@@ -43,31 +206,15 @@ const CHARACTER_PROFILES = {
     torso: { type: 'SAFFRON_ANGAVASTRAM', main: '#ea580c', highlight: '#fb923c', shadow: '#9a3412', trim: '#fef08a' },
     legs: { type: 'SAFFRON_DHOTI', color: '#ea580c', trim: '#fbbf24' },
     cape: { enabled: false, color: '#f97316', trim: '#fde047' },
-    ornaments: { necklace: 'RUDRAKSHA_MALA', earrings: 'WOODEN_KUNDALAS', wrists: 'KUSHA_GRASS' },
-    markings: 'CHANDAN_TILAK'
-  },
-
-  ASURA: {
-    id: 'ASURA',
-    name: 'Ravana: Shadow King',
-    role: 'Sovereign of Lanka & Asuras',
-    emoji: '⚔️',
-    skin: { base: '#452b36', highlight: '#694152', shadow: '#26161e', rim: '#f43f5e' },
-    eyes: { size: 1.25, shape: 'BURNING_ASURA', iris: '#ef4444', glow: '#dc2626', thirdEye: false },
-    hair: { color: '#09090b', style: 'WILD_FLOWING', sway: 1.5 },
-    facialHair: 'WARRIOR_MUSTACHE',
-    headgear: 'SPIKED_HORNED_CROWN',
-    torso: { type: 'OBSIDIAN_BATTLE_CUIRASS', main: '#18181b', highlight: '#3f3f46', shadow: '#09090b', trim: '#e11d48' },
-    legs: { type: 'WAR_GREAVES', color: '#27272a', trim: '#dc2626' },
-    cape: { enabled: true, color: '#881337', trim: '#fb7185' },
-    ornaments: { necklace: 'BONE_GOLD_TORC', earrings: 'FANG_KUNDALAS', wrists: 'SPIKED_BRACERS' },
-    markings: 'ASURA_WAR_RUNES'
+    ornaments: { necklace: 'RUDRAKSHA_MALA', earrings: 'NONE', wrists: 'KUSHA_GRASS' },
+    markings: 'CHANDAN_TILAK',
+    aura: true
   },
 
   DEVI: {
     id: 'DEVI',
     name: 'Devi Mahamaya',
-    role: 'Divine Mother & Protector',
+    role: 'Divine Protector',
     emoji: '🌸',
     skin: { base: '#e6a66b', highlight: '#fcd34d', shadow: '#9a5c2d', rim: '#fef08a' },
     eyes: { size: 1.35, shape: 'ALMOND_DIVINE', iris: '#0284c7', glow: '#38bdf8', thirdEye: true },
@@ -78,30 +225,14 @@ const CHARACTER_PROFILES = {
     legs: { type: 'SILK_PLEATED_SAREE', color: '#b91c1c', trim: '#fde047' },
     cape: { enabled: true, color: '#b91c1c', trim: '#facc15' },
     ornaments: { necklace: 'DIAMOND_GOLD_HARAM', earrings: 'JHUMKAS', wrists: 'GOLD_KADHAS' },
-    markings: 'DEVI_RED_BINDI'
-  },
-
-  VASUKI: {
-    id: 'VASUKI',
-    name: 'Vasuki: Serpent King',
-    role: 'Monarch of Patala & Nagas',
-    emoji: '🐍',
-    skin: { base: '#1b4d4f', highlight: '#2dd4bf', shadow: '#0f292a', rim: '#5eead4' },
-    eyes: { size: 1.1, shape: 'BURNING_ASURA', iris: '#10b981', glow: '#34d399', thirdEye: false },
-    hair: { color: '#042f2e', style: 'SERPENT_HOOD_CROWN', sway: 1.1 },
-    facialHair: 'NONE',
-    headgear: 'SEVEN_HOODED_NAGA',
-    torso: { type: 'SCALE_GOLD_ARMOR', main: '#115e59', highlight: '#14b8a6', shadow: '#042f2e', trim: '#facc15' },
-    legs: { type: 'SERPENT_SCALE_DHOTI', color: '#0f766e', trim: '#facc15' },
-    cape: { enabled: true, color: '#042f2e', trim: '#2dd4bf' },
-    ornaments: { necklace: 'EMERALD_SERPENT_TORC', earrings: 'COBRA_KUNDALAS', wrists: 'SERPENT_COILS' },
-    markings: 'NAGA_SCALES'
+    markings: 'DEVI_RED_BINDI',
+    aura: true
   },
 
   SHESHANAGA: {
     id: 'SHESHANAGA',
-    name: 'Sheshanaga: The Cosmic',
-    role: 'Bed of Vishnu & Time Keeper',
+    name: 'Sheshanaga',
+    role: 'The Cosmic Horizon',
     emoji: '🌌',
     skin: { base: '#253d6e', highlight: '#60a5fa', shadow: '#172554', rim: '#bfdbfe' },
     eyes: { size: 1.2, shape: 'SERENE_MEDITATIVE', iris: '#38bdf8', glow: '#93c5fd', thirdEye: false },
@@ -111,116 +242,33 @@ const CHARACTER_PROFILES = {
     torso: { type: 'CELESTIAL_SILK_VEST', main: '#1e40af', highlight: '#3b82f6', shadow: '#1e3a8a', trim: '#facc15' },
     legs: { type: 'OCEAN_BLUE_DHOTI', color: '#1d4ed8', trim: '#fef08a' },
     cape: { enabled: true, color: '#172554', trim: '#60a5fa' },
-    ornaments: { necklace: 'COSMIC_STAR_MALAS', earrings: 'SAPPHIRE_DROPS', wrists: 'GOLD_BANDS' },
-    markings: 'VISHNU_TILAK'
+    ornaments: { necklace: 'COSMIC_STAR_MALAS', earrings: 'NONE', wrists: 'GOLD_BANDS' },
+    markings: 'VISHNU_TILAK',
+    aura: true
   },
 
-  ARJUNA: {
-    id: 'ARJUNA',
-    name: 'Prince Arjuna: Dhanurdhari',
-    role: 'Peerless Archer of Bharat',
-    emoji: '🏹',
-    skin: { base: '#9c6644', highlight: '#c08552', shadow: '#6f452a', rim: '#f6bd60' },
-    eyes: { size: 1.05, shape: 'FIERCE_WARRIOR', iris: '#451a03', glow: '#f59e0b', thirdEye: false },
-    hair: { color: '#18181b', style: 'WARRIOR_TOPKNOT', sway: 0.9 },
-    facialHair: 'SHORT_STUBBLE',
-    headgear: 'SILVER_GOLD_WAR_MUKUT',
-    torso: { type: 'ROYAL_ARCHER_CUIRASS', main: '#334155', highlight: '#64748b', shadow: '#1e293b', trim: '#facc15' },
-    legs: { type: 'WAR_GREAVES', color: '#1e293b', trim: '#facc15' },
-    cape: { enabled: true, color: '#334155', trim: '#e2e8f0' },
-    ornaments: { necklace: 'PEARL_WARRIOR_CHOKER', earrings: 'ROYAL_KUNDALAS', wrists: 'ARCHER_BRACERS' },
-    markings: 'GANDIVA_SYMBOL'
-  },
-
-  KARNA: {
-    id: 'KARNA',
-    name: 'Karna: Suryaputra',
-    role: 'Warrior of Golden Armor',
-    emoji: '☀️',
-    skin: { base: '#b45309', highlight: '#fbbf24', shadow: '#78350f', rim: '#fef08a' },
-    eyes: { size: 1.1, shape: 'FIERCE_WARRIOR', iris: '#d97706', glow: '#fbbf24', thirdEye: false },
-    hair: { color: '#09090b', style: 'WARRIOR_MANE', sway: 1.1 },
-    facialHair: 'WARRIOR_MUSTACHE',
-    headgear: 'SUN_SURYA_MUKUT',
-    torso: { type: 'KAVACHA_GOLDEN_SKIN', main: '#eab308', highlight: '#fef08a', shadow: '#a16207', trim: '#f59e0b' },
-    legs: { type: 'GOLD_LEGGINGS', color: '#ca8a04', trim: '#fef08a' },
-    cape: { enabled: true, color: '#ea580c', trim: '#fef08a' },
-    ornaments: { necklace: 'SURYA_COLLAR', earrings: 'DIVINE_KUNDALAS', wrists: 'GOLD_KADHAS' },
-    markings: 'SURYA_CREST'
-  },
-
-  INDRA: {
-    id: 'INDRA',
-    name: 'Indra: King of Devas',
-    role: 'Lord of Lightning & Heavens',
-    emoji: '⚡',
-    skin: { base: '#d4a373', highlight: '#faedcd', shadow: '#996633', rim: '#ffffff' },
-    eyes: { size: 1.05, shape: 'ALMOND_DIVINE', iris: '#2563eb', glow: '#60a5fa', thirdEye: false },
-    hair: { color: '#1e293b', style: 'ROYAL_WAVES', sway: 1.0 },
-    facialHair: 'ROYAL_BEARD',
-    headgear: 'VAJRA_DIAMOND_CROWN',
-    torso: { type: 'CELESTIAL_ARMOR', main: '#4f46e5', highlight: '#818cf8', shadow: '#312e81', trim: '#facc15' },
-    legs: { type: 'ROYAL_DHOTI', color: '#4338ca', trim: '#facc15' },
-    cape: { enabled: true, color: '#3730a3', trim: '#93c5fd' },
-    ornaments: { necklace: 'VAJRA_PENDANT', earrings: 'DIAMOND_STUDS', wrists: 'THUNDER_BRACERS' },
-    markings: 'LIGHTNING_MARK'
-  },
-
-  GARUDA: {
-    id: 'GARUDA',
-    name: 'Garuda: King of Birds',
-    role: 'Vehicle of Lord Vishnu',
-    emoji: '🦅',
-    skin: { base: '#b45309', highlight: '#f59e0b', shadow: '#78350f', rim: '#fef08a' },
-    eyes: { size: 1.25, shape: 'FIERCE_WARRIOR', iris: '#b91c1c', glow: '#ef4444', thirdEye: false },
-    hair: { color: '#ca8a04', style: 'FEATHER_CREST', sway: 1.4 },
+  VASUKI: {
+    id: 'VASUKI',
+    name: 'Vasuki: Serpent King',
+    role: 'Monarch of Patala',
+    emoji: '🐍',
+    skin: { base: '#1b4d4f', highlight: '#2dd4bf', shadow: '#0f292a', rim: '#5eead4' },
+    eyes: { size: 1.1, shape: 'BURNING_ASURA', iris: '#10b981', glow: '#34d399', thirdEye: false },
+    hair: { color: '#042f2e', style: 'SERPENT_HOOD_CROWN', sway: 1.1 },
     facialHair: 'NONE',
-    headgear: 'GOLDEN_BEAK_CROWN',
-    torso: { type: 'FEATHERED_CUIRASS', main: '#eab308', highlight: '#fef08a', shadow: '#854d0e', trim: '#b91c1c' },
-    legs: { type: 'TALON_GREAVES', color: '#a16207', trim: '#fef08a' },
-    cape: { enabled: true, color: '#ca8a04', trim: '#fef08a' },
-    ornaments: { necklace: 'SNAKE_TROPHY_CHOKER', earrings: 'FEATHER_KUNDALAS', wrists: 'GOLD_TALON_BANDS' },
-    markings: 'SOLAR_FEATHER'
-  },
-
-  YAKSHI: {
-    id: 'YAKSHI',
-    name: 'Yakshi: Forest Spirit',
-    role: 'Guardian of Sacred Groves',
-    emoji: '🌿',
-    skin: { base: '#889a74', highlight: '#b7c7a3', shadow: '#586b46', rim: '#d9f99d' },
-    eyes: { size: 1.3, shape: 'WIDE_INNOCENT', iris: '#15803d', glow: '#4ade80', thirdEye: false },
-    hair: { color: '#172554', style: 'FLORAL_VINE_BRAIDS', sway: 1.4 },
-    facialHair: 'NONE',
-    headgear: 'JASMINE_FLOWER_TIARA',
-    torso: { type: 'LUSH_SILK_CHOLI', main: '#15803d', highlight: '#22c55e', shadow: '#14532d', trim: '#fef08a' },
-    legs: { type: 'EMERALD_SILK_SKIRT', color: '#166534', trim: '#86efac' },
-    cape: { enabled: true, color: '#14532d', trim: '#4ade80' },
-    ornaments: { necklace: 'LOTUS_SEED_MALA', earrings: 'BLOSSOM_STUDS', wrists: 'VINE_BRACELETS' },
-    markings: 'LEAF_BINDI'
-  },
-
-  SHISHYA: {
-    id: 'SHISHYA',
-    name: 'Shishya: The Seeker',
-    role: 'Devoted Disciple of Gurukul',
-    emoji: '📜',
-    skin: { base: '#9c6644', highlight: '#c08552', shadow: '#6f452a', rim: '#fde047' },
-    eyes: { size: 1.15, shape: 'WIDE_INNOCENT', iris: '#3e2723', glow: '#f59e0b', thirdEye: false },
-    hair: { color: '#0f172a', style: 'SIMPLE_TOPKNOT', sway: 0.8 },
-    facialHair: 'NONE',
-    headgear: 'NONE',
-    torso: { type: 'SIMPLE_COTTON_UTTARIYA', main: '#f8fafc', highlight: '#ffffff', shadow: '#cbd5e1', trim: '#d97706' },
-    legs: { type: 'COTTON_DHOTI', color: '#f1f5f9', trim: '#b45309' },
-    cape: { enabled: false, color: '#f8fafc', trim: '#e2e8f0' },
-    ornaments: { necklace: 'TULSI_BEADS', earrings: 'NONE', wrists: 'RED_SACRED_THREAD' },
-    markings: 'SANDALWOOD_DOT'
+    headgear: 'SEVEN_HOODED_NAGA',
+    torso: { type: 'SCALE_GOLD_ARMOR', main: '#115e59', highlight: '#14b8a6', shadow: '#042f2e', trim: '#facc15' },
+    legs: { type: 'SERPENT_SCALE_DHOTI', color: '#0f766e', trim: '#facc15' },
+    cape: { enabled: true, color: '#042f2e', trim: '#2dd4bf' },
+    ornaments: { necklace: 'EMERALD_SERPENT_TORC', earrings: 'NONE', wrists: 'SERPENT_COILS' },
+    markings: 'NAGA_SCALES',
+    aura: true
   }
 };
 
 class CharacterRig {
-  constructor(profileKey = 'RUDRA') {
-    this.profile = JSON.parse(JSON.stringify(CHARACTER_PROFILES[profileKey] || CHARACTER_PROFILES.RUDRA));
+  constructor(profileKey = 'ALEX') {
+    this.profile = JSON.parse(JSON.stringify(CHARACTER_PROFILES[profileKey] || CHARACTER_PROFILES.ALEX));
 
     // World & Locomotion Transform
     this.worldX = 0;         // -220 (stage left) to +220 (stage right)
@@ -246,10 +294,10 @@ class CharacterRig {
       eyeBlink: 0,           // 0 to 1
       eyeLookX: 0,
       eyeLookY: 0,
-      leftArmAngle: 0.2,
-      rightArmAngle: -0.2,
-      leftForearmAngle: 0.3,
-      rightForearmAngle: -0.3,
+      leftArmAngle: 0.15,
+      rightArmAngle: -0.15,
+      leftForearmAngle: 0.25,
+      rightForearmAngle: -0.25,
       leftLegAngle: 0,       // hip rotation
       rightLegAngle: 0,
       leftKneeAngle: 0,      // knee bend
@@ -277,6 +325,10 @@ class CharacterRig {
     }
   }
 
+  setArchetype(profileKey) {
+    this.setProfile(profileKey);
+  }
+
   setCustomParam(category, key, value) {
     if (this.profile[category] && this.profile[category][key] !== undefined) {
       this.profile[category][key] = value;
@@ -285,51 +337,111 @@ class CharacterRig {
     }
   }
 
+  setName(name) {
+    this.profile.name = name;
+  }
+
+  setOutfit(type, mainColor, accentColor) {
+    if (!this.profile.torso) this.profile.torso = {};
+    if (type) this.profile.torso.type = type;
+    if (mainColor) {
+      this.profile.torso.main = mainColor;
+      this.profile.torso.highlight = mainColor;
+    }
+    if (accentColor) this.profile.torso.trim = accentColor;
+  }
+
+  setHair(style, color) {
+    if (!this.profile.hair) this.profile.hair = {};
+    if (style) this.profile.hair.style = style;
+    if (color) this.profile.hair.color = color;
+  }
+
+  setSkinTone(base, highlight, shadow) {
+    this.profile.skin = { base, highlight: highlight || base, shadow: shadow || base, rim: '#ffffff' };
+  }
+
+  setEyes(irisColor, size) {
+    if (!this.profile.eyes) this.profile.eyes = {};
+    if (irisColor) {
+      this.profile.eyes.iris = irisColor;
+      this.profile.eyes.glow = irisColor;
+    }
+    if (size) this.profile.eyes.size = size;
+  }
+
+  setAccessory(acc) {
+    this.profile.accessories = acc;
+  }
+
   randomizeNewCharacter() {
-    const keys = Object.keys(CHARACTER_PROFILES);
-    const p1 = CHARACTER_PROFILES[keys[Math.floor(Math.random() * keys.length)]];
-    const p2 = CHARACTER_PROFILES[keys[Math.floor(Math.random() * keys.length)]];
-
-    const randomSkinHues = [
-      { base: '#3b5368', highlight: '#5c7d99', shadow: '#1e2c38', rim: '#93c5fd' }, // Ash blue
-      { base: '#b46e45', highlight: '#d98e64', shadow: '#784325', rim: '#fed7aa' }, // Wheatish
-      { base: '#452b36', highlight: '#694152', shadow: '#26161e', rim: '#f43f5e' }, // Obsidian bronze
-      { base: '#e6a66b', highlight: '#fcd34d', shadow: '#9a5c2d', rim: '#fef08a' }, // Radiant gold
-      { base: '#1b4d4f', highlight: '#2dd4bf', shadow: '#0f292a', rim: '#5eead4' }, // Emerald serpent
-      { base: '#253d6e', highlight: '#60a5fa', shadow: '#172554', rim: '#bfdbfe' }, // Deep sapphire
-      { base: '#9c6644', highlight: '#c08552', shadow: '#6f452a', rim: '#fde047' }, // Warm tan
-      { base: '#889a74', highlight: '#b7c7a3', shadow: '#586b46', rim: '#d9f99d' }  // Forest jade
+    const names = ['Alex', 'Maya', 'Jordan', 'Sam', 'Taylor', 'Chris', 'Elena', 'David', 'Priya', 'Leo', 'Zoe', 'Morgan'];
+    const roles = ['Creator', 'Host', 'Thinker', 'Designer', 'Student', 'Writer', 'Analyst', 'Traveler'];
+    const skinTones = [
+      { base: '#f7d7c4', highlight: '#fff0e5', shadow: '#e0b89f', rim: '#ffffff' }, // Fair
+      { base: '#d4a373', highlight: '#faedcd', shadow: '#996633', rim: '#ffffff' }, // Warm wheatish
+      { base: '#e6a66b', highlight: '#fed7aa', shadow: '#9a5c2d', rim: '#ffedd5' }, // Honey tan
+      { base: '#b46e45', highlight: '#d98e64', shadow: '#784325', rim: '#fed7aa' }, // Golden bronze
+      { base: '#7c533e', highlight: '#a27054', shadow: '#4d2d1f', rim: '#d6a284' }, // Rich brown
+      { base: '#4a2c1d', highlight: '#70422c', shadow: '#2d180e', rim: '#9c6644' }  // Deep espresso
     ];
+    const hairStyles = ['MODERN_FADE', 'SLEEK_BOB', 'TEXTURED_CROP', 'LONG_WAVES', 'SIDE_PART', 'PONYTAIL', 'CURLY_VOLUME'];
+    const hairColors = ['#18181b', '#09090b', '#451a03', '#7c2d12', '#d97706', '#94a3b8'];
+    const eyeColors = ['#3e2723', '#1e3a8a', '#15803d', '#78350f', '#0891b2', '#0f172a'];
+    const outfits = ['CASUAL_HOODIE', 'SMART_BLAZER', 'COTTON_TSHIRT', 'COZY_SWEATER', 'CLASSIC_SHIRT', 'JACKET'];
+    const outfitColors = ['#1e293b', '#0f172a', '#0284c7', '#d97706', '#4f46e5', '#059669', '#e11d48', '#334155'];
+    const accessories = ['NONE', 'STYLISH_GLASSES', 'STUDIO_HEADPHONES'];
 
-    const chosenSkin = randomSkinHues[Math.floor(Math.random() * randomSkinHues.length)];
-    const chosenEyeSize = 0.8 + Math.random() * 0.6; // 0.8 to 1.4
+    const chosenName = names[Math.floor(Math.random() * names.length)];
+    const chosenRole = roles[Math.floor(Math.random() * roles.length)];
+    const chosenSkin = skinTones[Math.floor(Math.random() * skinTones.length)];
+    const chosenHair = hairStyles[Math.floor(Math.random() * hairStyles.length)];
+    const chosenHairColor = hairColors[Math.floor(Math.random() * hairColors.length)];
+    const chosenEyeColor = eyeColors[Math.floor(Math.random() * eyeColors.length)];
+    const chosenOutfit = outfits[Math.floor(Math.random() * outfits.length)];
+    const chosenOutfitColor = outfitColors[Math.floor(Math.random() * outfitColors.length)];
+    const chosenAccessory = accessories[Math.floor(Math.random() * accessories.length)];
 
     this.profile = {
       id: 'CUSTOM_' + Date.now(),
-      name: 'Hero: ' + ['Veera', 'Deva', 'Yoddha', 'Aditya', 'Bhairava', 'Tara', 'Surya'][Math.floor(Math.random() * 7)],
-      role: 'Mythic Hero',
-      emoji: ['✨', '⚔️', '🔱', '👑', '🏹', '⚡'][Math.floor(Math.random() * 6)],
+      name: `${chosenName}: ${chosenRole}`,
+      role: chosenRole,
+      emoji: '👤',
       skin: chosenSkin,
       eyes: {
-        size: chosenEyeSize,
-        shape: ['FIERCE_WARRIOR', 'ALMOND_DIVINE', 'SERENE_MEDITATIVE', 'BURNING_ASURA', 'WIDE_INNOCENT'][Math.floor(Math.random() * 5)],
-        iris: p1.eyes.iris,
-        glow: p2.eyes.glow,
-        thirdEye: Math.random() > 0.6
+        size: 0.95 + Math.random() * 0.3,
+        shape: 'ROUND_EXPRESSIVE',
+        iris: chosenEyeColor,
+        glow: chosenEyeColor,
+        thirdEye: false
       },
       hair: {
-        color: ['#0f172a', '#18181b', '#e2e8f0', '#ca8a04', '#451a03'][Math.floor(Math.random() * 5)],
-        style: p1.hair.style,
-        sway: 1.0 + Math.random() * 0.5
+        color: chosenHairColor,
+        style: chosenHair,
+        sway: 0.7
       },
-      facialHair: ['NONE', 'SHORT_STUBBLE', 'WARRIOR_MUSTACHE', 'ROYAL_BEARD', 'FULL_WHITE_BEARD'][Math.floor(Math.random() * 5)],
-      headgear: p2.headgear,
-      torso: p1.torso,
-      legs: p2.legs,
-      cape: { enabled: Math.random() > 0.3, color: p1.cape.color, trim: p2.cape.trim },
-      ornaments: p1.ornaments,
-      markings: ['TRIPUNDRA_CHANDAN', 'CHANDAN_TILAK', 'DEVI_RED_BINDI', 'VISHNU_TILAK', 'GANDIVA_SYMBOL', 'NONE'][Math.floor(Math.random() * 6)]
+      facialHair: Math.random() > 0.6 ? 'SHORT_STUBBLE' : 'NONE',
+      headgear: 'NONE',
+      accessories: chosenAccessory,
+      torso: {
+        type: chosenOutfit,
+        main: chosenOutfitColor,
+        highlight: chosenOutfitColor,
+        shadow: '#0f172a',
+        trim: '#f8fafc'
+      },
+      legs: {
+        type: Math.random() > 0.4 ? 'SLIM_JEANS' : 'CHINO_TROUSERS',
+        color: '#1e293b',
+        trim: '#ffffff'
+      },
+      cape: { enabled: false, color: '#000000', trim: '#000000' },
+      ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: Math.random() > 0.5 ? 'SMART_WATCH' : 'NONE' },
+      markings: 'NONE',
+      aura: false
     };
+
+    return this.profile;
   }
 
   /**
@@ -483,25 +595,25 @@ class CharacterRig {
     ctx.translate(this.worldX + ox, this.worldY + oy + this.bones.rootY);
     ctx.scale(this.facing * scale, scale * this.bones.breathScaleY);
 
-    // Layer 0: Divine Prabhavali (Sacred Radiance & Aura)
+    // Layer 0: Divine Prabhavali (Sacred Radiance & Aura) - only if enabled
     this.renderPrabhavali(ctx);
 
     // Layer 1: Back Cape & Hair
-    if (this.profile.cape.enabled) {
+    if (this.profile.cape && this.profile.cape.enabled) {
       this.renderCape(ctx);
     }
     this.renderBackHair(ctx);
 
-    // Layer 2: Articulated Legs & Walking Sandal/Greaves
+    // Layer 2: Articulated Legs & Walking Sandal/Sneakers
     this.renderLegs(ctx);
 
-    // Layer 3: Torso Cuirass / Robe & Shoulders
+    // Layer 3: Torso Cuirass / Modern Clothing & Shoulders
     this.renderTorso(ctx);
 
-    // Layer 4: Neck & Sacred Malas
+    // Layer 4: Neck & Collar / Ornaments
     this.renderNeck(ctx);
 
-    // Layer 5: Head, Facial Structure, Eyes, Nose & Lip-Sync Mouth
+    // Layer 5: Head, Facial Structure, Eyes, Glasses, Nose & Lip-Sync Mouth
     ctx.save();
     ctx.translate(this.bones.headOffsetX, -165 + this.bones.headOffsetY);
     ctx.rotate(this.bones.headAngle);
@@ -521,11 +633,13 @@ class CharacterRig {
   /* ------------------- SACRED DIVINE PRABHAVALI (AURA & HALO) ------------------- */
 
   renderPrabhavali(ctx) {
+    if (!this.profile.aura) return; // Modern neutral characters do NOT have halos!
+
     ctx.save();
     ctx.translate(this.bones.headOffsetX * 0.5, -150);
     const pulse = 1.0 + Math.sin(this.time * 2.2) * 0.04;
     const auraRadius = 115 * pulse;
-    const auraColor = this.profile.eyes.glow || this.profile.torso.trim || '#facc15';
+    const auraColor = this.profile.eyes?.glow || this.profile.torso?.trim || '#facc15';
 
     // Soft outer celestial radiance
     const auraGrad = ctx.createRadialGradient(0, 0, 30, 0, 0, auraRadius);
@@ -546,24 +660,6 @@ class CharacterRig {
     ctx.arc(0, 0, 75, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Subtle radiating sacred needles
-    ctx.save();
-    ctx.rotate(this.time * 0.15);
-    ctx.strokeStyle = auraColor + '40';
-    ctx.lineWidth = 1.2;
-    for (let r = 0; r < 16; r++) {
-      const angle = (r / 16) * Math.PI * 2;
-      const x1 = Math.cos(angle) * 76;
-      const y1 = Math.sin(angle) * 76;
-      const x2 = Math.cos(angle) * 92;
-      const y2 = Math.sin(angle) * 92;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-    ctx.restore();
-
     ctx.restore();
   }
 
@@ -571,9 +667,9 @@ class CharacterRig {
 
   renderLegs(ctx) {
     ctx.save();
-    const legType = this.profile.legs?.type || 'ROYAL_DHOTI';
-    const mainColor = this.profile.legs?.color || '#ea580c';
-    const trimColor = this.profile.legs?.trim || '#facc15';
+    const legType = this.profile.legs?.type || 'SLIM_JEANS';
+    const mainColor = this.profile.legs?.color || '#1e293b';
+    const trimColor = this.profile.legs?.trim || '#f8fafc';
 
     // Left Leg (Behind / Lead)
     this.renderSingleLeg(ctx, -26, this.bones.leftLegAngle, this.bones.leftKneeAngle, mainColor, trimColor, legType, -1);
@@ -589,145 +685,143 @@ class CharacterRig {
     ctx.translate(hipX, 110);
     ctx.rotate(hipAngle);
 
-    // 1. Thigh & Cascading Pleated Dhoti / Greave
-    const thighGrad = ctx.createLinearGradient(-18, 0, 18, 90);
-    thighGrad.addColorStop(0, color);
-    thighGrad.addColorStop(0.5, color);
-    thighGrad.addColorStop(1, '#1e1104');
+    const isModernPants = type === 'SLIM_JEANS' || type === 'CHINO_TROUSERS' || type === 'CASUAL_SKIRT';
 
-    ctx.fillStyle = thighGrad;
-    ctx.strokeStyle = trim;
-    ctx.lineWidth = 2.5;
+    if (isModernPants) {
+      // Modern Trousers / Jeans
+      const pantGrad = ctx.createLinearGradient(-16, 0, 16, 90);
+      pantGrad.addColorStop(0, color);
+      pantGrad.addColorStop(0.6, color);
+      pantGrad.addColorStop(1, '#0f172a');
 
-    ctx.beginPath();
-    ctx.moveTo(-18, 0);
-    ctx.quadraticCurveTo(-22, 45, -14, 88);
-    ctx.lineTo(14, 88);
-    ctx.quadraticCurveTo(22, 45, 18, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+      ctx.fillStyle = pantGrad;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = 1.5;
 
-    // Dhoti Silk Pleats (diagonal fold highlights)
-    ctx.strokeStyle = trim + '77';
-    ctx.lineWidth = 1.5;
-    for (let p = 15; p <= 75; p += 18) {
+      // Thigh
       ctx.beginPath();
-      ctx.moveTo(-14, p);
-      ctx.lineTo(12, p + 6);
+      ctx.moveTo(-16, 0);
+      ctx.quadraticCurveTo(-18, 45, -13, 86);
+      ctx.lineTo(13, 86);
+      ctx.quadraticCurveTo(18, 45, 16, 0);
+      ctx.closePath();
+      ctx.fill();
       ctx.stroke();
-    }
 
-    // Embroidered Zari border along thigh hem
-    ctx.strokeStyle = trim;
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(-15, 84);
-    ctx.lineTo(15, 84);
-    ctx.stroke();
-
-    // 2. Articulated Knee Cop / Rondel
-    ctx.translate(0, 88);
-    ctx.rotate(kneeAngle);
-
-    // Golden knee medallion
-    const kneeGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 13);
-    kneeGrad.addColorStop(0, '#ffffff');
-    kneeGrad.addColorStop(0.3, trim);
-    kneeGrad.addColorStop(1, '#b45309');
-
-    ctx.fillStyle = kneeGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, 12, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Center jewel in knee rondel
-    ctx.fillStyle = '#dc2626';
-    ctx.beginPath();
-    ctx.arc(0, 0, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 3. Shin, Calf & Lower Dhoti / Greave
-    ctx.fillStyle = thighGrad;
-    ctx.strokeStyle = trim;
-    ctx.lineWidth = 2.2;
-
-    ctx.beginPath();
-    ctx.moveTo(-13, 0);
-    ctx.quadraticCurveTo(-16, 45, -10, 85);
-    ctx.lineTo(10, 85);
-    ctx.quadraticCurveTo(16, 45, 13, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Shin highlights / pleats
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.moveTo(0, 6);
-    ctx.lineTo(0, 75);
-    ctx.stroke();
-
-    // 4. Ankle & Sacred Ornate Payal / Ghungroos
-    ctx.translate(0, 85);
-
-    // Multi-tier Golden Payal
-    ctx.fillStyle = trim;
-    ctx.fillRect(-12, -4, 24, 5);
-    // Ghungroo bells
-    for (let g = -10; g <= 10; g += 5) {
+      // Subtle Denim Side Seam
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.0;
       ctx.beginPath();
-      ctx.arc(g, 3, 2, 0, Math.PI * 2);
+      ctx.moveTo(12, 10);
+      ctx.lineTo(10, 80);
+      ctx.stroke();
+
+      // Knee joint
+      ctx.translate(0, 86);
+      ctx.rotate(kneeAngle);
+
+      // Shin / Lower Leg
+      ctx.fillStyle = pantGrad;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = 1.5;
+
+      ctx.beginPath();
+      ctx.moveTo(-13, 0);
+      ctx.quadraticCurveTo(-15, 45, -11, 85);
+      ctx.lineTo(11, 85);
+      ctx.quadraticCurveTo(15, 45, 13, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Ankle & Modern Clean Sneakers
+      ctx.translate(0, 85);
+
+      // Sneaker Silhouette
+      // White rubber sole
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(-12, 14, 38, 6, 3);
+      ctx.fill();
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      // Sneaker Upper (Accent color or clean white)
+      ctx.fillStyle = trim === '#f8fafc' || trim === '#ffffff' ? '#f1f5f9' : trim;
+      ctx.beginPath();
+      ctx.moveTo(-11, 2);
+      ctx.lineTo(14, 2);
+      ctx.quadraticCurveTo(24, 6, 25, 14);
+      ctx.lineTo(-11, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Sneaker Laces & Tongue
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-2, 3, 10, 4);
+      ctx.fillRect(-1, 8, 12, 3);
+
+    } else {
+      // Traditional Pleated Dhoti / Greaves
+      const thighGrad = ctx.createLinearGradient(-18, 0, 18, 90);
+      thighGrad.addColorStop(0, color);
+      thighGrad.addColorStop(0.5, color);
+      thighGrad.addColorStop(1, '#1e1104');
+
+      ctx.fillStyle = thighGrad;
+      ctx.strokeStyle = trim;
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.quadraticCurveTo(-22, 45, -14, 88);
+      ctx.lineTo(14, 88);
+      ctx.quadraticCurveTo(22, 45, 18, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Knee joint
+      ctx.translate(0, 88);
+      ctx.rotate(kneeAngle);
+
+      ctx.beginPath();
+      ctx.arc(0, 0, 12, 0, Math.PI * 2);
+      ctx.fillStyle = trim;
+      ctx.fill();
+
+      // Shin
+      ctx.fillStyle = thighGrad;
+      ctx.beginPath();
+      ctx.moveTo(-13, 0);
+      ctx.quadraticCurveTo(-16, 45, -10, 85);
+      ctx.lineTo(10, 85);
+      ctx.quadraticCurveTo(16, 45, 13, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Sandal
+      ctx.translate(0, 85);
+      ctx.fillStyle = trim;
+      ctx.beginPath();
+      ctx.roundRect(-12, 14, 38, 5, 2);
       ctx.fill();
     }
-
-    // 5. Foot Anatomy & Royal Paduka / Sandal
-    // Foot arch
-    ctx.fillStyle = this.profile.skin.base;
-    ctx.beginPath();
-    ctx.moveTo(-10, 2);
-    ctx.lineTo(24, 2);
-    ctx.quadraticCurveTo(26, 12, 22, 16);
-    ctx.lineTo(-10, 16);
-    ctx.closePath();
-    ctx.fill();
-
-    // Golden Sandal Sole
-    ctx.fillStyle = trim;
-    ctx.beginPath();
-    ctx.roundRect(-12, 14, 38, 5, 2);
-    ctx.fill();
-
-    // Royal Sandal Straps & Golden Toe Ring (Angutha)
-    ctx.strokeStyle = trim;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-8, 3);
-    ctx.lineTo(14, 14);
-    ctx.moveTo(8, 3);
-    ctx.lineTo(20, 14);
-    ctx.stroke();
-
-    // Golden Toe Stud
-    ctx.fillStyle = '#fef08a';
-    ctx.beginPath();
-    ctx.arc(22, 9, 2.5, 0, Math.PI * 2);
-    ctx.fill();
 
     ctx.restore();
   }
 
   renderCape(ctx) {
+    if (!this.profile.cape || !this.profile.cape.enabled) return;
+
     ctx.save();
     const sway = this.bones.capeSway;
     const capeColor = this.profile.cape.color;
     const trimColor = this.profile.cape.trim || '#facc15';
 
-    // Rich shaded velvet / royal silk gradient
     const capeGrad = ctx.createLinearGradient(0, -110, sway * 0.8, 330);
     capeGrad.addColorStop(0, '#0a0a0f');
     capeGrad.addColorStop(0.35, capeColor);
@@ -738,7 +832,6 @@ class CharacterRig {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
     ctx.shadowBlur = 22;
 
-    // Fluid royal drape geometry
     ctx.beginPath();
     ctx.moveTo(-105, -110);
     ctx.quadraticCurveTo(-135 + sway * 0.7, 110, -165 + sway * 1.4, 335);
@@ -749,37 +842,24 @@ class CharacterRig {
     ctx.fill();
 
     ctx.shadowBlur = 0;
-
-    // Embroidered Golden Zari Border Hem
     ctx.strokeStyle = trimColor;
     ctx.lineWidth = 3.5;
     ctx.stroke();
-
-    // Inner embroidered filigree line
-    ctx.strokeStyle = trimColor + '66';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(-155 + sway * 1.4, 325);
-    ctx.quadraticCurveTo(-70 + sway * 0.9, 312, 0 + sway * 0.5, 328);
-    ctx.quadraticCurveTo(70 + sway * 0.9, 312, 155 + sway * 1.4, 325);
-    ctx.stroke();
-
-    // Corner Golden Medallions / Tassels
-    ctx.fillStyle = trimColor;
-    ctx.beginPath();
-    ctx.arc(-165 + sway * 1.4, 335, 5, 0, Math.PI * 2);
-    ctx.arc(165 + sway * 1.4, 335, 5, 0, Math.PI * 2);
-    ctx.fill();
 
     ctx.restore();
   }
 
   renderBackHair(ctx) {
+    const hairStyle = this.profile.hair?.style || 'MODERN_FADE';
+    // Short modern hairstyles don't drape long strands down the back
+    if (hairStyle === 'MODERN_FADE' || hairStyle === 'SHORT_CROP' || hairStyle === 'TEXTURED_CROP' || hairStyle === 'SIDE_PART') {
+      return;
+    }
+
     ctx.save();
     const sway = this.bones.hairSway;
-    const hairColor = this.profile.hair.color;
+    const hairColor = this.profile.hair?.color || '#18181b';
 
-    // Multi-lock flowing hair with depth gradients
     const hairGrad = ctx.createLinearGradient(0, -160, 0, 120);
     hairGrad.addColorStop(0, '#020306');
     hairGrad.addColorStop(0.6, hairColor);
@@ -787,41 +867,18 @@ class CharacterRig {
 
     ctx.fillStyle = hairGrad;
 
-    // Left flowing locks (cascading layers)
+    // Natural flowing hair layers for long hair styles
     ctx.beginPath();
-    ctx.moveTo(-60, -160);
-    ctx.quadraticCurveTo(-110 + sway * 0.8, -40, -95 + sway * 1.2, 85);
-    ctx.quadraticCurveTo(-70 + sway * 0.5, 50, -45, -120);
+    ctx.moveTo(-55, -150);
+    ctx.quadraticCurveTo(-95 + sway * 0.8, -30, -80 + sway * 1.2, 80);
+    ctx.quadraticCurveTo(-55 + sway * 0.5, 45, -35, -110);
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(-45, -140);
-    ctx.quadraticCurveTo(-90 + sway * 1.1, -10, -75 + sway * 1.6, 120);
-    ctx.quadraticCurveTo(-50 + sway * 0.7, 70, -25, -100);
+    ctx.moveTo(55, -150);
+    ctx.quadraticCurveTo(95 + sway * 0.8, -30, 80 + sway * 1.2, 80);
+    ctx.quadraticCurveTo(55 + sway * 0.5, 45, 35, -110);
     ctx.fill();
-
-    // Right flowing locks (cascading layers)
-    ctx.beginPath();
-    ctx.moveTo(60, -160);
-    ctx.quadraticCurveTo(110 + sway * 0.8, -40, 95 + sway * 1.2, 85);
-    ctx.quadraticCurveTo(70 + sway * 0.5, 50, 45, -120);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(45, -140);
-    ctx.quadraticCurveTo(90 + sway * 1.1, -10, 75 + sway * 1.6, 120);
-    ctx.quadraticCurveTo(50 + sway * 0.7, 70, 25, -100);
-    ctx.fill();
-
-    // Lustrous sheen strands
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(-52, -130);
-    ctx.quadraticCurveTo(-82 + sway, 0, -68 + sway * 1.3, 75);
-    ctx.moveTo(52, -130);
-    ctx.quadraticCurveTo(82 + sway, 0, 68 + sway * 1.3, 75);
-    ctx.stroke();
 
     ctx.restore();
   }
@@ -830,178 +887,266 @@ class CharacterRig {
     ctx.save();
     ctx.rotate(this.bones.chestAngle);
 
-    const t = this.profile.torso;
-    const skin = this.profile.skin;
+    const t = this.profile.torso || {};
+    const outfitType = t.type || 'CASUAL_HOODIE';
+    const mainColor = t.main || '#1e293b';
+    const trimColor = t.trim || '#38bdf8';
 
-    // Muscular Cuirass / Robe Form with 3D volumetric shading
-    const grad = ctx.createLinearGradient(-90, -120, 90, 120);
-    grad.addColorStop(0, t.highlight);
-    grad.addColorStop(0.5, t.main);
-    grad.addColorStop(1, t.shadow);
+    if (outfitType === 'CASUAL_HOODIE') {
+      // 1. Modern Casual Hoodie
+      const hoodieGrad = ctx.createLinearGradient(-75, -115, 75, 120);
+      hoodieGrad.addColorStop(0, t.highlight || '#334155');
+      hoodieGrad.addColorStop(0.5, mainColor);
+      hoodieGrad.addColorStop(1, t.shadow || '#0f172a');
 
-    ctx.fillStyle = grad;
-    ctx.strokeStyle = t.trim;
-    ctx.lineWidth = 3.2;
+      ctx.fillStyle = hoodieGrad;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.lineWidth = 2.0;
 
-    // Contoured anatomical chest / armor silhouette
-    ctx.beginPath();
-    ctx.moveTo(-70, -112);
-    ctx.quadraticCurveTo(0, -118, 70, -112);
-    ctx.quadraticCurveTo(86, -50, 80, 5);
-    ctx.quadraticCurveTo(72, 65, 58, 120);
-    ctx.lineTo(-58, 120);
-    ctx.quadraticCurveTo(-72, 65, -80, 5);
-    ctx.quadraticCurveTo(-86, -50, -70, -112);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Pectoral Plate Contouring
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
-    ctx.lineWidth = 2.0;
-    // Left pec
-    ctx.beginPath();
-    ctx.arc(-26, -50, 28, 0.2, Math.PI - 0.4);
-    ctx.stroke();
-    // Right pec
-    ctx.beginPath();
-    ctx.arc(26, -50, 28, 0.4, Math.PI - 0.2);
-    ctx.stroke();
-
-    // Pectoral Highlight Sheen
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.arc(-28, -58, 22, -0.6, 0.6);
-    ctx.moveTo(28, -58);
-    ctx.arc(28, -58, 22, Math.PI - 0.6, Math.PI + 0.6);
-    ctx.stroke();
-
-    // Sacred Diagonal Janeu Thread (Yajnopavita)
-    ctx.save();
-    ctx.strokeStyle = '#fef08a';
-    ctx.lineWidth = 1.8;
-    ctx.shadowColor = '#facc15';
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.moveTo(-45, -110);
-    ctx.quadraticCurveTo(-10, 0, 50, 115);
-    ctx.stroke();
-    // Second strand
-    ctx.strokeStyle = '#f1f5f9';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(-41, -110);
-    ctx.quadraticCurveTo(-6, 0, 54, 115);
-    ctx.stroke();
-    ctx.restore();
-
-    // Royal 12-Petaled Padma Sunburst Chest Medallion
-    ctx.save();
-    ctx.translate(0, -32);
-
-    // Golden base disc
-    const medGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, 26);
-    medGrad.addColorStop(0, '#ffffff');
-    medGrad.addColorStop(0.4, t.trim);
-    medGrad.addColorStop(1, '#92400e');
-    ctx.fillStyle = medGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, 25, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 12 Radiating Embossed Sacred Petals
-    ctx.strokeStyle = '#fef08a';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
+      // Soft curved hoodie torso
       ctx.beginPath();
-      ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10);
-      ctx.lineTo(Math.cos(angle) * 23, Math.sin(angle) * 23);
+      ctx.moveTo(-68, -112);
+      ctx.quadraticCurveTo(0, -118, 68, -112);
+      ctx.quadraticCurveTo(82, -40, 76, 15);
+      ctx.quadraticCurveTo(68, 70, 56, 120);
+      ctx.lineTo(-56, 120);
+      ctx.quadraticCurveTo(-68, 70, -76, 15);
+      ctx.quadraticCurveTo(-82, -40, -68, -112);
+      ctx.closePath();
+      ctx.fill();
       ctx.stroke();
-    }
 
-    // Faceted Center Gemstone (Ruby / Emerald / Sapphire)
-    const gemColor = this.profile.eyes.glow || '#ef4444';
-    const gemGrad = ctx.createRadialGradient(-3, -3, 1, 0, 0, 9);
-    gemGrad.addColorStop(0, '#ffffff');
-    gemGrad.addColorStop(0.3, gemColor);
-    gemGrad.addColorStop(1, '#450a0a');
-    ctx.fillStyle = gemGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#fef08a';
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-
-    ctx.restore();
-
-    // Ornate Multi-Tiered Golden Kamarbandh (Waistband & Pleated Sash)
-    // Waistband
-    const beltGrad = ctx.createLinearGradient(-65, 105, 65, 120);
-    beltGrad.addColorStop(0, '#b45309');
-    beltGrad.addColorStop(0.5, t.trim);
-    beltGrad.addColorStop(1, '#b45309');
-    ctx.fillStyle = beltGrad;
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(-64, 104, 128, 16, 4);
-    ctx.fill();
-    ctx.stroke();
-
-    // Gem studs on belt
-    for (let bx = -50; bx <= 50; bx += 20) {
-      ctx.fillStyle = '#dc2626';
+      // Hood Drape Collar around neck
+      ctx.fillStyle = mainColor;
       ctx.beginPath();
-      ctx.arc(bx, 112, 3, 0, Math.PI * 2);
+      ctx.moveTo(-45, -112);
+      ctx.quadraticCurveTo(0, -90, 45, -112);
+      ctx.quadraticCurveTo(35, -82, 0, -85);
+      ctx.quadraticCurveTo(-35, -82, -45, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // White Drawstrings with metallic aglets
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(-14, -85);
+      ctx.quadraticCurveTo(-18, -35, -15, -10);
+      ctx.moveTo(14, -85);
+      ctx.quadraticCurveTo(18, -35, 15, -10);
+      ctx.stroke();
+      // Metallic aglet tips
+      ctx.fillStyle = trimColor;
+      ctx.fillRect(-17, -10, 4, 8);
+      ctx.fillRect(13, -10, 4, 8);
+
+      // Front Kangaroo Pouch Pocket
+      ctx.fillStyle = t.highlight || '#334155';
+      ctx.beginPath();
+      ctx.moveTo(-44, 25);
+      ctx.lineTo(44, 25);
+      ctx.quadraticCurveTo(52, 65, 42, 95);
+      ctx.lineTo(-42, 95);
+      ctx.quadraticCurveTo(-52, 65, -44, 25);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // Pocket entry seam
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.beginPath();
+      ctx.moveTo(-42, 38);
+      ctx.lineTo(-40, 80);
+      ctx.moveTo(42, 38);
+      ctx.lineTo(40, 80);
+      ctx.stroke();
+
+      // Ribbed Waistband
+      ctx.fillStyle = t.shadow || '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(-58, 110, 116, 14, 3);
+      ctx.fill();
+
+    } else if (outfitType === 'SMART_BLAZER') {
+      // 2. Modern Tailored Blazer with V-Neck Top
+      const blazerGrad = ctx.createLinearGradient(-75, -115, 75, 120);
+      blazerGrad.addColorStop(0, t.highlight || '#1e293b');
+      blazerGrad.addColorStop(0.5, mainColor);
+      blazerGrad.addColorStop(1, '#020617');
+
+      ctx.fillStyle = blazerGrad;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.lineWidth = 2.0;
+
+      // Outer blazer silhouette
+      ctx.beginPath();
+      ctx.moveTo(-70, -112);
+      ctx.quadraticCurveTo(0, -116, 70, -112);
+      ctx.quadraticCurveTo(84, -40, 78, 15);
+      ctx.lineTo(58, 120);
+      ctx.lineTo(-58, 120);
+      ctx.lineTo(-78, 15);
+      ctx.quadraticCurveTo(-84, -40, -70, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Inner Shirt / Top (V-neck)
+      ctx.fillStyle = trimColor || '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(-28, -112);
+      ctx.lineTo(28, -112);
+      ctx.lineTo(0, 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Notched Lapels
+      ctx.fillStyle = blazerGrad;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.lineWidth = 2.0;
+
+      // Left lapel
+      ctx.beginPath();
+      ctx.moveTo(-50, -112);
+      ctx.lineTo(-24, -55);
+      ctx.lineTo(-38, -48);
+      ctx.lineTo(-8, 35);
+      ctx.lineTo(-4, 35);
+      ctx.lineTo(-28, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Right lapel
+      ctx.beginPath();
+      ctx.moveTo(50, -112);
+      ctx.lineTo(24, -55);
+      ctx.lineTo(38, -48);
+      ctx.lineTo(8, 35);
+      ctx.lineTo(4, 35);
+      ctx.lineTo(28, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Blazer button
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(0, 50, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      // Pocket flaps
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-52, 70, 28, 8);
+      ctx.fillRect(24, 70, 28, 8);
+
+    } else if (outfitType === 'COTTON_TSHIRT' || outfitType === 'COZY_SWEATER' || outfitType === 'CLASSIC_SHIRT' || outfitType === 'JACKET') {
+      // 3. Modern T-Shirt / Sweater / Casual Top
+      const topGrad = ctx.createLinearGradient(-75, -115, 75, 120);
+      topGrad.addColorStop(0, t.highlight || '#38bdf8');
+      topGrad.addColorStop(0.5, mainColor);
+      topGrad.addColorStop(1, t.shadow || '#0369a1');
+
+      ctx.fillStyle = topGrad;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = 1.8;
+
+      ctx.beginPath();
+      ctx.moveTo(-68, -112);
+      ctx.quadraticCurveTo(0, -116, 68, -112);
+      ctx.quadraticCurveTo(80, -40, 74, 15);
+      ctx.lineTo(56, 120);
+      ctx.lineTo(-56, 120);
+      ctx.lineTo(-74, 15);
+      ctx.quadraticCurveTo(-80, -40, -68, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Crewneck Collar
+      ctx.fillStyle = t.shadow || '#0369a1';
+      ctx.beginPath();
+      ctx.arc(0, -112, 28, 0.2, Math.PI - 0.2);
+      ctx.lineTo(24, -112);
+      ctx.arc(0, -112, 24, Math.PI - 0.2, 0.2, true);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      if (outfitType === 'CLASSIC_SHIRT') {
+        // Vertical button placket
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -85);
+        ctx.lineTo(0, 115);
+        ctx.stroke();
+
+        // Buttons
+        for (let b = -60; b <= 90; b += 30) {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, b, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (outfitType === 'JACKET') {
+        // Metallic zipper line
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -85);
+        ctx.lineTo(0, 120);
+        ctx.stroke();
+      }
+
+    } else {
+      // 4. Traditional / Armored Cuirass (for historical presets)
+      const grad = ctx.createLinearGradient(-90, -120, 90, 120);
+      grad.addColorStop(0, t.highlight || '#ea580c');
+      grad.addColorStop(0.5, mainColor);
+      grad.addColorStop(1, t.shadow || '#7c2d12');
+
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = trimColor;
+      ctx.lineWidth = 3.2;
+
+      ctx.beginPath();
+      ctx.moveTo(-70, -112);
+      ctx.quadraticCurveTo(0, -118, 70, -112);
+      ctx.quadraticCurveTo(86, -50, 80, 5);
+      ctx.quadraticCurveTo(72, 65, 58, 120);
+      ctx.lineTo(-58, 120);
+      ctx.quadraticCurveTo(-72, 65, -80, 5);
+      ctx.quadraticCurveTo(-86, -50, -70, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Royal chest plate
+      ctx.fillStyle = trimColor;
+      ctx.beginPath();
+      ctx.arc(0, -32, 22, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    // Central Royal Buckle
-    ctx.fillStyle = '#fef08a';
-    ctx.beginPath();
-    ctx.arc(0, 112, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#92400e';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Cascading Center Pleated Sash (Patka)
-    ctx.fillStyle = t.main;
-    ctx.strokeStyle = t.trim;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-16, 120);
-    ctx.lineTo(16, 120);
-    ctx.lineTo(20, 185);
-    ctx.lineTo(0, 195);
-    ctx.lineTo(-20, 185);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Golden fringe at bottom of sash
-    ctx.strokeStyle = t.trim;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(-18, 183);
-    ctx.lineTo(0, 193);
-    ctx.lineTo(18, 183);
-    ctx.stroke();
 
     ctx.restore();
   }
 
   renderNeck(ctx) {
     ctx.save();
-    const skin = this.profile.skin;
+    const skin = this.profile.skin || { base: '#d4a373', shadow: '#996633' };
 
-    // Muscular neck cylinder with anatomical sternocleidomastoid shading
+    // Anatomical neck cylinder
     const neckGrad = ctx.createLinearGradient(-30, -160, 30, -110);
     neckGrad.addColorStop(0, skin.shadow);
     neckGrad.addColorStop(0.5, skin.base);
@@ -1011,154 +1156,58 @@ class CharacterRig {
     ctx.beginPath();
     ctx.moveTo(-28, -160);
     ctx.lineTo(28, -160);
-    ctx.lineTo(36, -110);
-    ctx.lineTo(-36, -110);
+    ctx.lineTo(34, -110);
+    ctx.lineTo(-34, -110);
     ctx.closePath();
     ctx.fill();
 
-    // Neck tendon shadows & jugular notch
+    // Neck tendon shadows
     ctx.strokeStyle = skin.shadow;
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.moveTo(-16, -155);
-    ctx.lineTo(-7, -118);
-    ctx.moveTo(16, -155);
-    ctx.lineTo(7, -118);
-    ctx.stroke();
-
-    // Clavicle (Collarbone) Highlight
-    ctx.strokeStyle = skin.highlight;
     ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(-50, -110);
-    ctx.quadraticCurveTo(-18, -112, -4, -116);
-    ctx.moveTo(50, -110);
-    ctx.quadraticCurveTo(18, -112, 4, -116);
+    ctx.moveTo(-14, -155);
+    ctx.lineTo(-6, -118);
+    ctx.moveTo(14, -155);
+    ctx.lineTo(6, -118);
     ctx.stroke();
 
-    // Sacred Neck Ornaments
+    // Clavicle Highlight
+    ctx.strokeStyle = skin.highlight || skin.base;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-45, -110);
+    ctx.quadraticCurveTo(-15, -112, -4, -116);
+    ctx.moveTo(45, -110);
+    ctx.quadraticCurveTo(15, -112, 4, -116);
+    ctx.stroke();
+
+    // Subtle modern chain / pendant if specified
     const orn = this.profile.ornaments?.necklace;
-
-    if (orn === 'RUDRAKSHA_COBRA') {
-      // 1. Coiled Emerald Naga Cobra around neck
-      ctx.save();
-      // Cobra body
-      const cobraGrad = ctx.createLinearGradient(-35, -135, 35, -115);
-      cobraGrad.addColorStop(0, '#064e3b');
-      cobraGrad.addColorStop(0.5, '#10b981');
-      cobraGrad.addColorStop(1, '#022c22');
-      ctx.strokeStyle = cobraGrad;
-      ctx.lineWidth = 11;
+    if (orn === 'SILVER_PENDANT' || orn === 'MINIMAL_CORD') {
+      ctx.strokeStyle = orn === 'SILVER_PENDANT' ? '#e2e8f0' : '#475569';
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.arc(0, -125, 27, 0.15, Math.PI - 0.15);
+      ctx.arc(0, -125, 26, 0.2, Math.PI - 0.2);
       ctx.stroke();
 
-      // Golden belly bands on serpent
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 2;
-      for (let s = 0.4; s < Math.PI - 0.4; s += 0.35) {
-        const sx = Math.cos(s) * 27;
-        const sy = -125 + Math.sin(s) * 27;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 5, s - 0.3, s + 0.3);
-        ctx.stroke();
-      }
-
-      // Flared Cobra Head
-      ctx.fillStyle = '#059669';
+      // Small modern geometric pendant
+      ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.ellipse(29, -128, 10, 7, 0.3, 0, Math.PI * 2);
+      ctx.arc(0, -99, 3, 0, Math.PI * 2);
       ctx.fill();
-
-      // Ruby red cobra eye
-      ctx.fillStyle = '#ef4444';
+    } else if (orn === 'RUDRAKSHA_COBRA') {
+      // Cobra for Rudra preset
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 9;
       ctx.beginPath();
-      ctx.arc(33, -129, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Forked golden tongue
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(38, -127);
-      ctx.lineTo(44, -126);
-      ctx.lineTo(47, -128);
-      ctx.moveTo(44, -126);
-      ctx.lineTo(47, -124);
+      ctx.arc(0, -125, 26, 0.2, Math.PI - 0.2);
       ctx.stroke();
-      ctx.restore();
-
-    } else if (orn === 'RUDRAKSHA_MALA' || orn === 'LOTUS_SEED_MALA') {
-      // 3D Spherical Rudraksha / Sacred Lotus Beads with Golden Capping
-      ctx.save();
-      const beadCount = 14;
-      for (let i = 0; i <= beadCount; i++) {
-        const theta = 0.15 + (i / beadCount) * (Math.PI - 0.3);
-        const bx = Math.cos(theta) * 31;
-        const by = -124 + Math.sin(theta) * 31;
-
-        // Gold bead cap
-        ctx.fillStyle = '#facc15';
-        ctx.beginPath();
-        ctx.arc(bx, by, 6.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 3D Rudraksha bead
-        const beadGrad = ctx.createRadialGradient(bx - 1.5, by - 1.5, 1, bx, by, 5);
-        beadGrad.addColorStop(0, '#b45309');
-        beadGrad.addColorStop(0.6, '#78350f');
-        beadGrad.addColorStop(1, '#291104');
-        ctx.fillStyle = beadGrad;
-        ctx.beginPath();
-        ctx.arc(bx, by, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Central Golden Guru Bead Pendant
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(0, -92, 7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#b45309';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
-
-    } else {
-      // Ornate Royal Gold Haram / Choker with Cascading Jewel Drops
-      ctx.save();
-      const goldGrad = ctx.createLinearGradient(-35, -135, 35, -115);
-      goldGrad.addColorStop(0, '#facc15');
-      goldGrad.addColorStop(0.5, '#fef08a');
-      goldGrad.addColorStop(1, '#d97706');
-
-      ctx.strokeStyle = goldGrad;
+    } else if (orn === 'RUDRAKSHA_MALA') {
+      ctx.strokeStyle = '#78350f';
       ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.arc(0, -124, 29, 0.12, Math.PI - 0.12);
+      ctx.arc(0, -125, 28, 0.2, Math.PI - 0.2);
       ctx.stroke();
-
-      // Dangling Pearl / Ruby Drops
-      for (let i = 2; i <= 8; i++) {
-        const theta = (i / 10) * Math.PI;
-        const dx = Math.cos(theta) * 29;
-        const dy = -124 + Math.sin(theta) * 29;
-
-        // Gold prong
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(dx, dy);
-        ctx.lineTo(dx, dy + 7);
-        ctx.stroke();
-
-        // Teardrop pearl
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(dx, dy + 9, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
     }
 
     ctx.restore();
@@ -1166,11 +1215,11 @@ class CharacterRig {
 
   renderHead(ctx) {
     ctx.save();
-    const skin = this.profile.skin;
+    const skin = this.profile.skin || { base: '#d4a373', highlight: '#faedcd', shadow: '#996633' };
 
     // Sculpted cranial mass with multi-stop radial lighting
     const headGrad = ctx.createRadialGradient(-10, -35, 12, 0, -20, 85);
-    headGrad.addColorStop(0, skin.highlight);
+    headGrad.addColorStop(0, skin.highlight || skin.base);
     headGrad.addColorStop(0.55, skin.base);
     headGrad.addColorStop(0.9, skin.shadow);
     headGrad.addColorStop(1, skin.rim || skin.shadow);
@@ -1179,155 +1228,89 @@ class CharacterRig {
     ctx.strokeStyle = skin.rim || skin.highlight;
     ctx.lineWidth = 1.8;
 
-    // Anatomical Head Silhouette: Chiseled zygomatics & sculpted jaw
+    // Head Silhouette
     ctx.beginPath();
-    ctx.moveTo(-50, -78);
-    // Left cranial curve to cheekbone
-    ctx.quadraticCurveTo(-54, -30, -46, 22);
-    // Left jawline to chin
-    ctx.quadraticCurveTo(-38, 54, -20, 68);
-    // Chiseled chin
-    ctx.quadraticCurveTo(0, 74, 20, 68);
-    // Right jawline from chin
-    ctx.quadraticCurveTo(38, 54, 46, 22);
-    // Right cheekbone to temple
-    ctx.quadraticCurveTo(54, -30, 50, -78);
-    // Cranium top
-    ctx.quadraticCurveTo(0, -108, -50, -78);
+    ctx.moveTo(-48, -78);
+    ctx.quadraticCurveTo(-52, -30, -45, 22);
+    ctx.quadraticCurveTo(-36, 54, -18, 68);
+    ctx.quadraticCurveTo(0, 74, 18, 68);
+    ctx.quadraticCurveTo(36, 54, 45, 22);
+    ctx.quadraticCurveTo(52, -30, 48, -78);
+    ctx.quadraticCurveTo(0, -108, -48, -78);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Cheekbone (Zygomatic) Soft Warm Highlight
-    const cheekGradL = ctx.createRadialGradient(-32, -6, 2, -32, -6, 20);
-    cheekGradL.addColorStop(0, skin.highlight + 'aa');
+    // Subtle Cheekbone Warm Highlights
+    const cheekGradL = ctx.createRadialGradient(-30, -4, 2, -30, -4, 18);
+    cheekGradL.addColorStop(0, (skin.highlight || '#fff') + '88');
     cheekGradL.addColorStop(1, 'transparent');
     ctx.fillStyle = cheekGradL;
     ctx.beginPath();
-    ctx.arc(-32, -6, 20, 0, Math.PI * 2);
+    ctx.arc(-30, -4, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    const cheekGradR = ctx.createRadialGradient(32, -6, 2, 32, -6, 20);
-    cheekGradR.addColorStop(0, skin.highlight + 'aa');
+    const cheekGradR = ctx.createRadialGradient(30, -4, 2, 30, -4, 18);
+    cheekGradR.addColorStop(0, (skin.highlight || '#fff') + '88');
     cheekGradR.addColorStop(1, 'transparent');
     ctx.fillStyle = cheekGradR;
     ctx.beginPath();
-    ctx.arc(32, -6, 20, 0, Math.PI * 2);
+    ctx.arc(30, -4, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ambient Occlusion Shadow Under Jaw & Chin
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(-36, 52);
-    ctx.quadraticCurveTo(0, 78, 36, 52);
-    ctx.stroke();
-
-    // Ears with Sculpted Helix, Tragus & Kundala Earrings
-    [-50, 50].forEach((earX, sideIdx) => {
+    // Natural Human Ears
+    [-48, 48].forEach((earX, sideIdx) => {
       ctx.save();
       const side = sideIdx === 0 ? -1 : 1;
-
-      // Ear Base
       ctx.fillStyle = skin.base;
       ctx.beginPath();
-      ctx.ellipse(earX, -2, 11, 16, side * 0.15, 0, Math.PI * 2);
+      ctx.ellipse(earX, -2, 10, 15, side * 0.15, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner Ear Cartilage (Concha depth shadow)
+      // Inner ear shadow
       ctx.fillStyle = skin.shadow;
       ctx.beginPath();
-      ctx.ellipse(earX + side * 2, -2, 6, 9, side * 0.15, 0, Math.PI * 2);
+      ctx.ellipse(earX + side * 2, -2, 5, 8, side * 0.15, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ear Rim Highlight
-      ctx.strokeStyle = skin.highlight;
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.arc(earX, -4, 9, side === -1 ? Math.PI * 0.4 : -Math.PI * 0.4, side === -1 ? Math.PI * 1.6 : Math.PI * 0.6);
-      ctx.stroke();
-
-      // Ornate Heavy Golden Makara Kundala Earring
-      const earAngle = this.bones.headAngle * 0.5;
-      ctx.translate(earX + side * 2, 14);
-      ctx.rotate(earAngle);
-
-      // Gold stud / hook
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(0, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Suspended Filigree Ring
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 3.2;
-      ctx.beginPath();
-      ctx.arc(0, 9, 8, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Dangling Ruby Teardrop
-      ctx.fillStyle = '#e11d48';
-      ctx.beginPath();
-      ctx.moveTo(0, 17);
-      ctx.quadraticCurveTo(-4, 25, 0, 29);
-      ctx.quadraticCurveTo(4, 25, 0, 17);
-      ctx.closePath();
-      ctx.fill();
+      // Earrings (Delicate hoops / studs if enabled)
+      const earType = this.profile.ornaments?.earrings;
+      if (earType === 'GOLD_HOOPS') {
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.arc(earX + side * 2, 12, 6, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (earType === 'PEARL_STUDS') {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(earX + side * 2, 11, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (earType === 'KUNDALAS' || earType === 'JHUMKAS') {
+        // Traditional earring
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(earX + side * 2, 14, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       ctx.restore();
     });
 
     // Facial Hair
     const fh = this.profile.facialHair;
-    if (fh === 'FULL_WHITE_BEARD') {
-      // Flowing Ascetic Sage Beard with Layered Volume
-      const beardGrad = ctx.createLinearGradient(0, 25, 0, 145);
-      beardGrad.addColorStop(0, '#f8fafc');
-      beardGrad.addColorStop(0.7, '#e2e8f0');
-      beardGrad.addColorStop(1, '#94a3b8');
-
-      ctx.fillStyle = beardGrad;
-      ctx.beginPath();
-      ctx.moveTo(-38, 25);
-      ctx.quadraticCurveTo(-52, 95, -12, 145);
-      ctx.quadraticCurveTo(0, 152, 12, 145);
-      ctx.quadraticCurveTo(52, 95, 38, 25);
-      ctx.quadraticCurveTo(0, 48, -38, 25);
-      ctx.closePath();
-      ctx.fill();
-
-      // Flowing beard hair strands
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.4;
-      for (let s = -24; s <= 24; s += 8) {
-        ctx.beginPath();
-        ctx.moveTo(s, 40);
-        ctx.quadraticCurveTo(s * 0.7, 95, s * 0.3, 140);
-        ctx.stroke();
-      }
-    } else if (fh === 'WARRIOR_MUSTACHE') {
-      // Royal Kshatriya / Rajput Curved Mustache
-      ctx.fillStyle = '#09090b';
-      ctx.strokeStyle = '#27272a';
-      ctx.lineWidth = 1.2;
-
-      ctx.beginPath();
-      ctx.moveTo(-36, 26);
-      ctx.quadraticCurveTo(-20, 14, 0, 22);
-      ctx.quadraticCurveTo(20, 14, 36, 26);
-      ctx.quadraticCurveTo(44, 20, 42, 14); // upturned tip right
-      ctx.quadraticCurveTo(34, 18, 18, 26);
-      ctx.quadraticCurveTo(0, 31, -18, 26);
-      ctx.quadraticCurveTo(-34, 18, -42, 14); // upturned tip left
-      ctx.quadraticCurveTo(-44, 20, -36, 26);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    } else if (fh === 'SHORT_STUBBLE') {
-      // Subtle masculine stubble
+    if (fh === 'SHORT_STUBBLE') {
       ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
       ctx.beginPath();
-      ctx.arc(0, 52, 28, 0.1, Math.PI - 0.1);
+      ctx.arc(0, 50, 26, 0.1, Math.PI - 0.1);
+      ctx.fill();
+    } else if (fh === 'FULL_WHITE_BEARD') {
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.moveTo(-36, 25);
+      ctx.quadraticCurveTo(-50, 95, 0, 145);
+      ctx.quadraticCurveTo(50, 95, 36, 25);
+      ctx.closePath();
       ctx.fill();
     }
 
@@ -1336,360 +1319,253 @@ class CharacterRig {
 
   renderFacialFeatures(ctx) {
     ctx.save();
-    const skin = this.profile.skin;
-    const eyes = this.profile.eyes;
+    const skin = this.profile.skin || { base: '#d4a373', shadow: '#996633' };
+    const eyes = this.profile.eyes || {};
     const eyeScale = eyes.size || 1.0;
 
-    // 1. Sacred Markings & Tilaks
+    // 1. Tilaks / Markings ONLY if requested
     const m = this.profile.markings;
     if (m === 'TRIPUNDRA_CHANDAN') {
-      // 3 curved sacred vibhuti ash lines
       ctx.strokeStyle = '#f1f5f9';
-      ctx.lineWidth = 3.5;
+      ctx.lineWidth = 3.2;
       for (let i = -1; i <= 1; i++) {
         ctx.beginPath();
-        ctx.moveTo(-28, -55 + i * 6.5);
-        ctx.quadraticCurveTo(0, -58 + i * 6.5, 28, -55 + i * 6.5);
+        ctx.moveTo(-26, -55 + i * 6);
+        ctx.lineTo(26, -55 + i * 6);
         ctx.stroke();
       }
-      // Center Sacred Kumkum Dot with Golden Sandalwood Core
       ctx.fillStyle = '#dc2626';
       ctx.beginPath();
-      ctx.arc(0, -55, 4.2, 0, Math.PI * 2);
+      ctx.arc(0, -55, 3.8, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(0, -55, 1.8, 0, Math.PI * 2);
-      ctx.fill();
-
-    } else if (m === 'CHANDAN_TILAK' || m === 'VISHNU_TILAK') {
-      // Urdhva Pundra (Sacred Chandan U-Shape & Central Vermillion Line)
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.moveTo(-7, -72);
-      ctx.lineTo(7, -72);
-      ctx.lineTo(4, -40);
-      ctx.lineTo(0, -34);
-      ctx.lineTo(-4, -40);
-      ctx.closePath();
-      ctx.fill();
-
-      // Central Sri Churna red line
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.moveTo(0, -70);
-      ctx.lineTo(0, -36);
-      ctx.stroke();
-
     } else if (m === 'DEVI_RED_BINDI') {
-      // Royal Vermillion Bindi with Chandana Chhaya (Pearl/Chandan ring dots)
-      ctx.save();
-      ctx.fillStyle = '#b91c1c';
-      ctx.shadowColor = '#dc2626';
-      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#dc2626';
       ctx.beginPath();
-      ctx.arc(0, -48, 6.5, 0, Math.PI * 2);
+      ctx.arc(0, -48, 5.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Inner gold dot
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(0, -48, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Delicate sandalwood chandan dots arching above brows
-      ctx.fillStyle = '#fef9c3';
-      for (let dot = -22; dot <= 22; dot += 5.5) {
-        if (Math.abs(dot) < 4) continue;
-        const dY = -42 - Math.cos((dot / 22) * Math.PI * 0.5) * 8;
-        ctx.beginPath();
-        ctx.arc(dot, dY, 1.4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-    } else if (m === 'ASURA_WAR_RUNES') {
-      // Glowing Obsidian / Crimson Battle War Glyphs
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.moveTo(-24, -62);
-      ctx.lineTo(-12, -52);
-      ctx.lineTo(-20, -42);
-      ctx.moveTo(24, -62);
-      ctx.lineTo(12, -52);
-      ctx.lineTo(20, -42);
-      ctx.stroke();
     }
 
-    // 2. Cosmic Third Eye (Trinetra)
+    // 2. Third Eye ONLY if enabled
     if (eyes.thirdEye) {
-      ctx.save();
-      // Golden lotus frame
       ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 1.8;
+      ctx.fillStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(0, -72);
-      ctx.quadraticCurveTo(9, -56, 0, -40);
-      ctx.quadraticCurveTo(-9, -56, 0, -72);
+      ctx.moveTo(0, -68);
+      ctx.quadraticCurveTo(8, -55, 0, -42);
+      ctx.quadraticCurveTo(-8, -55, 0, -68);
+      ctx.fill();
       ctx.stroke();
-
-      // Burning cosmic ruby core
-      const triGrad = ctx.createRadialGradient(0, -56, 1, 0, -56, 8);
-      triGrad.addColorStop(0, '#ffffff');
-      triGrad.addColorStop(0.35, '#fef08a');
-      triGrad.addColorStop(0.7, '#ef4444');
-      triGrad.addColorStop(1, '#7f1d1d');
-      ctx.fillStyle = triGrad;
-      ctx.fill();
-
-      // Cosmic flare sparks
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(0, -56, 1.8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
     }
 
-    // 3. Arched Sculpted Eyebrows
+    // 3. Natural Arched Eyebrows
     ctx.fillStyle = '#09090b';
     [-1, 1].forEach(side => {
       ctx.beginPath();
-      ctx.moveTo(side * 38, -32);
-      ctx.quadraticCurveTo(side * 22, -40, side * 6, -31);
-      ctx.quadraticCurveTo(side * 20, -35, side * 38, -29);
+      ctx.moveTo(side * 36, -32);
+      ctx.quadraticCurveTo(side * 22, -38, side * 6, -30);
+      ctx.quadraticCurveTo(side * 20, -34, side * 36, -28);
       ctx.closePath();
       ctx.fill();
     });
 
-    // 4. Luminous Expressive Eyes (Parametric Blinking, Gaze & Limbal Ring Depth)
+    // 4. Luminous Expressive Eyes (Blinking, Gaze & Soulful Glints)
     const blink = this.bones.eyeBlink;
     const lookX = this.bones.eyeLookX * 4.5;
     const lookY = this.bones.eyeLookY * 3.5;
 
-    [-23, 23].forEach((eyeX, idx) => {
+    [-22, 22].forEach((eyeX, idx) => {
       ctx.save();
       const side = idx === 0 ? -1 : 1;
       ctx.translate(eyeX, -16);
       ctx.scale(eyeScale, eyeScale * (1.0 - blink));
 
-      // Sclera with subtle top ambient occlusion shadow
-      const scleraGrad = ctx.createLinearGradient(0, -9, 0, 9);
+      // Sclera
+      const scleraGrad = ctx.createLinearGradient(0, -8, 0, 8);
       scleraGrad.addColorStop(0, '#cbd5e1');
       scleraGrad.addColorStop(0.35, '#f8fafc');
       scleraGrad.addColorStop(1, '#f1f5f9');
-
       ctx.fillStyle = scleraGrad;
+
       ctx.beginPath();
-      // Classical Almond Eye Contour
-      ctx.moveTo(-16, 0);
-      ctx.quadraticCurveTo(0, -9.5, 16, 0);
-      ctx.quadraticCurveTo(0, 9.0, -16, 0);
+      ctx.moveTo(-15, 0);
+      ctx.quadraticCurveTo(0, -9.0, 15, 0);
+      ctx.quadraticCurveTo(0, 8.5, -15, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Eyelid Clip for Iris & Pupil
+      // Eye Clip
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(-16, 0);
-      ctx.quadraticCurveTo(0, -9.5, 16, 0);
-      ctx.quadraticCurveTo(0, 9.0, -16, 0);
+      ctx.moveTo(-15, 0);
+      ctx.quadraticCurveTo(0, -9.0, 15, 0);
+      ctx.quadraticCurveTo(0, 8.5, -15, 0);
       ctx.closePath();
       ctx.clip();
 
-      // Outer Limbal Ring (Dark intense rim gives deep lifelike eyes)
+      // Limbal Ring
       ctx.fillStyle = '#050811';
       ctx.beginPath();
-      ctx.arc(lookX, lookY, 6.8, 0, Math.PI * 2);
+      ctx.arc(lookX, lookY, 6.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Multi-Layered Luminous Iris Radial Gradient
-      const irisGrad = ctx.createRadialGradient(lookX, lookY, 1, lookX, lookY, 6.2);
+      // Iris Gradient
+      const irisGrad = ctx.createRadialGradient(lookX, lookY, 1, lookX, lookY, 6.0);
       irisGrad.addColorStop(0, '#ffffff');
-      irisGrad.addColorStop(0.3, eyes.glow || eyes.iris);
-      irisGrad.addColorStop(0.8, eyes.iris || '#facc15');
-      irisGrad.addColorStop(1, '#0f172a');
-
+      irisGrad.addColorStop(0.3, eyes.glow || eyes.iris || '#3e2723');
+      irisGrad.addColorStop(0.8, eyes.iris || '#3e2723');
+      irisGrad.addColorStop(1, '#090d16');
       ctx.fillStyle = irisGrad;
       ctx.beginPath();
-      ctx.arc(lookX, lookY, 6.0, 0, Math.PI * 2);
+      ctx.arc(lookX, lookY, 5.8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Deep Obsidian Pupil
+      // Pupil
       ctx.fillStyle = '#020617';
       ctx.beginPath();
-      ctx.arc(lookX, lookY, 3.2, 0, Math.PI * 2);
+      ctx.arc(lookX, lookY, 3.0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Primary Specular Keylight Glint (Top-Left)
+      // Primary Specular Glint
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(lookX - 1.8, lookY - 1.8, 1.6, 0, Math.PI * 2);
+      ctx.arc(lookX - 1.6, lookY - 1.6, 1.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Secondary Bounce Light Glint (Bottom-Right)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      // Secondary Glint
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
       ctx.beginPath();
-      ctx.arc(lookX + 1.6, lookY + 1.5, 0.9, 0, Math.PI * 2);
+      ctx.arc(lookX + 1.5, lookY + 1.4, 0.8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore(); // end clip
 
-      // Upper Eyeliner (Winged Kohl / Kajal)
+      // Upper Eyelash line
       ctx.strokeStyle = '#050811';
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 2.2;
       ctx.beginPath();
-      ctx.moveTo(-17, 1);
-      ctx.quadraticCurveTo(0, -10.5, 17, 0);
-      // Winged tip
-      ctx.lineTo(19 * side, -2.5);
-      ctx.stroke();
-
-      // Delicate Lower Waterline
-      ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
-      ctx.lineWidth = 1.0;
-      ctx.beginPath();
-      ctx.moveTo(-15, 1);
-      ctx.quadraticCurveTo(0, 9.2, 15, 1);
-      ctx.stroke();
-
-      // Eyelid Upper Crease Fold
-      ctx.strokeStyle = skin.shadow;
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.arc(0, -4, 15, Math.PI + 0.35, -0.35);
+      ctx.moveTo(-16, 0);
+      ctx.quadraticCurveTo(0, -10.0, 16, 0);
       ctx.stroke();
 
       ctx.restore();
     });
 
-    // 5. Sculpted 3D Anatomical Nose
+    // 5. Modern Accessories: Stylish Glasses
+    if (this.profile.accessories === 'STYLISH_GLASSES') {
+      ctx.save();
+      ctx.strokeStyle = '#09090b'; // modern dark acetate frame
+      ctx.lineWidth = 2.6;
+
+      // Left Frame
+      ctx.beginPath();
+      ctx.roundRect(-36, -26, 26, 20, 6);
+      ctx.stroke();
+
+      // Right Frame
+      ctx.beginPath();
+      ctx.roundRect(10, -26, 26, 20, 6);
+      ctx.stroke();
+
+      // Nose Bridge Bar
+      ctx.beginPath();
+      ctx.moveTo(-10, -18);
+      ctx.quadraticCurveTo(0, -22, 10, -18);
+      ctx.stroke();
+
+      // Subtle Glass Lens Reflection
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-30, -22);
+      ctx.lineTo(-20, -10);
+      ctx.moveTo(16, -22);
+      ctx.lineTo(26, -10);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 6. Sculpted 3D Anatomical Nose
     ctx.save();
-    // Nose Bridge Lateral Shading
     ctx.strokeStyle = skin.shadow;
     ctx.lineWidth = 1.8;
     ctx.beginPath();
     ctx.moveTo(-3, -24);
-    ctx.quadraticCurveTo(-4, 0, -6, 17);
+    ctx.quadraticCurveTo(-4, 0, -5, 16);
     ctx.stroke();
 
-    // Nose Bridge Highlight
-    ctx.strokeStyle = skin.highlight;
-    ctx.lineWidth = 1.5;
+    // Nasal Tip Bulb Highlight
+    ctx.fillStyle = skin.highlight || skin.base;
     ctx.beginPath();
-    ctx.moveTo(0, -22);
-    ctx.lineTo(0, 16);
-    ctx.stroke();
-
-    // Nasal Tip Bulb (Soft Highlighted Dome)
-    ctx.fillStyle = skin.highlight;
-    ctx.beginPath();
-    ctx.arc(0, 18, 4.2, 0, Math.PI * 2);
+    ctx.arc(0, 18, 3.8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Nostril Wings & Cavity
+    // Nostrils
     ctx.fillStyle = skin.shadow;
     ctx.beginPath();
-    ctx.ellipse(-6, 20, 3.2, 1.8, -0.2, 0, Math.PI * 2);
-    ctx.ellipse(6, 20, 3.2, 1.8, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(-5, 20, 3.0, 1.6, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(5, 20, 3.0, 1.6, 0.2, 0, Math.PI * 2);
     ctx.fill();
-
-    // Devi / Divine Nose Ring (Nath / Mukku Pudaka)
-    if (this.profile.id === 'DEVI' || this.profile.id === 'YAKSHI') {
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.arc(9, 20, 4.5, 0, Math.PI * 2);
-      ctx.stroke();
-      // Tiny Pearl Drop
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(12, 24, 1.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
     ctx.restore();
 
-    // 6. Real-Time Expressive Lip-Sync Mouth (Cupid's Bow, Shaded Cavity & Gloss)
+    // 7. Real-Time Lip-Sync Mouth
     ctx.save();
     ctx.translate(0, 44);
     const jaw = this.bones.jawOpen;
     const mw = this.bones.mouthWidth;
 
     if (jaw < 0.12) {
-      // Closed Rest Lips: Sculpted Cupid's Bow & Glossy Lower Lip
-      // Upper lip
-      ctx.fillStyle = '#9f1239'; // rich rose
+      // Natural closed resting lips
+      ctx.fillStyle = '#9f1239'; // soft rose
       ctx.beginPath();
-      ctx.moveTo(-16 * mw, 0);
-      ctx.quadraticCurveTo(-7 * mw, -4.2, 0, -2.5); // left crest
-      ctx.quadraticCurveTo(7 * mw, -4.2, 16 * mw, 0); // right crest
-      ctx.quadraticCurveTo(0, 1.5, -16 * mw, 0);
+      ctx.moveTo(-15 * mw, 0);
+      ctx.quadraticCurveTo(-6 * mw, -3.5, 0, -2.0);
+      ctx.quadraticCurveTo(6 * mw, -3.5, 15 * mw, 0);
+      ctx.quadraticCurveTo(0, 1.2, -15 * mw, 0);
       ctx.closePath();
       ctx.fill();
 
       // Lower lip
       ctx.fillStyle = '#be123c';
       ctx.beginPath();
-      ctx.moveTo(-15 * mw, 0);
-      ctx.quadraticCurveTo(0, 1.2, 15 * mw, 0);
-      ctx.quadraticCurveTo(0, 7.5, -15 * mw, 0);
+      ctx.moveTo(-14 * mw, 0);
+      ctx.quadraticCurveTo(0, 1.0, 14 * mw, 0);
+      ctx.quadraticCurveTo(0, 7.0, -14 * mw, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Lower lip specular gloss highlight
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      // Gloss highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.beginPath();
-      ctx.ellipse(0, 3.5, 5 * mw, 1.8, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 3.2, 4.5 * mw, 1.6, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Subtle lip separation line
-      ctx.strokeStyle = '#4c0519';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-16 * mw, 0);
-      ctx.quadraticCurveTo(0, 1.0, 16 * mw, 0);
-      ctx.stroke();
 
     } else {
-      // Dynamic Talking Oral Cavity (with Teeth & Soft Tongue Depth)
+      // Talking Mouth Cavity with Teeth and Tongue
       ctx.beginPath();
-      ctx.moveTo(-17 * mw, 0);
-      ctx.quadraticCurveTo(0, -8 * jaw, 17 * mw, 0);
-      ctx.quadraticCurveTo(0, 18 * jaw, -17 * mw, 0);
+      ctx.moveTo(-16 * mw, 0);
+      ctx.quadraticCurveTo(0, -8 * jaw, 16 * mw, 0);
+      ctx.quadraticCurveTo(0, 18 * jaw, -16 * mw, 0);
       ctx.closePath();
 
-      // Shaded deep oral interior
       ctx.fillStyle = '#1c0712';
       ctx.fill();
       ctx.strokeStyle = '#881337';
-      ctx.lineWidth = 2.0;
+      ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // Upper Dental Arch (Teeth)
+      // Teeth
       ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.roundRect(-9 * mw, -4 * jaw, 18 * mw, 6 * jaw, [0, 0, 3, 3]);
+      ctx.roundRect(-8 * mw, -4 * jaw, 16 * mw, 6 * jaw, [0, 0, 3, 3]);
       ctx.fill();
 
-      // Soft Tongue Contour
+      // Tongue
       ctx.fillStyle = '#f43f5e';
       ctx.beginPath();
-      ctx.ellipse(0, 11 * jaw, 8 * mw, 4 * jaw, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 11 * jaw, 7 * mw, 4 * jaw, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Lip Borders
-      ctx.strokeStyle = '#9f1239';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.moveTo(-17 * mw, 0);
-      ctx.quadraticCurveTo(0, -8 * jaw, 17 * mw, 0);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-17 * mw, 0);
-      ctx.quadraticCurveTo(0, 18 * jaw, 17 * mw, 0);
-      ctx.stroke();
     }
 
     ctx.restore();
@@ -1698,233 +1574,133 @@ class CharacterRig {
 
   renderCrownAndFrontHair(ctx) {
     ctx.save();
-    const hg = this.profile.headgear;
-    const hairColor = this.profile.hair.color;
+    const hg = this.profile.headgear || 'NONE';
+    const hair = this.profile.hair || {};
+    const hairStyle = hair.style || 'MODERN_FADE';
+    const hairColor = hair.color || '#18181b';
 
-    // 1. Front Forehead Hair Strands
-    ctx.fillStyle = hairColor;
-    ctx.beginPath();
-    ctx.moveTo(-48, -75);
-    ctx.quadraticCurveTo(-25, -60, 0, -74);
-    ctx.quadraticCurveTo(25, -60, 48, -75);
-    ctx.quadraticCurveTo(0, -95, -48, -75);
-    ctx.fill();
+    // 1. Front Hair Rendering based on modern style
+    if (hg === 'NONE') {
+      ctx.fillStyle = hairColor;
 
-    // 2. Specialized Iconic Headgear Archetypes
-    if (hg === 'CRESCENT_MOON_SERPENT') {
-      // Rudra's Matted Jata Bun, Crescent Chandra & Coiled Naga
-      // Jata Bun
-      const jataGrad = ctx.createRadialGradient(-10, -105, 5, 0, -100, 42);
-      jataGrad.addColorStop(0, '#334155');
-      jataGrad.addColorStop(0.5, hairColor);
-      jataGrad.addColorStop(1, '#020617');
-      ctx.fillStyle = jataGrad;
-      ctx.beginPath();
-      ctx.arc(0, -100, 42, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Woven golden jata cords
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 2.0;
-      for (let j = -20; j <= 20; j += 10) {
+      if (hairStyle === 'MODERN_FADE' || hairStyle === 'SHORT_CROP') {
+        // Modern fade / sharp textured crop
         ctx.beginPath();
-        ctx.arc(j, -100, 36, 0.4, Math.PI - 0.4);
-        ctx.stroke();
+        ctx.moveTo(-48, -75);
+        ctx.quadraticCurveTo(-45, -95, 0, -100);
+        ctx.quadraticCurveTo(45, -95, 48, -75);
+        ctx.quadraticCurveTo(25, -68, 0, -74);
+        ctx.quadraticCurveTo(-25, -68, -48, -75);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top texture strands
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1.5;
+        for (let s = -25; s <= 25; s += 10) {
+          ctx.beginPath();
+          ctx.moveTo(s, -98);
+          ctx.lineTo(s * 0.8, -80);
+          ctx.stroke();
+        }
+
+      } else if (hairStyle === 'SLEEK_BOB' || hairStyle === 'LONG_WAVES') {
+        // Sleek bob / wavy framing locks
+        ctx.beginPath();
+        ctx.moveTo(-48, -75);
+        ctx.quadraticCurveTo(-52, -20, -42, 25);
+        ctx.quadraticCurveTo(-34, -30, -22, -68);
+        ctx.quadraticCurveTo(0, -80, 22, -68);
+        ctx.quadraticCurveTo(34, -30, 42, 25);
+        ctx.quadraticCurveTo(52, -20, 48, -75);
+        ctx.quadraticCurveTo(0, -102, -48, -75);
+        ctx.closePath();
+        ctx.fill();
+
+      } else if (hairStyle === 'PONYTAIL') {
+        // Pulled back hair with high ponytail
+        ctx.beginPath();
+        ctx.moveTo(-48, -75);
+        ctx.quadraticCurveTo(0, -100, 48, -75);
+        ctx.quadraticCurveTo(0, -78, -48, -75);
+        ctx.fill();
+
+        // Ponytail bunch at back top
+        ctx.beginPath();
+        ctx.arc(0, -104, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else {
+        // Textured casual hair
+        ctx.beginPath();
+        ctx.moveTo(-48, -75);
+        ctx.quadraticCurveTo(-25, -62, 0, -74);
+        ctx.quadraticCurveTo(25, -62, 48, -75);
+        ctx.quadraticCurveTo(0, -98, -48, -75);
+        ctx.fill();
       }
 
-      // Glowing Silver Crescent Moon (Chandra)
-      ctx.save();
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 18;
+    } else if (hg === 'CRESCENT_MOON_SERPENT') {
+      // Jata Bun
+      ctx.fillStyle = hairColor;
+      ctx.beginPath();
+      ctx.arc(0, -98, 40, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Crescent moon
       ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.arc(32, -104, 18, 0, Math.PI * 2);
+      ctx.arc(30, -102, 16, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = hairColor;
       ctx.beginPath();
-      ctx.arc(26, -104, 16, 0, Math.PI * 2);
+      ctx.arc(24, -102, 14, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
 
-      // Coiled Kundalini Serpent Crowning Jata
-      ctx.strokeStyle = '#10b981';
+    } else if (hg === 'GOLDEN_LOTUS_TIARA' || hg === 'SILVER_GOLD_WAR_MUKUT') {
+      // Traditional crown
+      ctx.fillStyle = '#facc15';
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      ctx.moveTo(-50, -75);
+      ctx.lineTo(-30, -135);
+      ctx.lineTo(0, -165);
+      ctx.lineTo(30, -135);
+      ctx.lineTo(50, -75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // 2. Modern Accessories: Studio Headphones around neck
+    if (this.profile.accessories === 'STUDIO_HEADPHONES') {
+      ctx.save();
+      ctx.translate(0, 52); // Resting around the neck
+
+      // Headphone padded band
+      ctx.strokeStyle = '#09090b';
       ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.arc(0, -135, 14, 0.2, Math.PI * 2 - 0.2);
+      ctx.arc(0, -38, 40, 0.4, Math.PI - 0.4);
       ctx.stroke();
-      ctx.fillStyle = '#059669';
-      ctx.beginPath();
-      ctx.arc(14, -137, 5, 0, Math.PI * 2);
-      ctx.fill();
 
-    } else if (hg === 'SPIKED_HORNED_CROWN') {
-      // Ravana / Asura Obsidian Spiked Horns with Fiery Magma Veins
-      [-1, 1].forEach(side => {
-        ctx.save();
-        // Obsidian Horn Base
-        const hornGrad = ctx.createLinearGradient(0, -75, side * 85, -185);
-        hornGrad.addColorStop(0, '#27272a');
-        hornGrad.addColorStop(0.5, '#18181b');
-        hornGrad.addColorStop(1, '#09090b');
-
-        ctx.fillStyle = hornGrad;
-        ctx.strokeStyle = '#e11d48';
-        ctx.lineWidth = 2.5;
-
-        ctx.beginPath();
-        ctx.moveTo(side * 42, -75);
-        ctx.quadraticCurveTo(side * 95, -130, side * 82, -185);
-        ctx.quadraticCurveTo(side * 68, -125, side * 30, -85);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Fiery Magma Fissure Veins
-        ctx.strokeStyle = '#f43f5e';
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        ctx.moveTo(side * 36, -80);
-        ctx.lineTo(side * 52, -110);
-        ctx.lineTo(side * 64, -145);
-        ctx.lineTo(side * 78, -180);
-        ctx.stroke();
-
-        ctx.restore();
-      });
-
-      // Central Skull / War Crest
-      ctx.fillStyle = '#e11d48';
-      ctx.beginPath();
-      ctx.moveTo(0, -105);
-      ctx.lineTo(12, -85);
-      ctx.lineTo(0, -75);
-      ctx.lineTo(-12, -85);
-      ctx.closePath();
-      ctx.fill();
-
-    } else if (hg === 'GOLDEN_LOTUS_TIARA' || hg === 'SILVER_GOLD_WAR_MUKUT' || hg === 'VAJRA_DIAMOND_CROWN' || hg === 'SUN_SURYA_MUKUT') {
-      // Ornate Multi-Tiered Vedic Golden Mukut (Repoussé Filigree & Faceted Jewels)
-      ctx.save();
-
-      // Tier 1: Gold Crown Base Band
-      const baseGrad = ctx.createLinearGradient(-55, -78, 55, -78);
-      baseGrad.addColorStop(0, '#d97706');
-      baseGrad.addColorStop(0.5, '#fef08a');
-      baseGrad.addColorStop(1, '#b45309');
-      ctx.fillStyle = baseGrad;
-      ctx.strokeStyle = '#78350f';
+      // Left Ear Cup
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2.0;
-
       ctx.beginPath();
-      ctx.moveTo(-52, -76);
-      ctx.lineTo(52, -76);
-      ctx.lineTo(56, -90);
-      ctx.lineTo(-56, -90);
-      ctx.closePath();
+      ctx.roundRect(-46, -25, 14, 26, 6);
       ctx.fill();
       ctx.stroke();
 
-      // Tier 2: Architectural Tiered Peaks (5 Lotus Spires)
-      const mukutGrad = ctx.createLinearGradient(0, -90, 0, -185);
-      mukutGrad.addColorStop(0, '#facc15');
-      mukutGrad.addColorStop(0.5, '#fef08a');
-      mukutGrad.addColorStop(1, '#b45309');
-
-      ctx.fillStyle = mukutGrad;
+      // Right Ear Cup
       ctx.beginPath();
-      ctx.moveTo(-54, -90);
-      ctx.lineTo(-38, -135);
-      ctx.lineTo(-24, -120);
-      ctx.lineTo(0, -182); // tall center peak
-      ctx.lineTo(24, -120);
-      ctx.lineTo(38, -135);
-      ctx.lineTo(54, -90);
-      ctx.closePath();
+      ctx.roundRect(32, -25, 14, 26, 6);
       ctx.fill();
       ctx.stroke();
 
-      // Embossed Filigree Inlay Lines
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(0, -180);
-      ctx.lineTo(0, -90);
-      ctx.moveTo(-24, -120);
-      ctx.lineTo(0, -145);
-      ctx.lineTo(24, -120);
-      ctx.stroke();
-
-      // Large Faceted Glowing Ruby/Emerald Gemstone in Center Peak
-      const crownGemColor = hg === 'VAJRA_DIAMOND_CROWN' ? '#38bdf8' : (hg === 'SUN_SURYA_MUKUT' ? '#f59e0b' : '#dc2626');
-      const gemGrad = ctx.createRadialGradient(-2, -126, 1, 0, -124, 11);
-      gemGrad.addColorStop(0, '#ffffff');
-      gemGrad.addColorStop(0.35, crownGemColor);
-      gemGrad.addColorStop(1, '#450a0a');
-
-      ctx.fillStyle = gemGrad;
-      ctx.beginPath();
-      ctx.arc(0, -124, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#fef08a';
-      ctx.lineWidth = 1.6;
-      ctx.stroke();
-
-      // Dangling Pearl Fringe along Mukut Rim
-      ctx.fillStyle = '#ffffff';
-      for (let p = -48; p <= 48; p += 12) {
-        ctx.beginPath();
-        ctx.arc(p, -72, 2.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
-
-    } else if (hg === 'RUDRAKSHA_BEAD_BAND') {
-      // Ascetic Sage Rudraksha Mala Band
-      ctx.save();
-      for (let x = -44; x <= 44; x += 11) {
-        // Gold capping
-        ctx.fillStyle = '#facc15';
-        ctx.beginPath();
-        ctx.arc(x, -76, 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Rudraksha bead
-        const beadGrad = ctx.createRadialGradient(x - 1, -77, 1, x, -76, 5);
-        beadGrad.addColorStop(0, '#b45309');
-        beadGrad.addColorStop(0.7, '#78350f');
-        beadGrad.addColorStop(1, '#291104');
-        ctx.fillStyle = beadGrad;
-        ctx.beginPath();
-        ctx.arc(x, -76, 4.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-    } else if (hg === 'JASMINE_FLOWER_TIARA') {
-      // Yakshi's Fresh Jasmine Garland Tiara
-      ctx.save();
-      ctx.strokeStyle = '#15803d';
-      ctx.lineWidth = 3.0;
-      ctx.beginPath();
-      ctx.arc(0, -76, 48, 0.4, Math.PI - 0.4);
-      ctx.stroke();
-
-      for (let fl = -40; fl <= 40; fl += 10) {
-        // 5 white jasmine petals
-        ctx.fillStyle = '#ffffff';
-        for (let pet = 0; pet < 5; pet++) {
-          const pa = (pet / 5) * Math.PI * 2;
-          ctx.beginPath();
-          ctx.arc(fl + Math.cos(pa) * 4, -76 + Math.sin(pa) * 4, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // Gold pollen center
-        ctx.fillStyle = '#facc15';
-        ctx.beginPath();
-        ctx.arc(fl, -76, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
       ctx.restore();
     }
 
@@ -1933,166 +1709,124 @@ class CharacterRig {
 
   renderArms(ctx) {
     ctx.save();
-    const skin = this.profile.skin;
-    const t = this.profile.torso;
+    const skin = this.profile.skin || { base: '#d4a373' };
+    const t = this.profile.torso || {};
 
     // Left Arm (Back / Lead)
-    this.renderSingleArm(ctx, -75, -100, this.bones.leftArmAngle, this.bones.leftForearmAngle, skin, t.trim, -1);
+    this.renderSingleArm(ctx, -75, -100, this.bones.leftArmAngle, this.bones.leftForearmAngle, skin, t, -1);
 
     // Right Arm (Front / Gesture)
-    this.renderSingleArm(ctx, 75, -100, this.bones.rightArmAngle, this.bones.rightForearmAngle, skin, t.trim, 1);
+    this.renderSingleArm(ctx, 75, -100, this.bones.rightArmAngle, this.bones.rightForearmAngle, skin, t, 1);
 
     ctx.restore();
   }
 
-  renderSingleArm(ctx, shoulderX, shoulderY, armAngle, forearmAngle, skin, trim, side) {
+  renderSingleArm(ctx, shoulderX, shoulderY, armAngle, forearmAngle, skin, torso, side) {
     ctx.save();
     ctx.translate(shoulderX, shoulderY);
 
-    // 1. Ornate Shoulder Pauldron (Kandhadhara / Armor Cop)
-    const pauldronGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, 24);
-    pauldronGrad.addColorStop(0, '#ffffff');
-    pauldronGrad.addColorStop(0.35, trim);
-    pauldronGrad.addColorStop(1, '#92400e');
+    const isModern = torso.type === 'CASUAL_HOODIE' || torso.type === 'SMART_BLAZER' || torso.type === 'COTTON_TSHIRT' || torso.type === 'COZY_SWEATER' || torso.type === 'CLASSIC_SHIRT' || torso.type === 'JACKET';
 
-    ctx.fillStyle = pauldronGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, 22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 2.2;
-    ctx.stroke();
-
-    // Embossed concentric ring
-    ctx.strokeStyle = '#fef08a';
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.arc(0, 0, 14, 0, Math.PI * 2);
-    ctx.stroke();
+    // 1. Shoulder
+    if (isModern) {
+      // Cloth shoulder seam
+      ctx.fillStyle = torso.main || '#1e293b';
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Armor pauldron
+      ctx.fillStyle = torso.trim || '#facc15';
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // 2. Upper Bicep
     ctx.rotate(armAngle);
 
-    const bicepGrad = ctx.createLinearGradient(-13, 0, 13, 75);
-    bicepGrad.addColorStop(0, skin.highlight);
-    bicepGrad.addColorStop(0.5, skin.base);
-    bicepGrad.addColorStop(1, skin.shadow);
+    if (isModern && torso.type !== 'COTTON_TSHIRT') {
+      // Long cloth sleeve (Hoodie / Blazer / Sweater)
+      ctx.fillStyle = torso.main || '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(-13, 0, 26, 75, 8);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    } else {
+      // Bare arm or short sleeve
+      ctx.fillStyle = skin.base;
+      ctx.beginPath();
+      ctx.roundRect(-12, 0, 24, 75, 8);
+      ctx.fill();
+    }
 
-    ctx.fillStyle = bicepGrad;
-    ctx.strokeStyle = skin.rim || skin.highlight;
-    ctx.lineWidth = 1.2;
-
-    ctx.beginPath();
-    ctx.moveTo(-13, 0);
-    ctx.quadraticCurveTo(-16, 38, -11, 75);
-    ctx.lineTo(11, 75);
-    ctx.quadraticCurveTo(16, 38, 13, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Golden Armlet (Bajubandh / Vanki) around Bicep
-    ctx.save();
-    ctx.translate(0, 32);
-    ctx.fillStyle = trim;
-    ctx.fillRect(-14, -4, 28, 8);
-    // Center gem on armlet
-    ctx.fillStyle = '#dc2626';
-    ctx.beginPath();
-    ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 3. Elbow, Forearm & Wrist Bracer (Kada)
+    // 3. Forearm & Wrist
     ctx.translate(0, 75);
     ctx.rotate(forearmAngle);
 
-    // Ornate Golden Kada / Wrist Bracer
-    const kadaGrad = ctx.createLinearGradient(-14, 0, 14, 20);
-    kadaGrad.addColorStop(0, '#fef08a');
-    kadaGrad.addColorStop(0.5, trim);
-    kadaGrad.addColorStop(1, '#b45309');
+    if (isModern && (torso.type === 'CASUAL_HOODIE' || torso.type === 'SMART_BLAZER' || torso.type === 'COZY_SWEATER')) {
+      // Sleeve continuing down forearm
+      ctx.fillStyle = torso.main || '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(-11, 0, 22, 60, 6);
+      ctx.fill();
 
-    ctx.fillStyle = kadaGrad;
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.roundRect(-14, 0, 28, 18, 3);
-    ctx.fill();
-    ctx.stroke();
+      // Sleeve ribbed cuff
+      ctx.fillStyle = torso.highlight || torso.main;
+      ctx.fillRect(-12, 58, 24, 10);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.strokeRect(-12, 58, 24, 10);
+    } else {
+      // Forearm skin
+      ctx.fillStyle = skin.base;
+      ctx.beginPath();
+      ctx.roundRect(-11, 0, 22, 68, 6);
+      ctx.fill();
+    }
 
-    // Forearm with muscle contour
-    ctx.fillStyle = bicepGrad;
-    ctx.strokeStyle = skin.rim || skin.highlight;
-    ctx.lineWidth = 1.2;
+    // Smartwatch on wrist
+    if (this.profile.ornaments?.wrists === 'SMART_WATCH') {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-13, 62, 26, 8);
+      // Screen
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(-5, 63, 10, 6);
+    }
 
-    ctx.beginPath();
-    ctx.moveTo(-11, 18);
-    ctx.quadraticCurveTo(-13, 48, -9, 78);
-    ctx.lineTo(9, 78);
-    ctx.quadraticCurveTo(13, 48, 11, 18);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    // 4. Natural Modern Hand & Expressive Fingers
+    ctx.translate(0, 75);
 
-    // 4. Expressive Sculpted Hand with Classical Mudra
-    ctx.translate(0, 78);
-
-    // Palm base
-    ctx.fillStyle = skin.highlight;
+    // Palm
+    ctx.fillStyle = skin.highlight || skin.base;
     ctx.beginPath();
     ctx.ellipse(0, 6, 11, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sacred Red Alta / Henna Dye on Palm Center
-    const isDivine = this.profile.id === 'DEVI' || this.profile.id === 'YAKSHI' || this.profile.id === 'RUDRA';
-    if (isDivine) {
-      ctx.fillStyle = '#dc2626';
-      ctx.beginPath();
-      ctx.arc(0, 6, 4.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Natural Thumb
+    // Thumb
     ctx.save();
     ctx.translate(side === 1 ? -9 : 9, 3);
-    ctx.rotate(side === 1 ? -0.45 : 0.45);
+    ctx.rotate(side === 1 ? -0.4 : 0.4);
     ctx.fillStyle = skin.base;
     ctx.beginPath();
-    ctx.roundRect(-3.5, 0, 7, 14, 3.5);
+    ctx.roundRect(-3.5, 0, 7, 13, 3.5);
     ctx.fill();
-    if (isDivine) {
-      // Red Alta on thumb tip
-      ctx.fillStyle = '#dc2626';
-      ctx.beginPath();
-      ctx.arc(0, 11, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
     ctx.restore();
 
-    // 4 Tapered Graceful Fingers (held in classical Mudra posture)
+    // 4 Fingers
     const fingerOffsets = [-7, -2.5, 2.5, 7];
-    const fingerLengths = [15, 18, 17, 14];
+    const fingerLengths = [14, 17, 16, 13];
 
     fingerOffsets.forEach((fx, fIdx) => {
       const fl = fingerLengths[fIdx];
       ctx.save();
       ctx.translate(fx, 11);
-      ctx.rotate((fx / 12) * 0.15); // gentle fan
-
+      ctx.rotate((fx / 12) * 0.15);
       ctx.fillStyle = skin.base;
       ctx.beginPath();
-      ctx.roundRect(-2.8, 0, 5.6, fl, 2.8);
+      ctx.roundRect(-2.6, 0, 5.2, fl, 2.6);
       ctx.fill();
-
-      // Red Alta on fingertip
-      if (isDivine) {
-        ctx.fillStyle = '#dc2626';
-        ctx.beginPath();
-        ctx.arc(0, fl - 2, 2.4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
       ctx.restore();
     });
 
