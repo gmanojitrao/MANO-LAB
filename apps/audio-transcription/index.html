@@ -209,10 +209,10 @@
         <!-- Direct Action Buttons -->
         <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
           <!-- Folder Upload Button -->
-          <label for="folderInput" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer transition flex items-center gap-2">
+          <button type="button" onclick="scanFolder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer transition flex items-center gap-2">
             <i data-lucide="folder" class="w-4 h-4"></i>
             <span>Select Entire Folder</span>
-          </label>
+          </button>
           <input id="folderInput" type="file" webkitdirectory directory multiple class="hidden" onchange="handleFolderOrFilesUpload(this.files)">
 
           <!-- Files Upload Button -->
@@ -800,7 +800,20 @@
         }
 
         if (filesToAdd.length > 0) {
-          await uploadFileList(filesToAdd);
+          if (!isBackendAvailable) {
+            // Direct client-side handling on Cloudflare Pages / Standalone web
+            filesToAdd.forEach(f => {
+              selectedFiles.push({
+                name: f.name,
+                path: f.name,
+                size_mb: Math.round((f.size / (1024 * 1024)) * 100) / 100,
+                file: f
+              });
+            });
+            renderSelectedFiles();
+          } else {
+            await uploadFileList(filesToAdd);
+          }
         } else {
           alert("No compatible audio files detected in the dropped items.");
         }
@@ -977,6 +990,38 @@
       renderSelectedFiles();
     }
 
+    async function pickFolderViaDirectoryPicker() {
+      if (window.showDirectoryPicker) {
+        try {
+          const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+          const files = [];
+          async function scanDir(dh) {
+            for await (const entry of dh.values()) {
+              if (entry.kind === 'file') {
+                const f = await entry.getFile();
+                if (isAudioFilename(f.name)) files.push(f);
+              } else if (entry.kind === 'directory') {
+                await scanDir(entry);
+              }
+            }
+          }
+          await scanDir(dirHandle);
+          if (files.length === 0) {
+            alert(`No supported audio files found inside folder "${dirHandle.name}".\nSupported formats: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.`);
+            return true;
+          }
+          const folderInputBox = document.getElementById('inputFolderPath');
+          if (folderInputBox) folderInputBox.value = dirHandle.name;
+          await handleFolderOrFilesUpload(files);
+          return true;
+        } catch (err) {
+          if (err.name === 'AbortError') return true; // User cancelled the picker dialog
+          console.warn("showDirectoryPicker error, falling back to input:", err);
+        }
+      }
+      return false;
+    }
+
     async function scanFolder() {
       let path = document.getElementById('inputFolderPath').value.trim();
       // Clean quotes, backticks, file:// protocols, and whitespace
@@ -985,63 +1030,51 @@
       else if (path.startsWith('file://')) path = decodeURIComponent(path.replace('file://', ''));
       document.getElementById('inputFolderPath').value = path;
 
-      if (!path) {
-        alert("Please enter a folder path on your computer (e.g. C:\\Users\\...\\Recordings).");
-        return;
+      // On localhost with Python backend running, scan filesystem directly
+      if (isBackendAvailable && path) {
+        const scanBtn = document.querySelector('button[onclick="scanFolder()"]');
+        const origBtnHtml = scanBtn ? scanBtn.innerHTML : '';
+        if (scanBtn) {
+          scanBtn.disabled = true;
+          scanBtn.innerHTML = '<span>Scanning...</span>';
+        }
+
+        try {
+          const res = await apiFetch('/api/scan-folder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ folder_path: path, recursive: true })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (!data.files || data.files.length === 0) {
+              alert(`Scanned: ${data.folder_path}\n\nNo supported audio files found inside this directory.\n(Checked for: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
+              selectedFiles = [];
+              renderSelectedFiles();
+              return;
+            }
+
+            selectedFiles = data.files || [];
+            renderSelectedFiles();
+            return;
+          }
+        } catch (e) {
+          console.warn("Backend scan error, falling back to directory picker:", e);
+        } finally {
+          if (scanBtn) {
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = origBtnHtml;
+          }
+          if (window.lucide) lucide.createIcons();
+        }
       }
 
-      if (!isBackendAvailable) {
-        const folderName = path.replace(/\\/g, '/').split('/').filter(Boolean).pop() || 'bikramjit';
-        alert(
-          `📁 Web Browser Security Notice:\n\n` +
-          `Public websites on https://mano-lab.pages.dev cannot directly read your C:\\ disk paths without browser permission.\n\n` +
-          `👉 The folder selector will now open so you can select your "${folderName}" folder in 1 click!\n\n` +
-          `(Or open http://127.0.0.1:8000/apps/audio-transcription/ on this PC to scan disk paths directly).`
-        );
+      // On Cloudflare Pages (mano-lab.pages.dev) or if backend is offline:
+      // Launch native Windows Directory Picker directly so user selects folder in 1 click!
+      const handled = await pickFolderViaDirectoryPicker();
+      if (!handled) {
         const fi = document.getElementById('folderInput');
         if (fi) fi.click();
-        return;
-      }
-
-      const scanBtn = document.querySelector('button[onclick="scanFolder()"]');
-      const origBtnHtml = scanBtn ? scanBtn.innerHTML : '';
-      if (scanBtn) {
-        scanBtn.disabled = true;
-        scanBtn.innerHTML = '<span>Scanning...</span>';
-      }
-
-      try {
-        const res = await apiFetch('/api/scan-folder', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ folder_path: path, recursive: true })
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          alert(err.detail || `Cannot read "${path}" directly from web sandbox.\n\nOpening the folder selector so you can choose it in 1 click!`);
-          const fi = document.getElementById('folderInput');
-          if (fi) fi.click();
-          return;
-        }
-
-        const data = await res.json();
-        if (!data.files || data.files.length === 0) {
-          alert(`Scanned: ${data.folder_path}\n\nNo supported audio files found inside this directory.\n(Checked for: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
-          selectedFiles = [];
-          renderSelectedFiles();
-          return;
-        }
-
-        selectedFiles = data.files || [];
-        renderSelectedFiles();
-      } catch (e) {
-        alert("Error scanning folder: " + e.message);
-      } finally {
-        if (scanBtn) {
-          scanBtn.disabled = false;
-          scanBtn.innerHTML = origBtnHtml;
-        }
-        if (window.lucide) lucide.createIcons();
       }
     }
 

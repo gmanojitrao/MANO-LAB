@@ -737,31 +737,61 @@ class CharacterRig {
       // Ankle & Modern Clean Sneakers
       ctx.translate(0, 85);
 
-      // Sneaker Silhouette
-      // White rubber sole
+      // Sneaker Silhouette - Chunky Streetwear Cupsole
+      // White rubber midsole with tread notches
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.roundRect(-12, 14, 38, 6, 3);
+      ctx.roundRect(-13, 13, 40, 7, 3);
       ctx.fill();
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1.0;
       ctx.stroke();
 
-      // Sneaker Upper (Accent color or clean white)
+      // Bottom tread texture
+      ctx.fillStyle = '#94a3b8';
+      for (let tx = -9; tx <= 22; tx += 6) {
+        ctx.fillRect(tx, 18, 3, 2);
+      }
+
+      // Sneaker Upper (Accent color or crisp white/leather)
       ctx.fillStyle = trim === '#f8fafc' || trim === '#ffffff' ? '#f1f5f9' : trim;
       ctx.beginPath();
-      ctx.moveTo(-11, 2);
-      ctx.lineTo(14, 2);
-      ctx.quadraticCurveTo(24, 6, 25, 14);
-      ctx.lineTo(-11, 14);
+      ctx.moveTo(-12, 1);
+      ctx.lineTo(13, 1);
+      ctx.quadraticCurveTo(24, 5, 26, 13);
+      ctx.lineTo(-12, 13);
       ctx.closePath();
       ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.lineWidth = 1.0;
       ctx.stroke();
 
-      // Sneaker Laces & Tongue
+      // Toe Cap Bumper
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-2, 3, 10, 4);
-      ctx.fillRect(-1, 8, 12, 3);
+      ctx.beginPath();
+      ctx.moveTo(16, 8);
+      ctx.quadraticCurveTo(25, 9, 26, 13);
+      ctx.lineTo(16, 13);
+      ctx.closePath();
+      ctx.fill();
+
+      // Padded Tongue & Eyelet Rows
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-2, 0, 11, 4);
+
+      // Crisscross Laces
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-2, 4); ctx.lineTo(8, 7);
+      ctx.moveTo(8, 4); ctx.lineTo(-2, 7);
+      ctx.moveTo(-2, 8); ctx.lineTo(8, 11);
+      ctx.moveTo(8, 8); ctx.lineTo(-2, 11);
+      ctx.stroke();
+
+      // Rear Heel Pull Tab
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(-13, 3, 2.5, 6);
 
     } else {
       // Traditional Pleated Dhoti / Greaves
@@ -931,7 +961,7 @@ class CharacterRig {
 
       // White Drawstrings with metallic aglets
       ctx.strokeStyle = '#f8fafc';
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(-14, -85);
       ctx.quadraticCurveTo(-18, -35, -15, -10);
@@ -943,7 +973,7 @@ class CharacterRig {
       ctx.fillRect(-17, -10, 4, 8);
       ctx.fillRect(13, -10, 4, 8);
 
-      // Front Kangaroo Pouch Pocket
+      // Front Kangaroo Pouch Pocket with double-needle stitching
       ctx.fillStyle = t.highlight || '#334155';
       ctx.beginPath();
       ctx.moveTo(-44, 25);
@@ -953,24 +983,35 @@ class CharacterRig {
       ctx.quadraticCurveTo(-52, 65, -44, 25);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // Pocket entry seam
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      // Pocket entry seams & subtle cloth drape lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(-42, 38);
+      ctx.moveTo(-42, 36);
       ctx.lineTo(-40, 80);
-      ctx.moveTo(42, 38);
+      ctx.moveTo(42, 36);
       ctx.lineTo(40, 80);
+      ctx.moveTo(-25, 45);
+      ctx.quadraticCurveTo(0, 52, 25, 45);
       ctx.stroke();
 
-      // Ribbed Waistband
+      // Ribbed Waistband with vertical elastic stitch texture
       ctx.fillStyle = t.shadow || '#0f172a';
       ctx.beginPath();
       ctx.roundRect(-58, 110, 116, 14, 3);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 0.8;
+      for (let rx = -52; rx <= 52; rx += 8) {
+        ctx.beginPath();
+        ctx.moveTo(rx, 111);
+        ctx.lineTo(rx, 123);
+        ctx.stroke();
+      }
 
     } else if (outfitType === 'SMART_BLAZER') {
       // 2. Modern Tailored Blazer with V-Neck Top
@@ -1005,7 +1046,10 @@ class CharacterRig {
       ctx.closePath();
       ctx.fill();
 
-      // Notched Lapels
+      // Notched Lapels with Subtle Drop Shadow
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 6;
       ctx.fillStyle = blazerGrad;
       ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.lineWidth = 2.0;
@@ -1033,17 +1077,39 @@ class CharacterRig {
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
+      ctx.restore();
 
-      // Blazer button
+      // Breast Welt Pocket with Folded Pocket Square
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-52, -28, 22, 5);
+      ctx.fillStyle = trimColor || '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(-48, -28);
+      ctx.lineTo(-42, -35);
+      ctx.lineTo(-36, -28);
+      ctx.closePath();
+      ctx.fill();
+
+      // Tailored Horn Button with Cross-Stitch Holes
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.arc(0, 50, 4.5, 0, Math.PI * 2);
+      ctx.arc(0, 50, 5.0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#f8fafc';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 1.0;
       ctx.stroke();
 
-      // Pocket flaps
+      // 4 thread stitch dots
+      ctx.fillStyle = '#ffffff';
+      [-1.5, 1.5].forEach(dx => {
+        [-1.5, 1.5].forEach(dy => {
+          ctx.beginPath();
+          ctx.arc(dx, 50 + dy, 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      });
+
+      // Lower Pocket flaps
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(-52, 70, 28, 8);
       ctx.fillRect(24, 70, 28, 8);
@@ -1217,18 +1283,33 @@ class CharacterRig {
     ctx.save();
     const skin = this.profile.skin || { base: '#d4a373', highlight: '#faedcd', shadow: '#996633' };
 
+    // Ambient drop shadow beneath the jaw/chin for true 3D floating depth
+    ctx.save();
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.28)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 6;
+    ctx.beginPath();
+    ctx.moveTo(-46, -20);
+    ctx.quadraticCurveTo(-36, 56, -18, 70);
+    ctx.quadraticCurveTo(0, 76, 18, 70);
+    ctx.quadraticCurveTo(36, 56, 46, -20);
+    ctx.closePath();
+    ctx.fillStyle = skin.shadow;
+    ctx.fill();
+    ctx.restore();
+
     // Sculpted cranial mass with multi-stop radial lighting
-    const headGrad = ctx.createRadialGradient(-10, -35, 12, 0, -20, 85);
+    const headGrad = ctx.createRadialGradient(-10, -35, 12, 0, -15, 88);
     headGrad.addColorStop(0, skin.highlight || skin.base);
     headGrad.addColorStop(0.55, skin.base);
-    headGrad.addColorStop(0.9, skin.shadow);
+    headGrad.addColorStop(0.88, skin.shadow);
     headGrad.addColorStop(1, skin.rim || skin.shadow);
 
     ctx.fillStyle = headGrad;
     ctx.strokeStyle = skin.rim || skin.highlight;
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 1.6;
 
-    // Head Silhouette
+    // Head Silhouette - Anatomical jawline and chin contour
     ctx.beginPath();
     ctx.moveTo(-48, -78);
     ctx.quadraticCurveTo(-52, -30, -45, 22);
@@ -1241,56 +1322,79 @@ class CharacterRig {
     ctx.fill();
     ctx.stroke();
 
-    // Subtle Cheekbone Warm Highlights
-    const cheekGradL = ctx.createRadialGradient(-30, -4, 2, -30, -4, 18);
-    cheekGradL.addColorStop(0, (skin.highlight || '#fff') + '88');
+    // Soft Chin Cleft & Highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.beginPath();
+    ctx.ellipse(0, 64, 9, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Subtle Cheekbone Warm Highlights & Natural Healthy Blush
+    const cheekGradL = ctx.createRadialGradient(-28, -2, 2, -28, -2, 20);
+    cheekGradL.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+    cheekGradL.addColorStop(0.6, (skin.highlight || '#fff') + '44');
     cheekGradL.addColorStop(1, 'transparent');
     ctx.fillStyle = cheekGradL;
     ctx.beginPath();
-    ctx.arc(-30, -4, 18, 0, Math.PI * 2);
+    ctx.arc(-28, -2, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    const cheekGradR = ctx.createRadialGradient(30, -4, 2, 30, -4, 18);
-    cheekGradR.addColorStop(0, (skin.highlight || '#fff') + '88');
+    const cheekGradR = ctx.createRadialGradient(28, -2, 2, 28, -2, 20);
+    cheekGradR.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+    cheekGradR.addColorStop(0.6, (skin.highlight || '#fff') + '44');
     cheekGradR.addColorStop(1, 'transparent');
     ctx.fillStyle = cheekGradR;
     ctx.beginPath();
-    ctx.arc(30, -4, 18, 0, Math.PI * 2);
+    ctx.arc(28, -2, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Natural Human Ears
+    // Sculpted Human Ears with Concha & Antihelix
     [-48, 48].forEach((earX, sideIdx) => {
       ctx.save();
       const side = sideIdx === 0 ? -1 : 1;
+      
+      // Outer helix
       ctx.fillStyle = skin.base;
+      ctx.strokeStyle = skin.shadow;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.ellipse(earX, -2, 10, 15, side * 0.15, 0, Math.PI * 2);
+      ctx.ellipse(earX, -2, 10, 16, side * 0.15, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
 
-      // Inner ear shadow
+      // Inner concha shadow
       ctx.fillStyle = skin.shadow;
       ctx.beginPath();
-      ctx.ellipse(earX + side * 2, -2, 5, 8, side * 0.15, 0, Math.PI * 2);
+      ctx.ellipse(earX + side * 2, -2, 5, 9, side * 0.15, 0, Math.PI * 2);
       ctx.fill();
+
+      // Antihelix ridge highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.arc(earX + side * 3, -3, 4, -0.8, 1.2);
+      ctx.stroke();
 
       // Earrings (Delicate hoops / studs if enabled)
       const earType = this.profile.ornaments?.earrings;
       if (earType === 'GOLD_HOOPS') {
         ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 2.0;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
-        ctx.arc(earX + side * 2, 12, 6, 0, Math.PI * 2);
+        ctx.arc(earX + side * 2, 12, 6.5, 0, Math.PI * 2);
         ctx.stroke();
       } else if (earType === 'PEARL_STUDS') {
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(earX + side * 2, 11, 3, 0, Math.PI * 2);
+        ctx.arc(earX + side * 2, 11, 3.5, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
       } else if (earType === 'KUNDALAS' || earType === 'JHUMKAS') {
         // Traditional earring
         ctx.fillStyle = '#facc15';
         ctx.beginPath();
-        ctx.arc(earX + side * 2, 14, 5, 0, Math.PI * 2);
+        ctx.arc(earX + side * 2, 14, 5.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -1322,6 +1426,7 @@ class CharacterRig {
     const skin = this.profile.skin || { base: '#d4a373', shadow: '#996633' };
     const eyes = this.profile.eyes || {};
     const eyeScale = eyes.size || 1.0;
+    const speechInfluence = Math.min(1.0, (this.bones.jawOpen || 0) * 1.5);
 
     // 1. Tilaks / Markings ONLY if requested
     const m = this.profile.markings;
@@ -1358,18 +1463,32 @@ class CharacterRig {
       ctx.stroke();
     }
 
-    // 3. Natural Arched Eyebrows
+    // 3. Natural Arched Feathered Eyebrows (Dynamic speech-reactive tilt)
+    const browTilt = Math.sin(this.time * 2.0) * 0.05 * speechInfluence;
     ctx.fillStyle = '#09090b';
     [-1, 1].forEach(side => {
+      ctx.save();
+      ctx.rotate(side * browTilt);
       ctx.beginPath();
-      ctx.moveTo(side * 36, -32);
-      ctx.quadraticCurveTo(side * 22, -38, side * 6, -30);
-      ctx.quadraticCurveTo(side * 20, -34, side * 36, -28);
+      ctx.moveTo(side * 37, -32);
+      ctx.quadraticCurveTo(side * 22, -39 - speechInfluence * 2, side * 6, -31);
+      ctx.quadraticCurveTo(side * 20, -35, side * 37, -29);
       ctx.closePath();
       ctx.fill();
+
+      // Feathered brow hair strokes
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 0.8;
+      for (let bx = side * 10; Math.abs(bx) < 34; bx += side * 5) {
+        ctx.beginPath();
+        ctx.moveTo(bx, -33);
+        ctx.lineTo(bx + side * 3, -37);
+        ctx.stroke();
+      }
+      ctx.restore();
     });
 
-    // 4. Luminous Expressive Eyes (Blinking, Gaze & Soulful Glints)
+    // 4. Luminous Expressive Eyes (Blinking, Gaze, Multi-Ring Iris & Dual Glints)
     const blink = this.bones.eyeBlink;
     const lookX = this.bones.eyeLookX * 4.5;
     const lookY = this.bones.eyeLookY * 3.5;
@@ -1380,8 +1499,16 @@ class CharacterRig {
       ctx.translate(eyeX, -16);
       ctx.scale(eyeScale, eyeScale * (1.0 - blink));
 
-      // Sclera
-      const scleraGrad = ctx.createLinearGradient(0, -8, 0, 8);
+      // Upper Eyelid Crease Shadow (Orbital Depth)
+      ctx.strokeStyle = skin.shadow;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-16, -11);
+      ctx.quadraticCurveTo(0, -15, 16, -11);
+      ctx.stroke();
+
+      // Sclera with soft vertical gradient
+      const scleraGrad = ctx.createLinearGradient(0, -9, 0, 9);
       scleraGrad.addColorStop(0, '#cbd5e1');
       scleraGrad.addColorStop(0.35, '#f8fafc');
       scleraGrad.addColorStop(1, '#f1f5f9');
@@ -1389,69 +1516,93 @@ class CharacterRig {
 
       ctx.beginPath();
       ctx.moveTo(-15, 0);
-      ctx.quadraticCurveTo(0, -9.0, 15, 0);
-      ctx.quadraticCurveTo(0, 8.5, -15, 0);
+      ctx.quadraticCurveTo(0, -9.2, 15, 0);
+      ctx.quadraticCurveTo(0, 8.8, -15, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Eye Clip
+      // Tear duct / Caruncle (inner canthus)
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+      ctx.beginPath();
+      ctx.arc(side === -1 ? 14 : -14, 0, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye Clip for Iris and Pupil
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(-15, 0);
-      ctx.quadraticCurveTo(0, -9.0, 15, 0);
-      ctx.quadraticCurveTo(0, 8.5, -15, 0);
+      ctx.quadraticCurveTo(0, -9.2, 15, 0);
+      ctx.quadraticCurveTo(0, 8.8, -15, 0);
       ctx.closePath();
       ctx.clip();
 
-      // Limbal Ring
+      // Limbal Ring (Crisp dark border around iris)
       ctx.fillStyle = '#050811';
       ctx.beginPath();
-      ctx.arc(lookX, lookY, 6.5, 0, Math.PI * 2);
+      ctx.arc(lookX, lookY, 6.8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Iris Gradient
-      const irisGrad = ctx.createRadialGradient(lookX, lookY, 1, lookX, lookY, 6.0);
+      // Iris Gradient with rich radial depth
+      const irisGrad = ctx.createRadialGradient(lookX, lookY, 1, lookX, lookY, 6.2);
       irisGrad.addColorStop(0, '#ffffff');
-      irisGrad.addColorStop(0.3, eyes.glow || eyes.iris || '#3e2723');
-      irisGrad.addColorStop(0.8, eyes.iris || '#3e2723');
+      irisGrad.addColorStop(0.28, eyes.glow || eyes.iris || '#3e2723');
+      irisGrad.addColorStop(0.75, eyes.iris || '#3e2723');
       irisGrad.addColorStop(1, '#090d16');
       ctx.fillStyle = irisGrad;
       ctx.beginPath();
-      ctx.arc(lookX, lookY, 5.8, 0, Math.PI * 2);
+      ctx.arc(lookX, lookY, 6.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pupil
+      // Delicate Iris Radial Fibers (Striations)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 0.7;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+        ctx.beginPath();
+        ctx.moveTo(lookX + Math.cos(a) * 2.8, lookY + Math.sin(a) * 2.8);
+        ctx.lineTo(lookX + Math.cos(a) * 5.6, lookY + Math.sin(a) * 5.6);
+        ctx.stroke();
+      }
+
+      // Pupil with subtle breathing dilation
+      const pupilRadius = 3.0 + Math.sin(this.time * 1.5) * 0.2;
       ctx.fillStyle = '#020617';
       ctx.beginPath();
-      ctx.arc(lookX, lookY, 3.0, 0, Math.PI * 2);
+      ctx.arc(lookX, lookY, pupilRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Primary Specular Glint
+      // Primary Crisp Specular Keylight Glint
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(lookX - 1.6, lookY - 1.6, 1.5, 0, Math.PI * 2);
+      ctx.arc(lookX - 1.8, lookY - 1.8, 1.6, 0, Math.PI * 2);
       ctx.fill();
 
-      // Secondary Glint
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      // Secondary Ambient Bounce Reflection
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
       ctx.beginPath();
-      ctx.arc(lookX + 1.5, lookY + 1.4, 0.8, 0, Math.PI * 2);
+      ctx.arc(lookX + 1.6, lookY + 1.5, 0.9, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore(); // end clip
 
-      // Upper Eyelash line
+      // Upper Eyelash line with delicate winged corner
       ctx.strokeStyle = '#050811';
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(-16, 0);
-      ctx.quadraticCurveTo(0, -10.0, 16, 0);
+      ctx.quadraticCurveTo(0, -10.2, 16, 0);
+      ctx.stroke();
+
+      // Fine feathered lash strokes on outer eye
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.moveTo(side === 1 ? 15 : -15, 0);
+      ctx.quadraticCurveTo(side === 1 ? 18 : -18, -3, side === 1 ? 20 : -20, -5);
       ctx.stroke();
 
       ctx.restore();
     });
 
-    // 5. Modern Accessories: Stylish Glasses
+    // 5. Modern Accessories: Stylish Acetate Glasses
     if (this.profile.accessories === 'STYLISH_GLASSES') {
       ctx.save();
       ctx.strokeStyle = '#09090b'; // modern dark acetate frame
@@ -1486,85 +1637,136 @@ class CharacterRig {
       ctx.restore();
     }
 
-    // 6. Sculpted 3D Anatomical Nose
+    // 6. Sculpted 3D Anatomical Nose with Bridge Shading & Tip Specular
     ctx.save();
-    ctx.strokeStyle = skin.shadow;
-    ctx.lineWidth = 1.8;
+    
+    // Bilateral Bridge Shading
+    ctx.strokeStyle = skin.shadow + '88';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.moveTo(-3, -24);
-    ctx.quadraticCurveTo(-4, 0, -5, 16);
+    ctx.moveTo(-4, -24);
+    ctx.quadraticCurveTo(-5, 0, -6, 15);
     ctx.stroke();
 
-    // Nasal Tip Bulb Highlight
+    ctx.strokeStyle = skin.shadow + '44';
+    ctx.beginPath();
+    ctx.moveTo(4, -24);
+    ctx.quadraticCurveTo(5, 0, 6, 15);
+    ctx.stroke();
+
+    // Dorsal Highlight Line
+    ctx.strokeStyle = (skin.highlight || '#fff') + 'aa';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0, -20);
+    ctx.lineTo(0, 14);
+    ctx.stroke();
+
+    // Nasal Tip Bulb Highlight Dome
     ctx.fillStyle = skin.highlight || skin.base;
     ctx.beginPath();
-    ctx.arc(0, 18, 3.8, 0, Math.PI * 2);
+    ctx.arc(0, 17, 4.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Nostrils
+    // Alar Creases (Nostril Wings)
+    ctx.strokeStyle = skin.shadow;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-8, 18);
+    ctx.quadraticCurveTo(-11, 20, -7, 23);
+    ctx.moveTo(8, 18);
+    ctx.quadraticCurveTo(11, 20, 7, 23);
+    ctx.stroke();
+
+    // Nostril Cavities
     ctx.fillStyle = skin.shadow;
     ctx.beginPath();
-    ctx.ellipse(-5, 20, 3.0, 1.6, -0.2, 0, Math.PI * 2);
-    ctx.ellipse(5, 20, 3.0, 1.6, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(-5, 20.5, 3.2, 1.8, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(5, 20.5, 3.2, 1.8, 0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 7. Real-Time Lip-Sync Mouth
+    // 7. Real-Time Lip-Sync Mouth with Philtrum Column & Specular Gloss
     ctx.save();
     ctx.translate(0, 44);
     const jaw = this.bones.jawOpen;
     const mw = this.bones.mouthWidth;
 
+    // Subtle Philtrum Column Indentation leading down from nose septum
+    ctx.strokeStyle = skin.shadow + '55';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(-2.5, -17);
+    ctx.lineTo(-2.0, -6);
+    ctx.moveTo(2.5, -17);
+    ctx.lineTo(2.0, -6);
+    ctx.stroke();
+
     if (jaw < 0.12) {
-      // Natural closed resting lips
+      // Natural closed resting lips with Cupid's bow and corner nodes
       ctx.fillStyle = '#9f1239'; // soft rose
       ctx.beginPath();
       ctx.moveTo(-15 * mw, 0);
-      ctx.quadraticCurveTo(-6 * mw, -3.5, 0, -2.0);
-      ctx.quadraticCurveTo(6 * mw, -3.5, 15 * mw, 0);
+      ctx.quadraticCurveTo(-6 * mw, -4.0, 0, -2.2);
+      ctx.quadraticCurveTo(6 * mw, -4.0, 15 * mw, 0);
       ctx.quadraticCurveTo(0, 1.2, -15 * mw, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Lower lip
+      // Lower lip fullness
       ctx.fillStyle = '#be123c';
       ctx.beginPath();
       ctx.moveTo(-14 * mw, 0);
       ctx.quadraticCurveTo(0, 1.0, 14 * mw, 0);
-      ctx.quadraticCurveTo(0, 7.0, -14 * mw, 0);
+      ctx.quadraticCurveTo(0, 7.5, -14 * mw, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Gloss highlight
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      // Curved specular gloss reflection
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(0, 3.2, 4.5 * mw, 1.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 3.4, 5.0 * mw, 1.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subtle Lip Corner Dimples
+      ctx.fillStyle = skin.shadow;
+      ctx.beginPath();
+      ctx.arc(-15 * mw, 0, 1.0, 0, Math.PI * 2);
+      ctx.arc(15 * mw, 0, 1.0, 0, Math.PI * 2);
       ctx.fill();
 
     } else {
-      // Talking Mouth Cavity with Teeth and Tongue
+      // Talking Mouth Cavity with Shaded Throat, Enamel Incisors, and Tongue
       ctx.beginPath();
       ctx.moveTo(-16 * mw, 0);
       ctx.quadraticCurveTo(0, -8 * jaw, 16 * mw, 0);
-      ctx.quadraticCurveTo(0, 18 * jaw, -16 * mw, 0);
+      ctx.quadraticCurveTo(0, 19 * jaw, -16 * mw, 0);
       ctx.closePath();
 
       ctx.fillStyle = '#1c0712';
       ctx.fill();
       ctx.strokeStyle = '#881337';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 2.0;
       ctx.stroke();
 
-      // Teeth
+      // Upper Enamel Incisors (Translucent edge)
       ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.roundRect(-8 * mw, -4 * jaw, 16 * mw, 6 * jaw, [0, 0, 3, 3]);
+      ctx.roundRect(-8.5 * mw, -4 * jaw, 17 * mw, 6.5 * jaw, [0, 0, 3, 3]);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(203, 213, 225, 0.6)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
 
-      // Tongue
+      // Tongue Articulation with soft specular bounce
       ctx.fillStyle = '#f43f5e';
       ctx.beginPath();
-      ctx.ellipse(0, 11 * jaw, 7 * mw, 4 * jaw, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 12 * jaw, 7.5 * mw, 4.5 * jaw, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(0, 10 * jaw, 4.0 * mw, 2.0 * jaw, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1786,25 +1988,51 @@ class CharacterRig {
       ctx.fill();
     }
 
-    // Smartwatch on wrist
+    // Smartwatch on wrist - Modern Curved OLED Display
     if (this.profile.ornaments?.wrists === 'SMART_WATCH') {
+      ctx.save();
+      // Silicone strap band
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(-13, 62, 26, 8);
-      // Screen
+      ctx.beginPath();
+      ctx.roundRect(-13, 61, 26, 9, 2);
+      ctx.fill();
+
+      // Curved OLED Bezel
+      ctx.fillStyle = '#020617';
+      ctx.beginPath();
+      ctx.roundRect(-7, 60, 14, 11, 3);
+      ctx.fill();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // Glowing Cyan Digital Display & Activity Ring
       ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(-5, 63, 10, 6);
+      ctx.fillRect(-5, 62, 10, 4);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.arc(0, 68, 2, 0, Math.PI * 1.5);
+      ctx.stroke();
+      ctx.restore();
     }
 
-    // 4. Natural Modern Hand & Expressive Fingers
+    // 4. Natural Modern Hand & Expressive Fingers with Knuckle Creases
     ctx.translate(0, 75);
 
-    // Palm
+    // Palm & Thenar Eminence (Thumb Pad Muscle)
     ctx.fillStyle = skin.highlight || skin.base;
     ctx.beginPath();
     ctx.ellipse(0, 6, 11, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Thumb
+    // Thenar muscle pad contour
+    ctx.fillStyle = skin.base;
+    ctx.beginPath();
+    ctx.ellipse(side === 1 ? -4 : 4, 7, 5, 7, side * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Thumb with pad and fingernail accent
     ctx.save();
     ctx.translate(side === 1 ? -9 : 9, 3);
     ctx.rotate(side === 1 ? -0.4 : 0.4);
@@ -1812,9 +2040,15 @@ class CharacterRig {
     ctx.beginPath();
     ctx.roundRect(-3.5, 0, 7, 13, 3.5);
     ctx.fill();
+
+    // Thumb nail
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.roundRect(-2, 8, 4, 3.5, 1.5);
+    ctx.fill();
     ctx.restore();
 
-    // 4 Fingers
+    // 4 Articulated Fingers with Knuckle Creases
     const fingerOffsets = [-7, -2.5, 2.5, 7];
     const fingerLengths = [14, 17, 16, 13];
 
@@ -1823,10 +2057,27 @@ class CharacterRig {
       ctx.save();
       ctx.translate(fx, 11);
       ctx.rotate((fx / 12) * 0.15);
+      
+      // Finger segment
       ctx.fillStyle = skin.base;
       ctx.beginPath();
       ctx.roundRect(-2.6, 0, 5.2, fl, 2.6);
       ctx.fill();
+
+      // Knuckle crease
+      ctx.strokeStyle = skin.shadow + '66';
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-1.8, fl * 0.45);
+      ctx.lineTo(1.8, fl * 0.45);
+      ctx.stroke();
+
+      // Fingernail bed
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.beginPath();
+      ctx.roundRect(-1.6, fl - 3.8, 3.2, 2.8, 1.0);
+      ctx.fill();
+
       ctx.restore();
     });
 
