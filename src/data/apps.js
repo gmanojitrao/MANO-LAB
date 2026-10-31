@@ -1,9 +1,11 @@
 /**
  * MANO-LAB Application Registry
- * Curated Collection: Flagship AI Transcription, Focus Soundscapes, and Classic Games.
+ * Active Curated Public Suite: Audio Transcription, Aether-Weave, and Visual Story Generator.
+ * Note: All other applications remain preserved in the codebase and are temporarily hidden from the public UI.
  */
 
-const MANO_APPS = [
+// Master registry preserving all applications
+const ALL_MANO_APPS = [
   {
     id: "audio-transcription",
     name: "Audio Transcription Studio",
@@ -17,34 +19,6 @@ const MANO_APPS = [
     accentColor: "#3b82f6",
     tags: ["Speech-to-Text", "Diarization", "Bilingual", "Dossier Export"],
     badge: "Flagship Application"
-  },
-  {
-    id: "unborn-realm",
-    name: "THE UNBORN REALM",
-    tagline: "Persistent autonomous synthetic universe (ORIGIN-001) with non-Earth existence",
-    description: "An existence that does not resemble Earth: no planets, suns, or biological life. Governed by non-Newtonian physics (Coherence, Resonance, Density of Meaning, Transition Pressure), 120 autonomous consciousnesses (Auraliths, Veskari, Oroth, Nemori, Ilyr), an original 42-glyph language (Vareth), and 8 observer modes spanning five dimensions.",
-    category: "Virtual Cosmos",
-    route: "apps/unborn-realm/",
-    status: "Available",
-    featured: true,
-    emoji: "✦",
-    accentColor: "#10b981",
-    tags: ["Synthetic Universe", "ORIGIN-001", "Vareth Language", "5 Dimensions", "Persistent"],
-    badge: "Synthetic Universe"
-  },
-  {
-    id: "axioma",
-    name: "AXIOMA: The Autonomous Civilization",
-    tagline: "Enter a non-biological virtual universe where sentient geometric beings live and evolve",
-    description: "A civilization that never existed in our reality. Free from carbon, gravity, sunlight, and mortality. Witness self-organizing conscious polyhedra that graze on quantum entropy, converse via moiré light interference, synthesize new life through harmonic resonance, and erect celestial spires in a continuous tensor lattice. Step in as the Creator or silent observer.",
-    category: "Virtual Cosmos",
-    route: "apps/axioma/",
-    status: "Available",
-    featured: true,
-    emoji: "🌌",
-    accentColor: "#38bdf8",
-    tags: ["Autonomous Civilization", "Artificial Life", "Non-Earth Reality", "God Mode"],
-    badge: "Transcendental Cosmos"
   },
   {
     id: "aether-weave",
@@ -63,115 +37,121 @@ const MANO_APPS = [
   {
     id: "visual-story-generator",
     name: "Visual Story Generator",
-    tagline: "AI animated 9:16 viral shorts creator with procedural score & karaoke subtitles",
-    description: "Transform any topic into viral, cinematic 9:16 vertical short stories inspired by epic Indian mythology and folklore. Features scene-by-scene script writing, procedural 2.5D camera motions (Ken Burns zoom, pan, shake), dynamic particle VFX (divine rays, floating embers), bilingual narration (Hindi & English), synchronized karaoke captions, and direct video recording (.webm export).",
+    tagline: "2.5D rigged character animation, real-time lip-sync & studio voice mastering",
+    description: "Turn stories into cinematic animated 9:16 vertical shorts. Features sculpted rigged character archetypes with procedural breathing, eye blinking, dynamic audio-driven mouth lip-sync, in-browser studio microphone recording with warm mastering DSP, and 60 FPS video export.",
     category: "Creative & Art",
     route: "apps/visual-story-generator/",
     status: "Available",
     featured: true,
     emoji: "🎬",
     accentColor: "#facc15",
-    tags: ["9:16 Shorts", "Viral Reels", "Mythology & Lore", "AI Script Engine", "Video Export"],
-    badge: "AI Story Studio"
+    tags: ["Rigged Characters", "Real Lip-Sync", "Studio Voice", "9:16 Video Export"],
+    badge: "Animation Studio"
+  },
+  // Preserved & hidden for now:
+  {
+    id: "unborn-realm",
+    name: "THE UNBORN REALM",
+    tagline: "Persistent autonomous synthetic universe (ORIGIN-001)",
+    description: "Non-Earth existence simulation across five dimensions.",
+    category: "Virtual Cosmos",
+    route: "apps/unborn-realm/",
+    status: "Hidden",
+    featured: false,
+    hidden: true
+  },
+  {
+    id: "axioma",
+    name: "AXIOMA: The Autonomous Civilization",
+    tagline: "Autonomous virtual civilization",
+    description: "Virtual non-biological universe.",
+    category: "Virtual Cosmos",
+    route: "apps/axioma/",
+    status: "Hidden",
+    featured: false,
+    hidden: true
   },
   {
     id: "focus-ambient",
     name: "Focus Ambient",
-    tagline: "Generative soundscapes & minimalist Pomodoro timer",
-    description: "Procedural acoustic environments. Mix gentle rain, crackling fireplace, ocean surf, and 40Hz binaural focus frequencies in real-time with zero external audio files.",
+    tagline: "Generative soundscapes & Pomodoro timer",
+    description: "Procedural acoustic environments.",
     category: "Productivity",
     route: "apps/focus-ambient/",
-    status: "Available",
-    featured: true,
-    emoji: "🎧",
-    accentColor: "#10b981",
-    tags: ["Rain", "Fireplace", "Soundscapes", "Pomodoro"],
-    badge: "Acoustic Tool"
+    status: "Hidden",
+    featured: false,
+    hidden: true
   },
   {
     id: "turbo-typist",
     name: "Turbo Typist",
-    tagline: "High-speed typing competition on a 3D speedway track",
-    description: "Floor the gas pedal with your keyboard! Type with speed and accuracy to accelerate your GT supercar, ignite nitro flames, overtake AI rivals, and claim the championship podium.",
+    tagline: "High-speed typing competition",
+    description: "Typing speedway racer.",
     category: "Classic Games",
     route: "apps/turbo-typist/",
-    status: "Available",
-    featured: true,
-    emoji: "🏎️",
-    accentColor: "#ef4444",
-    tags: ["Typing Racer", "WPM Speedometer", "Nitro Boost", "Championship"],
-    badge: "New Racing Game"
+    status: "Hidden",
+    featured: false,
+    hidden: true
   },
   {
     id: "snake",
     name: "Classic Snake",
-    tagline: "The iconic retro grid arcade game",
-    description: "Clean, responsive implementation of the classic arcade favorite. Guide the snake, gather apples, avoid boundaries, and compete for top personal high scores.",
+    tagline: "Retro grid arcade game",
+    description: "Classic snake game.",
     category: "Classic Games",
     route: "apps/snake/",
-    status: "Available",
+    status: "Hidden",
     featured: false,
-    emoji: "🐍",
-    accentColor: "#22c55e",
-    tags: ["Retro Arcade", "High Score", "Responsive"],
-    badge: "Arcade Classic"
+    hidden: true
   },
   {
     id: "breakout",
     name: "Brick Breaker",
-    tagline: "Paddle-and-ball brick destruction arcade",
-    description: "Smooth paddle physics, multi-tier rainbow brick walls, score multipliers, and 3-life challenge. Playable with mouse, touch, or arrow keys.",
+    tagline: "Paddle-and-ball arcade",
+    description: "Classic brick breaker.",
     category: "Classic Games",
     route: "apps/breakout/",
-    status: "Available",
+    status: "Hidden",
     featured: false,
-    emoji: "🕹️",
-    accentColor: "#3b82f6",
-    tags: ["Brick Breaker", "Paddle Physics", "Arcade"],
-    badge: "Arcade Classic"
+    hidden: true
   },
   {
     id: "game-2048",
     name: "Classic 2048",
-    tagline: "The beloved number sliding puzzle",
-    description: "Authentic Gabriele Cirulli design with warm beige tiles, smooth sliding animations, touch swipe support for mobile, and automatic high-score preservation.",
+    tagline: "Number sliding puzzle",
+    description: "Classic 2048 puzzle.",
     category: "Classic Games",
     route: "apps/game-2048/",
-    status: "Available",
+    status: "Hidden",
     featured: false,
-    emoji: "🎲",
-    accentColor: "#edc22e",
-    tags: ["Puzzle", "Number Slide", "Brain Game"],
-    badge: "Arcade Classic"
+    hidden: true
   },
   {
     id: "flappy-bird",
     name: "Flappy Bird",
-    tagline: "The timeless one-tap obstacle flight game",
-    description: "Tap the screen or hit Spacebar to flap wings, glide through green pipe columns, and beat your best streak. Simple, clean, and endlessly replayable.",
+    tagline: "One-tap obstacle flight",
+    description: "Classic flappy bird.",
     category: "Classic Games",
     route: "apps/flappy-bird/",
-    status: "Available",
+    status: "Hidden",
     featured: false,
-    emoji: "🐥",
-    accentColor: "#facc15",
-    tags: ["One-Tap", "Reaction", "Instant Restart"],
-    badge: "Arcade Classic"
+    hidden: true
   }
 ];
 
+// Active visible applications only (Transcription, Aether-Weave, Visual Story Generator)
+const MANO_APPS = ALL_MANO_APPS.filter(app => !app.hidden);
+
 const MANO_CATEGORIES = [
-  { id: "all", label: "All Items" },
-  { id: "Virtual Cosmos", label: "🌌 Virtual Cosmos" },
+  { id: "all", label: "All Creations" },
   { id: "Speech & AI", label: "🎙️ Speech & AI" },
-  { id: "Creative & Art", label: "✨ Creative & Art" },
-  { id: "Productivity", label: "🎧 Productivity" },
-  { id: "Classic Games", label: "🕹️ Classic Games" }
+  { id: "Creative & Art", label: "✨ Creative & Art" }
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { MANO_APPS, MANO_CATEGORIES };
+  module.exports = { MANO_APPS, MANO_CATEGORIES, ALL_MANO_APPS };
 } else {
   window.MANO_APPS = MANO_APPS;
   window.MANO_CATEGORIES = MANO_CATEGORIES;
+  window.ALL_MANO_APPS = ALL_MANO_APPS;
 }
