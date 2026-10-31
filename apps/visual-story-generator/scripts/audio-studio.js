@@ -332,7 +332,70 @@ class AudioStudio {
       } catch (e) {}
       this.activeSource = null;
     }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (this.speechPulseInterval) {
+      clearInterval(this.speechPulseInterval);
+      this.speechPulseInterval = null;
+    }
     this.isPlaying = false;
+  }
+
+  /**
+   * Speak arbitrary text via Browser Web Speech Synthesis while driving
+   * real-time lip-sync amplitude and frequency into the character rig!
+   */
+  speakText(text, options = {}, onEndedCallback = null) {
+    this.stopVoice();
+    this.ensureActive();
+
+    if (!('speechSynthesis' in window)) {
+      this.playVoice(onEndedCallback);
+      return;
+    }
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.pitch = options.pitch || 0.92;
+    u.rate = options.rate || 0.95;
+    if (options.lang) u.lang = options.lang;
+
+    this.isPlaying = true;
+
+    // Simulate acoustic carrier pulses into the lip sync metrics during speech
+    let tick = 0;
+    this.speechPulseInterval = setInterval(() => {
+      tick++;
+      // Natural speech cadence wave with pauses and consonant bursts
+      const cadence = 0.14 + Math.sin(tick * 0.9) * 0.09 + (Math.random() * 0.06);
+      this.metrics.amplitude = Math.max(0.04, cadence);
+      this.metrics.frequency = 550 + Math.sin(tick * 1.4) * 220;
+      this.metrics.isSpeaking = true;
+    }, 45);
+
+    u.onend = () => {
+      if (this.speechPulseInterval) {
+        clearInterval(this.speechPulseInterval);
+        this.speechPulseInterval = null;
+      }
+      this.metrics.amplitude = 0;
+      this.metrics.isSpeaking = false;
+      this.isPlaying = false;
+      if (onEndedCallback) onEndedCallback();
+    };
+
+    u.onerror = () => {
+      if (this.speechPulseInterval) {
+        clearInterval(this.speechPulseInterval);
+        this.speechPulseInterval = null;
+      }
+      this.metrics.amplitude = 0;
+      this.metrics.isSpeaking = false;
+      this.isPlaying = false;
+      if (onEndedCallback) onEndedCallback();
+    };
+
+    window.speechSynthesis.speak(u);
   }
 
   /**

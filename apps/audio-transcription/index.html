@@ -221,6 +221,13 @@
             <span>Select Individual Audio Files</span>
           </label>
           <input id="filesInput" type="file" multiple accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.flac,.mp4,.mkv" class="hidden" onchange="handleFolderOrFilesUpload(this.files)">
+
+          <!-- Live In-App Audio Recorder Button -->
+          <button type="button" onclick="openRecordModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-md shadow-rose-600/20 cursor-pointer transition flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            <i data-lucide="mic" class="w-4 h-4"></i>
+            <span>Record Live Audio</span>
+          </button>
         </div>
       </div>
 
@@ -498,6 +505,72 @@
         </button>
       </div>
       <div id="batchesListContainer" class="space-y-2 max-h-[360px] overflow-y-auto custom-scrollbar"></div>
+    </div>
+  </div>
+
+  <!-- LIVE AUDIO RECORDING MODAL -->
+  <div id="recordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+          <span>Live Audio & Interview Recorder</span>
+        </h3>
+        <button onclick="closeRecordModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Real-time Visualizer Canvas -->
+      <div class="relative bg-slate-950 rounded-2xl p-4 overflow-hidden border border-slate-800">
+        <canvas id="recordVisualizer" class="w-full h-24 block"></canvas>
+        <div class="absolute bottom-3 right-4 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-black/60 px-2 py-0.5 rounded-full border border-emerald-500/20">
+          <span id="recordStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span id="recordStatusText">Microphone Ready</span>
+        </div>
+      </div>
+
+      <!-- Digital Timer & Guidance -->
+      <div class="text-center space-y-1">
+        <div id="recordTimerText" class="font-mono text-3xl font-extrabold tracking-wider text-slate-900 dark:text-white">00:00:00</div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">Records directly in your browser • Automatically translated & transcribed into bilingual dossiers</p>
+      </div>
+
+      <!-- Playback Preview -->
+      <div id="recordPreviewSection" class="hidden p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span>🎧 Listen to Recording</span>
+          <span id="recordDurationBadge" class="font-mono text-[11px] text-indigo-500 dark:text-indigo-400">0s</span>
+        </div>
+        <audio id="recordAudioPlayer" controls class="w-full h-10 rounded-xl"></audio>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center gap-2 pt-2">
+        <button id="btnStartRecord" onclick="startRecording()" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20">
+          <i data-lucide="mic" class="w-4 h-4"></i>
+          <span>Start Recording</span>
+        </button>
+
+        <button id="btnPauseRecord" onclick="togglePauseRecording()" class="hidden py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center justify-center gap-2">
+          <i data-lucide="pause" class="w-4 h-4"></i>
+          <span id="recordPauseLabel">Pause</span>
+        </button>
+
+        <button id="btnStopRecord" onclick="stopRecording()" class="hidden py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs transition flex items-center justify-center gap-2">
+          <i data-lucide="square" class="w-4 h-4"></i>
+          <span>Stop & Review</span>
+        </button>
+
+        <button id="btnUseRecord" onclick="useRecordedAudio()" class="hidden flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Transcribe Recording</span>
+        </button>
+
+        <button id="btnResetRecord" onclick="resetRecording()" class="hidden py-3 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold" title="Record Again">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -920,11 +993,13 @@
       if (!isBackendAvailable) {
         const folderName = path.replace(/\\/g, '/').split('/').filter(Boolean).pop() || 'bikramjit';
         alert(
-          `You are viewing Mano Lab on the web (mano-lab.pages.dev).\n\n` +
-          `Browsers on the public web cannot directly access local PC disk paths like C:\\ for security reasons.\n\n` +
-          `👉 Please click the purple "Select Entire Folder" button above and choose your "${folderName}" folder in 1 click!\n\n` +
-          `Or run your local desktop app at http://127.0.0.1:8000/apps/audio-transcription/ to scan local paths directly.`
+          `📁 Web Browser Security Notice:\n\n` +
+          `Public websites on https://mano-lab.pages.dev cannot directly read your C:\\ disk paths without browser permission.\n\n` +
+          `👉 The folder selector will now open so you can select your "${folderName}" folder in 1 click!\n\n` +
+          `(Or open http://127.0.0.1:8000/apps/audio-transcription/ on this PC to scan disk paths directly).`
         );
+        const fi = document.getElementById('folderInput');
+        if (fi) fi.click();
         return;
       }
 
@@ -943,7 +1018,9 @@
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          alert(err.detail || `Directory path does not exist on your computer:\n${path}\n\nPlease verify the path.`);
+          alert(err.detail || `Cannot read "${path}" directly from web sandbox.\n\nOpening the folder selector so you can choose it in 1 click!`);
+          const fi = document.getElementById('folderInput');
+          if (fi) fi.click();
           return;
         }
 
@@ -968,25 +1045,139 @@
       }
     }
 
-    async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '') {
-      const base64Data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const res = reader.result;
-          const b64 = res.split(',')[1];
-          resolve(b64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+    // ============================================================
+    // GEMINI FILES API FOR LARGE AUDIO FILES (> 15MB up to 2GB)
+    // ============================================================
+    async function uploadFileToGeminiFilesApi(file, mimeType, activeKey) {
+      const startUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${activeKey}`;
+      const startHeaders = {
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': file.size.toString(),
+        'X-Goog-Upload-Header-Content-Type': mimeType,
+        'Content-Type': 'application/json'
+      };
+
+      const startResp = await fetch(startUrl, {
+        method: 'POST',
+        headers: startHeaders,
+        body: JSON.stringify({ file: { display_name: file.name } })
       });
 
+      if (!startResp.ok) {
+        const err = await startResp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Files API start returned HTTP ${startResp.status}`);
+      }
+
+      const uploadUrl = startResp.headers.get('x-goog-upload-url') || startResp.headers.get('upload-url');
+      if (!uploadUrl) {
+        throw new Error("Did not receive upload URL from Gemini Files API.");
+      }
+
+      const uploadResp = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Length': file.size.toString(),
+          'X-Goog-Upload-Offset': '0',
+          'X-Goog-Upload-Command': 'upload, finalize'
+        },
+        body: file // Direct streaming of raw file blob
+      });
+
+      if (!uploadResp.ok) {
+        const err = await uploadResp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `File upload failed with HTTP ${uploadResp.status}`);
+      }
+
+      const fileData = await uploadResp.json();
+      const fileUri = fileData.file?.uri;
+      if (!fileUri) {
+        throw new Error("Did not receive file URI from Gemini Files API.");
+      }
+
+      // If file state is PROCESSING, poll until ACTIVE
+      if (fileData.file?.state === 'PROCESSING') {
+        const checkUrl = `https://generativelanguage.googleapis.com/v1beta/${fileData.file.name}?key=${activeKey}`;
+        for (let attempt = 0; attempt < 12; attempt++) {
+          await new Promise(r => setTimeout(r, 1500));
+          const pollRes = await fetch(checkUrl);
+          if (pollRes.ok) {
+            const pollData = await pollRes.json();
+            if (pollData.state === 'ACTIVE') break;
+            if (pollData.state === 'FAILED') throw new Error("Gemini file processing failed.");
+          }
+        }
+      }
+
+      return fileUri;
+    }
+
+    async function callGeminiTextTranslation(prompt, activeKey) {
+      const models = ['gemini-flash-lite-latest', 'gemini-3-flash-preview', 'gemini-flash-latest'];
+      for (const m of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 8192
+              }
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (text && text.trim()) return text.trim();
+          }
+        } catch (e) {
+          console.warn("Translation fallback attempt on " + m + " failed:", e);
+        }
+      }
+      return '';
+    }
+
+    async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '') {
       let mimeType = file.type || 'audio/mp3';
       if (!mimeType || mimeType === 'application/octet-stream') {
         const ext = file.name.split('.').pop().toLowerCase();
-        mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : 'audio/mp3');
+        mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : 'audio/mp3'));
       }
 
       const activeKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+
+      // Handle large files (> 15MB or > 100MB) using the Gemini Files API
+      let filePart = null;
+      if (file.size > 15 * 1024 * 1024) {
+        console.log(`Large audio file detected (${(file.size / (1024*1024)).toFixed(1)} MB). Streaming to Gemini Files API...`);
+        const fileUri = await uploadFileToGeminiFilesApi(file, mimeType, activeKey);
+        filePart = {
+          file_data: {
+            file_uri: fileUri,
+            mime_type: mimeType
+          }
+        };
+      } else {
+        const base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const res = reader.result;
+            const b64 = res.split(',')[1];
+            resolve(b64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        filePart = {
+          inline_data: {
+            mime_type: mimeType,
+            data: base64Data
+          }
+        };
+      }
 
       const prompt = `You are an elite, world-class ethnographic field-interview transcriptionist.
 Analyze this interview audio recording carefully.
@@ -994,19 +1185,18 @@ There are two primary speakers:
 1. Interviewer: The researcher conducting the interview, asking questions, prompting for explanations.
 2. Artisan / Interviewee: The master craftsman, artist, or person being interviewed${artisanHint ? ` (Candidate/expected name: '${artisanHint}')` : ''}.
 
-CRITICAL INSTRUCTIONS:
+CRITICAL MANDATORY INSTRUCTIONS:
 1. SPEAKER DIARIZATION (NO TIMESTAMPS):
    - You MUST label EVERY single conversational turn clearly.
    - Use "Interviewer:" for the person asking questions.
    - Use the Artisan's verified name (e.g. "${artisanHint || 'Artisan'}:") for the artisan answering questions.
-   - If a second artisan or another person speaks, label them clearly.
-   - Example dialogue turn format:
+   - Example format:
      Interviewer: Aap apna naam bataye?
      Deepak Prajapati: Mera naam Deepak Prajapati hai.
 
-2. EXACTLY TWO OUTPUT TRANSCRIPTS REQUIRED (NO TIMESTAMPS):
-   - "native_transcript": Complete verbatim dialogue in the authentic spoken native script (Devanagari for Hindi, Bengali script বাংলা লিপি for Bengali, Tamil தமிழ், etc.). Every turn MUST begin with "Interviewer: " or "<Artisan Name>: ". Do NOT transcribe in English or Romanized letters. Do NOT include timestamps or timecodes.
-   - "english_transcript": Flawless, genuine, pure raw English translation of the exact same spoken dialogue, with identical matching speaker turns ("Interviewer: ..." and "<Artisan Name>: ..."). Do NOT summarize, omit, or add editorial commentary.
+2. YOU MUST DELIVER BOTH OF THESE FIELDS COMPLETELY:
+   - "native_transcript": Complete verbatim dialogue in authentic spoken native script (Devanagari for Hindi, Bengali script বাংলা লিপি for Bengali, Tamil தமிழ், etc.). Every turn MUST begin with "Interviewer: " or "<Artisan Name>: ". Do NOT use Latin/Romanized letters. Do NOT include timestamps.
+   - "english_transcript": Complete, genuine, verbatim English translation of EVERY SINGLE spoken turn above, matching "Interviewer: ..." and "<Artisan Name>: ...". DO NOT LEAVE THIS EMPTY. YOU MUST TRANSLATE THE ENTIRE INTERVIEW INTO ENGLISH.
 
 3. DETECTED ENTITIES:
    - "confirmed_artisan_name": The verified full name of the artisan / interviewee (e.g. '${artisanHint || 'Artisan'}').
@@ -1032,6 +1222,8 @@ Output only the valid JSON without any other conversational commentary.`;
       ];
 
       let lastError = null;
+      let parsed = null;
+
       for (const m of fallbackModels) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
@@ -1042,12 +1234,7 @@ Output only the valid JSON without any other conversational commentary.`;
               contents: [{
                 parts: [
                   { text: prompt },
-                  {
-                    inline_data: {
-                      mime_type: mimeType,
-                      data: base64Data
-                    }
-                  }
+                  filePart
                 ]
               }],
               generationConfig: {
@@ -1066,9 +1253,9 @@ Output only the valid JSON without any other conversational commentary.`;
           const data = await res.json();
           const candidate = data.candidates?.[0];
           const rawText = candidate?.content?.parts?.[0]?.text || '';
-          const parsed = extractJsonFromResponse(rawText);
+          parsed = extractJsonFromResponse(rawText);
           if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
-            return parsed;
+            break;
           }
         } catch (e) {
           lastError = e;
@@ -1076,7 +1263,38 @@ Output only the valid JSON without any other conversational commentary.`;
         }
       }
 
-      throw lastError || new Error("Gemini could not process this audio file.");
+      if (!parsed) {
+        throw lastError || new Error("Gemini could not process this audio file.");
+      }
+
+      // ============================================================
+      // GUARANTEE: If English translation is missing or duplicate, run secondary pass!
+      // ============================================================
+      const eng = (parsed.english_transcript || '').trim();
+      const nat = (parsed.native_transcript || '').trim();
+      if (nat && (!eng || eng.length < 10 || eng === nat)) {
+        console.info("English translation was missing from initial pass. Running dedicated translation pass...");
+        const transPrompt = `You are an elite bilingual ethnographic field-interview translator.
+Translate this verbatim interview transcription into accurate, natural, fluent English dialogue turns.
+Preserve the exact same speaker names (e.g. 'Interviewer:', '${artisanHint || 'Artisan'}:', etc.) for every single line.
+Do NOT summarize or add editorial notes.
+
+NATIVE TRANSCRIPT TO TRANSLATE:
+${nat}
+
+Output ONLY the verbatim English translation dialogue turns:`;
+
+        try {
+          const transResult = await callGeminiTextTranslation(transPrompt, activeKey);
+          if (transResult && transResult.trim()) {
+            parsed.english_transcript = transResult.trim();
+          }
+        } catch (err) {
+          console.warn("Secondary translation pass error:", err);
+        }
+      }
+
+      return parsed;
     }
 
     async function startClientSideBatchTranscription() {
@@ -1843,6 +2061,251 @@ Output only the valid JSON without any other conversational commentary.`;
       }
     }
 
+    // ============================================================
+    // LIVE IN-APP AUDIO RECORDER & VISUALIZER
+    // ============================================================
+    let mediaRecorder = null;
+    let audioStream = null;
+    let audioCtx = null;
+    let analyserNode = null;
+    let visualizerAnimId = null;
+    let recordedChunks = [];
+    let recordTimerInterval = null;
+    let recordSeconds = 0;
+    let lastRecordedBlob = null;
+
+    function openRecordModal() {
+      document.getElementById('recordModal').classList.remove('hidden');
+      resetRecording();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeRecordModal() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        stopRecording();
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach(t => t.stop());
+        audioStream = null;
+      }
+      if (visualizerAnimId) cancelAnimationFrame(visualizerAnimId);
+      document.getElementById('recordModal').classList.add('hidden');
+    }
+
+    async function startRecording() {
+      try {
+        recordedChunks = [];
+        recordSeconds = 0;
+        updateRecordTimerDisplay();
+
+        audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 48000
+          }
+        });
+
+        // Setup Web Audio Analyser for dynamic wave visualizer
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 128;
+        const source = audioCtx.createMediaStreamSource(audioStream);
+        source.connect(analyserNode);
+
+        // Determine best mimeType
+        let options = { mimeType: 'audio/webm;codecs=opus' };
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          options = { mimeType: 'audio/webm' };
+          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options = { mimeType: 'audio/mp4' };
+          }
+        }
+
+        mediaRecorder = new MediaRecorder(audioStream, options);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          lastRecordedBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          const audioPlayer = document.getElementById('recordAudioPlayer');
+          audioPlayer.src = URL.createObjectURL(lastRecordedBlob);
+
+          const durSec = recordSeconds;
+          const mins = Math.floor(durSec / 60);
+          const secs = durSec % 60;
+          document.getElementById('recordDurationBadge').textContent = `${mins}m ${secs}s`;
+          document.getElementById('recordPreviewSection').classList.remove('hidden');
+
+          document.getElementById('btnStartRecord').classList.add('hidden');
+          document.getElementById('btnPauseRecord').classList.add('hidden');
+          document.getElementById('btnStopRecord').classList.add('hidden');
+          document.getElementById('btnUseRecord').classList.remove('hidden');
+          document.getElementById('btnResetRecord').classList.remove('hidden');
+
+          document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+          document.getElementById('recordStatusText').textContent = "Recording Ready to Transcribe";
+        };
+
+        mediaRecorder.start(200); // 200ms slices
+
+        // UI transitions
+        document.getElementById('btnStartRecord').classList.add('hidden');
+        document.getElementById('btnPauseRecord').classList.remove('hidden');
+        document.getElementById('btnStopRecord').classList.remove('hidden');
+        document.getElementById('btnUseRecord').classList.add('hidden');
+        document.getElementById('btnResetRecord').classList.add('hidden');
+        document.getElementById('recordPreviewSection').classList.add('hidden');
+
+        document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping";
+        document.getElementById('recordStatusText').textContent = "● Recording Live Audio...";
+
+        // Timer
+        clearInterval(recordTimerInterval);
+        recordTimerInterval = setInterval(() => {
+          recordSeconds++;
+          updateRecordTimerDisplay();
+        }, 1000);
+
+        // Start visualizer loop
+        drawRecordVisualizer();
+      } catch (err) {
+        alert("Microphone access error: " + err.message + "\nPlease grant microphone permissions in your browser.");
+      }
+    }
+
+    function togglePauseRecording() {
+      if (!mediaRecorder) return;
+      if (mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        clearInterval(recordTimerInterval);
+        document.getElementById('recordPauseLabel').textContent = "Resume";
+        document.getElementById('recordStatusText').textContent = "⏸ Paused";
+        document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+      } else if (mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        recordTimerInterval = setInterval(() => {
+          recordSeconds++;
+          updateRecordTimerDisplay();
+        }, 1000);
+        document.getElementById('recordPauseLabel').textContent = "Pause";
+        document.getElementById('recordStatusText').textContent = "● Recording Live Audio...";
+        document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping";
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      clearInterval(recordTimerInterval);
+      if (visualizerAnimId) cancelAnimationFrame(visualizerAnimId);
+      if (audioStream) {
+        audioStream.getTracks().forEach(t => t.stop());
+        audioStream = null;
+      }
+    }
+
+    function resetRecording() {
+      stopRecording();
+      recordedChunks = [];
+      recordSeconds = 0;
+      lastRecordedBlob = null;
+      updateRecordTimerDisplay();
+
+      document.getElementById('btnStartRecord').classList.remove('hidden');
+      document.getElementById('btnPauseRecord').classList.add('hidden');
+      document.getElementById('btnStopRecord').classList.add('hidden');
+      document.getElementById('btnUseRecord').classList.add('hidden');
+      document.getElementById('btnResetRecord').classList.add('hidden');
+      document.getElementById('recordPreviewSection').classList.add('hidden');
+
+      document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+      document.getElementById('recordStatusText').textContent = "Microphone Ready";
+
+      // Clear canvas visualizer
+      const canvas = document.getElementById('recordVisualizer');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#050811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function updateRecordTimerDisplay() {
+      const h = Math.floor(recordSeconds / 3600);
+      const m = Math.floor((recordSeconds % 3600) / 60);
+      const s = recordSeconds % 60;
+      const pad = n => n.toString().padStart(2, '0');
+      document.getElementById('recordTimerText').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+
+    function drawRecordVisualizer() {
+      const canvas = document.getElementById('recordVisualizer');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyserNode ? analyserNode.frequencyBinCount : 32;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function renderFrame() {
+        visualizerAnimId = requestAnimationFrame(renderFrame);
+        if (analyserNode) analyserNode.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = '#050811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 1.8;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (dataArray[i] / 255) * (canvas.height * 0.85);
+
+          const grad = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+          grad.addColorStop(0, '#f43f5e'); // rose
+          grad.addColorStop(0.5, '#ec4899'); // pink
+          grad.addColorStop(1, '#6366f1'); // indigo
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.roundRect(x, canvas.height - barHeight, Math.max(2, barWidth - 2), barHeight, [4, 4, 0, 0]);
+          ctx.fill();
+
+          x += barWidth;
+        }
+      }
+      renderFrame();
+    }
+
+    function useRecordedAudio() {
+      if (!lastRecordedBlob) {
+        alert("No recording found. Please record audio first.");
+        return;
+      }
+
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '_');
+      const ext = (lastRecordedBlob.type && lastRecordedBlob.type.includes('mp4')) ? 'mp4' : 'webm';
+      const filename = `Live_Interview_${timestamp}.${ext}`;
+
+      const recFile = new File([lastRecordedBlob], filename, {
+        type: lastRecordedBlob.type || 'audio/webm',
+        lastModified: Date.now()
+      });
+
+      selectedFiles.push({
+        name: filename,
+        path: filename,
+        size_mb: Math.round((recFile.size / (1024 * 1024)) * 100) / 100,
+        file: recFile
+      });
+
+      renderSelectedFiles();
+      closeRecordModal();
+      alert(`Recorded interview "${filename}" added to your queue! Click "Start Smart Batch Transcription" to transcribe and translate.`);
+    }
+
     function updateEngineBadge() {
       const badge = document.getElementById('ffmpegBadge');
       if (!badge) return;
@@ -1934,6 +2397,13 @@ Output only the valid JSON without any other conversational commentary.`;
         GEMINI_KEY = savedGem;
         const gemInput = document.getElementById('modalGeminiKey');
         if (gemInput) gemInput.value = savedGem;
+      }
+
+      const isLocalHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+      if (!isLocalHost && !API_BASE) {
+        isBackendAvailable = false;
+        updateEngineBadge();
+        return;
       }
 
       try {

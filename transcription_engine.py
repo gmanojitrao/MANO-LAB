@@ -303,6 +303,33 @@ Output only the valid JSON without any other conversational commentary."""
                         english_text = parsed.get("english_transcript", "").strip()
                         romanized_text = parsed.get("romanized_transcript", "").strip()
 
+                        # Guarantee English translation is never omitted
+                        if native_text and (not english_text or len(english_text) < 10 or english_text == native_text):
+                            trans_prompt = f"""You are an elite bilingual ethnographic field-interview translator.
+Translate this verbatim interview transcription into accurate, natural, fluent English dialogue turns.
+Preserve the exact same speaker names (e.g. 'Interviewer:', '{artisan_hint or 'Artisan'}:', etc.) for every single line.
+Do NOT summarize, omit, or add editorial commentary.
+
+NATIVE TRANSCRIPT TO TRANSLATE:
+{native_text}
+
+Output ONLY the verbatim English translation dialogue turns:"""
+                            for t_model in fallback_models:
+                                try:
+                                    t_url = f"{self.base_url}/{t_model}:generateContent?key={self.api_key}"
+                                    t_resp = requests.post(t_url, headers=headers, json={
+                                        "contents": [{"parts": [{"text": trans_prompt}]}],
+                                        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 8192}
+                                    }, timeout=(10, 30))
+                                    if t_resp.status_code == 200:
+                                        t_cand = t_resp.json().get("candidates", [{}])[0]
+                                        t_text = t_cand.get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                                        if t_text:
+                                            english_text = t_text
+                                            break
+                                except Exception:
+                                    continue
+
                         segments: List[TranscriptionSegment] = []
                         raw_segs = parsed.get("segments", [])
                         if isinstance(raw_segs, list):
