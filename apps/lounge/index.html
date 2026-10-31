@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VIP Lounge & Private Club — MANO-LAB</title>
-  <meta name="description" content="Private VIP Lounge, encrypted real-time chat room, and multiplayer racing for authorized Mano Lab members.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23facc15%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22black%22>👑</text></svg>">
+  <title>Private Room — MANO-LAB</title>
+  <meta name="description" content="Private room, real-time chat, and multiplayer typing racing.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%233b82f6%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>🔒</text></svg>">
 
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +14,9 @@
   
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Mano Unified Auth -->
+  <script src="../../src/scripts/auth.js"></script>
 
   <!-- Official Google Identity Services (GIS) Client Library -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -713,7 +716,7 @@
       <div class="brand-icon">🧪</div>
       <div class="brand-name">
         <span>MANO-LAB</span>
-        <span class="brand-tag">👑 VIP LOUNGE</span>
+        <span class="brand-tag">ROOM</span>
       </div>
     </a>
 
@@ -721,15 +724,15 @@
     <nav class="nav-tabs hidden" id="nav-tabs-bar">
       <button class="tab-btn active" data-tab="tab-chat" onclick="switchLoungeTab('tab-chat')">
         <i data-lucide="message-square" style="width: 15px; height: 15px;"></i>
-        <span>Live Chat Room</span>
+        <span>Chat Room</span>
       </button>
       <button class="tab-btn" data-tab="tab-racer" onclick="switchLoungeTab('tab-racer')">
         <i data-lucide="gauge" style="width: 15px; height: 15px;"></i>
-        <span>Typing Racing Game</span>
+        <span>Typing Racing</span>
       </button>
       <button class="tab-btn" data-tab="tab-admin" id="btn-tab-admin" onclick="switchLoungeTab('tab-admin')">
         <i data-lucide="shield-check" style="width: 15px; height: 15px;"></i>
-        <span>Guest Whitelist</span>
+        <span>Manage Access</span>
       </button>
     </nav>
 
@@ -738,8 +741,8 @@
       <div class="user-pill hidden" id="user-header-pill">
         <img id="user-avatar-img" class="user-avatar" src="" alt="Avatar">
         <div class="user-info">
-          <div class="user-name" id="user-name-text">Manojit Rao</div>
-          <div class="user-role" id="user-role-badge">Owner &bull; VIP Member</div>
+          <div class="user-name" id="user-name-text">User</div>
+          <div class="user-role" id="user-role-badge">Member</div>
         </div>
       </div>
       <button class="btn-logout hidden" id="btn-signout" onclick="handleSignOut()">
@@ -761,65 +764,41 @@
     <!-- 1. RESTRICTED ACCESS GATE (Shown when not logged in or unapproved) -->
     <div id="view-gate">
       <div class="gate-card">
-        <div class="gate-badge">
-          <i data-lucide="lock" style="width: 13px; height: 13px;"></i>
-          <span>SECURE GOOGLE AUTH GATE</span>
-        </div>
-
-        <h1 class="gate-title">Private VIP Lounge</h1>
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔒</div>
+        <h1 class="gate-title">Private Room</h1>
         <p class="gate-desc">
-          Restricted private quarters of Mano Lab. Sign in with an approved Google account to enter the encrypted peer-to-peer chat room, multiplayer typing races, and VIP privileges.
+          Sign in with Google to enter. Access is granted by the administrator.
         </p>
 
-        <!-- Unauthenticated: Render Official Google Button -->
+        <!-- Unauthenticated: Render Google Button -->
         <div id="auth-box-login">
-          <div class="gate-btn-wrap">
+          <div class="gate-btn-wrap" style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
             <div id="google-signin-btn"></div>
-          </div>
-          <p style="font-size: 0.75rem; color: var(--text-muted);">
-            Sign in with your verified Google account. Access is restricted to whitelisted members.
-          </p>
-          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
-              <button onclick="devLoginAsAdmin()" class="btn-secondary" style="font-size: 0.75rem; padding: 0.45rem 0.9rem; border-radius: 9999px; background: rgba(250, 204, 21, 0.1); border: 1px solid var(--border-gold); color: var(--gold); cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-                <i data-lucide="zap" style="width: 13px; height: 13px;"></i>
-                <span>Fast-Pass: Owner (gmanojitr@gmail.com)</span>
-              </button>
-              <button onclick="devLoginAsGuest()" class="btn-secondary" style="font-size: 0.75rem; padding: 0.45rem 0.9rem; border-radius: 9999px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-                <i data-lucide="shield-alert" style="width: 13px; height: 13px;"></i>
-                <span>Test: Denied Guest</span>
-              </button>
-            </div>
-            <span style="font-size: 0.68rem; color: var(--text-muted);">Local Preview & Verification Shortcuts</span>
+            <button onclick="ManoAuth.openSignInModal()" class="btn-send" style="padding: 0.55rem 1.25rem; font-size: 0.82rem; background: #3b82f6;">
+              <span>Sign In with Google</span>
+            </button>
           </div>
         </div>
 
         <!-- Authenticated but NOT on Guest Whitelist -->
         <div id="auth-box-denied" class="hidden">
-          <div class="restricted-box">
-            <div style="font-size: 1.6rem; margin-bottom: 0.4rem;">⛔</div>
-            <h3 style="font-size: 1.05rem; font-weight: 800; color: #f87171; margin-bottom: 0.3rem;">Access Restricted</h3>
-            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.75rem;">
-              Signed in as: <strong id="denied-email-text" style="color: #fff;">user@gmail.com</strong>
+          <div class="restricted-box" style="background: rgba(255, 255, 255, 0.03); border: 1px solid #1e293b; padding: 1.2rem; border-radius: 0.75rem; margin-bottom: 1rem;">
+            <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.4rem;">
+              Signed in as: <strong id="denied-email-text" style="color: #60a5fa;">user@gmail.com</strong>
             </p>
-            <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-              Your Google account is not on the VIP guest list. Please contact Manojit (<span style="color: var(--gold);">gmanojitr@gmail.com</span>) to request access.
+            <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.45;">
+              This Google account does not have access. Contact Manojit (gmanojitr@gmail.com) to grant access.
             </p>
           </div>
           <div style="display: flex; gap: 0.6rem; justify-content: center;">
-            <button onclick="handleSignOut()" class="btn-send" style="background: #334155; font-size: 0.78rem;">
+            <button onclick="handleSignOut()" class="btn-logout">
               <i data-lucide="refresh-cw" style="width: 13px; height: 13px;"></i>
-              <span>Switch Google Account</span>
+              <span>Switch Account</span>
             </button>
+            <a href="../../" class="btn-logout" style="text-decoration: none;">
+              <span>Workbench</span>
+            </a>
           </div>
-        </div>
-
-        <!-- Google Client ID Setup (Shown if client_id needs configuration) -->
-        <div class="gate-client-config">
-          <button class="config-toggle-btn" onclick="toggleConfigModal(true)">
-            <i data-lucide="settings" style="width: 13px; height: 13px;"></i>
-            <span>Google OAuth Client ID Settings</span>
-          </button>
         </div>
       </div>
     </div>
@@ -964,30 +943,48 @@
       </div>
     </div>
 
-    <!-- 4. TAB CONTENT: ADMIN GUEST WHITELIST (Admin Only) -->
+    <!-- 4. TAB CONTENT: ADMIN ACCESS CONTROL (Admin Only) -->
     <div id="tab-admin" class="hidden">
       <div class="admin-card">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
           <div>
             <h2 style="font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.4rem;">
-              <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--gold);"></i>
-              <span>VIP Guest Whitelist Manager</span>
+              <i data-lucide="shield-check" style="width: 18px; height: 18px; color: #3b82f6;"></i>
+              <span>User Access & Permissions Control</span>
             </h2>
-            <p style="font-size: 0.78rem; color: var(--text-dim);">Only accounts listed here can enter the VIP lounge, chat room, and race arena.</p>
+            <p style="font-size: 0.78rem; color: var(--text-dim);">Give any Google account whatever access you want to give them.</p>
           </div>
-          <span class="brand-tag">OWNER PORTAL</span>
+          <span class="brand-tag">ADMIN</span>
         </div>
 
-        <!-- Add Email Form -->
-        <form onsubmit="handleAddWhitelistEmail(event)" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-          <input type="email" id="input-new-whitelist-email" class="chat-input" placeholder="Enter friend's Google email (e.g. friend@gmail.com)..." required>
-          <button type="submit" class="btn-send" style="background: linear-gradient(135deg, #10b981, #059669); white-space: nowrap;">
+        <!-- Add Email Form with Granular Checkboxes -->
+        <form onsubmit="handleGrantAccessFromLounge(event)" style="background: rgba(18, 24, 38, 0.5); border: 1px solid #1e293b; padding: 1.25rem; border-radius: 0.85rem; margin-bottom: 1.5rem;">
+          <div style="margin-bottom: 0.85rem;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">User Google Email</label>
+            <input type="email" id="input-new-whitelist-email" class="chat-input" style="width: 100%; box-sizing: border-box;" placeholder="e.g. friend@gmail.com" required>
+          </div>
+
+          <div style="margin-bottom: 1.15rem;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">Access to Give</label>
+            <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #cbd5e1; cursor: pointer;">
+                <input type="checkbox" id="input-perm-room" checked>
+                <span>Private Room (Live Chat & Multiplayer Games)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #cbd5e1; cursor: pointer;">
+                <input type="checkbox" id="input-perm-pro" checked>
+                <span>Unlocked Workbench Capabilities</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-send" style="background: linear-gradient(135deg, #3b82f6, #2563eb); width: 100%; justify-content: center; padding: 0.65rem;">
             <i data-lucide="user-plus" style="width: 15px; height: 15px;"></i>
-            <span>Add VIP Member</span>
+            <span>Save & Grant Access</span>
           </button>
         </form>
 
-        <h3 style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); margin-bottom: 0.75rem;">Approved Google Accounts:</h3>
+        <h3 style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); margin-bottom: 0.75rem;">Authorized Accounts:</h3>
         <div id="whitelist-records-list">
           <!-- Populated dynamically -->
         </div>
@@ -995,44 +992,6 @@
     </div>
 
   </main>
-
-  <!-- ============================================================ -->
-  <!-- GOOGLE CLIENT ID CONFIGURATION MODAL                         -->
-  <!-- ============================================================ -->
-  <div id="config-modal" class="modal-overlay hidden">
-    <div class="modal-box">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-        <h3 style="font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 0.4rem;">
-          <i data-lucide="key" style="width: 16px; height: 16px; color: var(--gold);"></i>
-          <span>Google OAuth Client ID</span>
-        </h3>
-        <button onclick="toggleConfigModal(false)" style="background: none; border: none; color: var(--text-muted); cursor: pointer;">
-          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
-        </button>
-      </div>
-
-      <p style="font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 1rem;">
-        To enable official Google Login on your domain (<code style="color: var(--gold);">mano-lab.pages.dev</code>), enter your Google OAuth 2.0 Web Client ID:
-      </p>
-
-      <form onsubmit="handleSaveClientId(event)">
-        <input type="text" id="input-client-id" class="chat-input" style="width: 100%; margin-bottom: 1rem; font-family: var(--font-mono); font-size: 0.8rem;" placeholder="e.g. 123456789-abcdef.apps.googleusercontent.com" required>
-        
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.75rem; color: var(--text-muted); line-height: 1.45;">
-          <strong>Quick 2-Minute Google Setup:</strong><br>
-          1. Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google Cloud Credentials</a><br>
-          2. Create Credentials &rarr; OAuth client ID &rarr; Web application<br>
-          3. Add <code>https://mano-lab.pages.dev</code> under <em>Authorized JavaScript origins</em><br>
-          4. Copy Client ID and paste it above!
-        </div>
-
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-          <button type="button" onclick="toggleConfigModal(false)" class="btn-logout">Cancel</button>
-          <button type="submit" class="btn-send">Save Client ID</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- Audio Chime for Chat & Race (Web Audio API Synthesizer) -->
   <script>
@@ -1085,24 +1044,19 @@
     // Load WebRTC P2P mesh networking via Trystero Torrent
     import { joinRoom } from 'https://unpkg.com/trystero@0.26.0/dist/torrent.mjs';
 
-    // 1. MASTER WHITELIST & PERMISSIONS
+    // 1. MASTER PERMISSIONS & USER STATE
     const ADMIN_EMAIL = 'gmanojitr@gmail.com';
-    let whitelist = JSON.parse(localStorage.getItem('mano_vip_whitelist') || '[]');
-    if (!whitelist.includes(ADMIN_EMAIL)) {
-      whitelist.push(ADMIN_EMAIL);
-      localStorage.setItem('mano_vip_whitelist', JSON.stringify(whitelist));
-    }
-
-    // 2. ACTIVE USER STATE
-    let currentUser = JSON.parse(localStorage.getItem('mano_vip_user') || 'null');
+    let currentUser = window.ManoAuth ? ManoAuth.getUser() : JSON.parse(localStorage.getItem('mano_auth_user') || 'null');
     let p2pRoom = null;
     let sendChatMessage = null;
     let sendRaceSync = null;
     let activePeers = {}; // peerId -> { user, wpm, progress }
 
-    // 3. GOOGLE CLIENT ID CONFIGURATION
-    const DEFAULT_CLIENT_ID = '98547281034-sample.apps.googleusercontent.com';
-    let GOOGLE_CLIENT_ID = localStorage.getItem('mano_google_client_id') || '';
+    // Listen for auth state changes
+    window.onManoAuthChanged = function(user) {
+      currentUser = user;
+      initApp();
+    };
 
     // Initialize UI on load
     window.addEventListener('DOMContentLoaded', () => {
@@ -1111,6 +1065,10 @@
     });
 
     function initApp() {
+      if (!currentUser && window.ManoAuth) {
+        currentUser = ManoAuth.getUser();
+      }
+
       if (currentUser && isUserWhitelisted(currentUser.email)) {
         renderAuthenticatedUI();
         initP2PNetwork();
@@ -1123,8 +1081,11 @@
 
     function isUserWhitelisted(email) {
       if (!email) return false;
-      const lower = email.toLowerCase().trim();
-      return whitelist.some(e => e.toLowerCase().trim() === lower);
+      if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return true;
+      if (window.ManoAuth) {
+        return ManoAuth.hasAccess('secret_room', { email: email });
+      }
+      return false;
     }
 
     // --- GOOGLE SIGN IN INITIALIZATION ---
@@ -1179,7 +1140,10 @@
         };
 
         currentUser = userObj;
-        localStorage.setItem('mano_vip_user', JSON.stringify(userObj));
+        localStorage.setItem('mano_auth_user', JSON.stringify(userObj));
+        if (window.ManoAuth) {
+          ManoAuth.renderAuthSlot();
+        }
 
         if (isUserWhitelisted(userObj.email)) {
           renderAuthenticatedUI();
@@ -1199,13 +1163,14 @@
       document.getElementById('user-header-pill').classList.remove('hidden');
       document.getElementById('btn-signout').classList.remove('hidden');
 
+      const isOwner = currentUser.email && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
       document.getElementById('user-avatar-img').src = currentUser.picture || 'https://www.gravatar.com/avatar?d=mp';
-      document.getElementById('user-name-text').textContent = currentUser.name;
-      document.getElementById('user-role-badge').textContent = currentUser.isAdmin ? '👑 Owner & Admin' : '✨ VIP Member';
+      document.getElementById('user-name-text').textContent = currentUser.name || currentUser.email;
+      document.getElementById('user-role-badge').textContent = isOwner ? 'Owner &bull; Admin' : 'Authorized Member';
 
       // Show/Hide Admin Tab based on email
       const adminTabBtn = document.getElementById('btn-tab-admin');
-      if (currentUser.isAdmin) {
+      if (isOwner) {
         adminTabBtn.classList.remove('hidden');
         renderWhitelistTable();
       } else {
@@ -1237,7 +1202,11 @@
     }
 
     function handleSignOut() {
-      localStorage.removeItem('mano_vip_user');
+      if (window.ManoAuth) {
+        ManoAuth.signOut();
+      } else {
+        localStorage.removeItem('mano_auth_user');
+      }
       currentUser = null;
       if (p2pRoom) {
         try { p2pRoom.leave(); } catch(e) {}
@@ -1569,54 +1538,77 @@
       if (lane) lane.remove();
     }
 
-    // --- ADMIN WHITELIST CONTROLLER ---
+    // --- ADMIN ACCESS CONTROLLER ---
     function renderWhitelistTable() {
       const container = document.getElementById('whitelist-records-list');
       if (!container) return;
 
+      const reg = window.ManoAuth ? ManoAuth.getRegistry() : {};
+      const emails = Object.keys(reg);
+
       container.innerHTML = '';
-      whitelist.forEach((email, idx) => {
+      emails.forEach((email, idx) => {
         const isOwner = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const entry = reg[email] || {};
+        const perms = entry.permissions || {};
         const row = document.createElement('div');
         row.className = 'whitelist-item';
         row.innerHTML = `
           <div style="display: flex; align-items: center; gap: 0.65rem;">
             <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">${idx + 1}.</span>
-            <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">${email}</span>
-            ${isOwner ? '<span class="brand-tag" style="background: rgba(250, 204, 21, 0.2);">OWNER</span>' : '<span class="brand-tag">VIP</span>'}
+            <div>
+              <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">${email}</span>
+              <div style="display: flex; gap: 0.35rem; margin-top: 0.2rem;">
+                ${isOwner ? '<span class="brand-tag">OWNER</span>' : '<span class="brand-tag">MEMBER</span>'}
+                ${perms.secret_room ? '<span class="brand-tag" style="background: rgba(59,130,246,0.2); color: #60a5fa;">Room</span>' : ''}
+                ${perms.extra_features ? '<span class="brand-tag" style="background: rgba(16,185,129,0.2); color: #34d399;">Pro</span>' : ''}
+              </div>
+            </div>
           </div>
-          ${!isOwner ? `<button onclick="handleRemoveWhitelistEmail('${email}')" class="btn-logout" style="color: var(--red);">Remove</button>` : '<span style="font-size: 0.75rem; color: var(--text-muted);">Protected</span>'}
+          ${!isOwner ? `<button onclick="handleRemoveWhitelistEmail('${email}')" class="btn-logout" style="color: var(--red);">Revoke</button>` : '<span style="font-size: 0.75rem; color: var(--text-muted);">Protected</span>'}
         `;
         container.appendChild(row);
       });
     }
 
-    function handleAddWhitelistEmail(e) {
+    function handleGrantAccessFromLounge(e) {
       e.preventDefault();
       const input = document.getElementById('input-new-whitelist-email');
       const email = input.value.trim().toLowerCase();
       if (!email) return;
 
-      if (!whitelist.includes(email)) {
-        whitelist.push(email);
-        localStorage.setItem('mano_vip_whitelist', JSON.stringify(whitelist));
-        renderWhitelistTable();
-        alert(`Added ${email} to VIP Guest List!`);
-      } else {
-        alert("This email is already on the whitelist.");
+      const permRoom = document.getElementById('input-perm-room').checked;
+      const permPro = document.getElementById('input-perm-pro').checked;
+
+      if (window.ManoAuth) {
+        const reg = ManoAuth.getRegistry();
+        reg[email] = {
+          role: email === ADMIN_EMAIL.toLowerCase() ? 'admin' : 'member',
+          permissions: {
+            secret_room: permRoom,
+            extra_features: permPro
+          },
+          updatedAt: Date.now()
+        };
+        ManoAuth.saveRegistry(reg);
       }
+      renderWhitelistTable();
       input.value = '';
+      alert(`Access updated for ${email}!`);
     }
-    window.handleAddWhitelistEmail = handleAddWhitelistEmail;
+    window.handleGrantAccessFromLounge = handleGrantAccessFromLounge;
 
     function handleRemoveWhitelistEmail(email) {
       if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        alert("Cannot remove Admin owner email.");
+        alert("Cannot revoke Owner access.");
         return;
       }
-      if (confirm(`Remove ${email} from VIP Guest List?`)) {
-        whitelist = whitelist.filter(e => e.toLowerCase() !== email.toLowerCase());
-        localStorage.setItem('mano_vip_whitelist', JSON.stringify(whitelist));
+      if (confirm(`Revoke access for ${email}?`)) {
+        if (window.ManoAuth) {
+          const reg = ManoAuth.getRegistry();
+          delete reg[email.toLowerCase()];
+          ManoAuth.saveRegistry(reg);
+        }
         renderWhitelistTable();
       }
     }
@@ -1639,64 +1631,6 @@
       if (window.lucide) lucide.createIcons();
     }
     window.switchLoungeTab = switchLoungeTab;
-
-    // --- CONFIG MODAL (Google Client ID) ---
-    function toggleConfigModal(show) {
-      const modal = document.getElementById('config-modal');
-      const input = document.getElementById('input-client-id');
-      if (show) {
-        input.value = GOOGLE_CLIENT_ID;
-        modal.classList.remove('hidden');
-      } else {
-        modal.classList.add('hidden');
-      }
-      if (window.lucide) lucide.createIcons();
-    }
-    window.toggleConfigModal = toggleConfigModal;
-
-    function handleSaveClientId(e) {
-      e.preventDefault();
-      const val = document.getElementById('input-client-id').value.trim();
-      if (!val) return;
-      GOOGLE_CLIENT_ID = val;
-      localStorage.setItem('mano_google_client_id', val);
-      toggleConfigModal(false);
-      alert("Google OAuth Client ID saved! Initializing Google Sign-In...");
-      initGoogleSignIn();
-    }
-    window.handleSaveClientId = handleSaveClientId;
-
-    // Fast Developer / Preview Helpers
-    function devLoginAsAdmin() {
-      const userObj = {
-        email: ADMIN_EMAIL,
-        name: 'Manojit (Owner)',
-        picture: 'https://api.dicebear.com/7.x/bottts/svg?seed=manojit',
-        sub: 'owner_' + Date.now(),
-        isAdmin: true,
-        authTime: Date.now()
-      };
-      currentUser = userObj;
-      localStorage.setItem('mano_vip_user', JSON.stringify(userObj));
-      renderAuthenticatedUI();
-      initP2PNetwork();
-    }
-    window.devLoginAsAdmin = devLoginAsAdmin;
-
-    function devLoginAsGuest() {
-      const userObj = {
-        email: 'uninvited_guest@example.com',
-        name: 'Uninvited User',
-        picture: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest',
-        sub: 'guest_' + Date.now(),
-        isAdmin: false,
-        authTime: Date.now()
-      };
-      currentUser = userObj;
-      localStorage.setItem('mano_vip_user', JSON.stringify(userObj));
-      renderDeniedUI(userObj.email);
-    }
-    window.devLoginAsGuest = devLoginAsGuest;
   </script>
 </body>
 </html>

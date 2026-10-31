@@ -48,21 +48,18 @@ const ALL_MANO_APPS = [
     tags: ["Rigged Characters", "Real Lip-Sync", "Studio Voice", "9:16 Video Export"],
     badge: "Animation Studio"
   },
+  // Preserved & hidden:
   {
     id: "lounge",
-    name: "VIP Lounge & Gaming Club",
-    tagline: "Restricted private chat room, multiplayer racing & VIP suite",
-    description: "Exclusive secret quarters protected by Google Account authentication and email whitelist. Features real-time P2P WebRTC chat and multiplayer Turbo Typist grand prix racing.",
-    category: "VIP & Social",
+    name: "Private Room",
+    tagline: "Private chat and multiplayer racing",
+    description: "Private room with real-time P2P WebRTC chat and multiplayer Turbo Typist racing.",
+    category: "Private",
     route: "apps/lounge/",
-    status: "Available",
-    featured: true,
-    emoji: "👑",
-    accentColor: "#facc15",
-    tags: ["Google Login", "P2P Chat", "Multiplayer Racing", "Whitelist Protected"],
-    badge: "Restricted Section"
+    status: "Hidden",
+    featured: false,
+    hidden: true
   },
-  // Preserved & hidden for now:
   {
     id: "unborn-realm",
     name: "THE UNBORN REALM",
