@@ -1179,39 +1179,45 @@
         };
       }
 
-      const prompt = `You are an elite, world-class ethnographic field-interview transcriptionist.
-Analyze this interview audio recording carefully.
-There are two primary speakers:
-1. Interviewer: The researcher conducting the interview, asking questions, prompting for explanations.
-2. Artisan / Interviewee: The master craftsman, artist, or person being interviewed${artisanHint ? ` (Candidate/expected name: '${artisanHint}')` : ''}.
+      const prompt = `You are a precise, professional verbatim audio transcription and translation engine.
+Listen carefully to the provided audio file.
 
-CRITICAL MANDATORY INSTRUCTIONS:
-1. SPEAKER DIARIZATION (NO TIMESTAMPS):
-   - You MUST label EVERY single conversational turn clearly.
-   - Use "Interviewer:" for the person asking questions.
-   - Use the Artisan's verified name (e.g. "${artisanHint || 'Artisan'}:") for the artisan answering questions.
-   - Example format:
-     Interviewer: Aap apna naam bataye?
-     Deepak Prajapati: Mera naam Deepak Prajapati hai.
+CORE OBJECTIVE:
+Transcribe EXACTLY what was actually spoken in the recording.
+ABSOLUTE ZERO-HALLUCINATION RULE:
+- NEVER invent, assume, or fabricate any dialogue, greetings, or filler.
+- NEVER add introductory phrases like "Hello, welcome to today's interview" or imaginary questions if they were not explicitly spoken in the audio.
+- If there is background silence, low murmur, or brief speech, transcribe ONLY the actual audible words spoken.
 
-2. YOU MUST DELIVER BOTH OF THESE FIELDS COMPLETELY:
-   - "native_transcript": Complete verbatim dialogue in authentic spoken native script (Devanagari for Hindi, Bengali script বাংলা লিপি for Bengali, Tamil தமிழ், etc.). Every turn MUST begin with "Interviewer: " or "<Artisan Name>: ". Do NOT use Latin/Romanized letters. Do NOT include timestamps.
-   - "english_transcript": Complete, genuine, verbatim English translation of EVERY SINGLE spoken turn above, matching "Interviewer: ..." and "<Artisan Name>: ...". DO NOT LEAVE THIS EMPTY. YOU MUST TRANSLATE THE ENTIRE INTERVIEW INTO ENGLISH.
+SPEAKER RULES:
+1. SINGLE SPEAKER (Monologue, Dictation, Voice Note, Lecture, Solo Speech):
+   - If only ONE person is speaking in the audio:
+   - Output the pure verbatim text directly.
+   - DO NOT prefix with "Interviewer:", "Interviewee:", "Speaker 1:", or any speaker tags. Just provide the clean spoken words.
+2. MULTIPLE SPEAKERS (Actual Conversation / Interview):
+   - ONLY if two or more distinct people are genuinely conversing or taking turns speaking:
+   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:" (or "Interviewer:", "${artisanHint || 'Artisan'}:" if an actual interview conversation is taking place).
 
-3. DETECTED ENTITIES:
-   - "confirmed_artisan_name": The verified full name of the artisan / interviewee (e.g. '${artisanHint || 'Artisan'}').
-   - "confirmed_section": The interview section if identifiable from speech or context (e.g. '${sectionHint || 'Section'}').
-   - "detected_language": Primary spoken language (e.g. 'Hindi', 'Bengali', etc.).
-   - "confidence": 0.98
+REQUIRED OUTPUT FIELDS (JSON):
+1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script বাংলা লিপি for Bengali, etc.). No timestamps.
+2. "english_transcript":
+   - If the audio is already in English: output the identical verbatim English transcription.
+   - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
+3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
+4. "is_multi_speaker": boolean (true if 2+ speakers conversing; false if single speaker).
+5. "confirmed_artisan_name": verified speaker name or "${artisanHint || ''}".
+6. "confirmed_section": "${sectionHint || 'General'}".
+7. "confidence": 0.99
 
-Output STRICTLY a JSON object with EXACTLY these keys:
+Output STRICTLY a JSON object with this structure:
 {
-  "confirmed_artisan_name": "${artisanHint || 'Artisan'}",
-  "confirmed_section": "${sectionHint || 'Section'}",
-  "detected_language": "Hindi",
-  "confidence": 0.98,
-  "native_transcript": "Interviewer: ...\\n\\n<Artisan Name>: ...",
-  "english_transcript": "Interviewer: ...\\n\\n<Artisan Name>: ..."
+  "detected_language": "English",
+  "is_multi_speaker": false,
+  "confirmed_artisan_name": "${artisanHint || ''}",
+  "confirmed_section": "${sectionHint || 'General'}",
+  "confidence": 0.99,
+  "native_transcript": "...",
+  "english_transcript": "..."
 }
 Output only the valid JSON without any other conversational commentary.`;
 
@@ -1270,19 +1276,28 @@ Output only the valid JSON without any other conversational commentary.`;
       // ============================================================
       // GUARANTEE: If English translation is missing or duplicate, run secondary pass!
       // ============================================================
-      const eng = (parsed.english_transcript || '').trim();
+      let eng = (parsed.english_transcript || '').trim();
       const nat = (parsed.native_transcript || '').trim();
-      if (nat && (!eng || eng.length < 10 || eng === nat)) {
-        console.info("English translation was missing from initial pass. Running dedicated translation pass...");
-        const transPrompt = `You are an elite bilingual ethnographic field-interview translator.
-Translate this verbatim interview transcription into accurate, natural, fluent English dialogue turns.
-Preserve the exact same speaker names (e.g. 'Interviewer:', '${artisanHint || 'Artisan'}:', etc.) for every single line.
-Do NOT summarize or add editorial notes.
+      const detectedLang = (parsed.detected_language || '').toLowerCase();
+      const isEnglishSpoken = detectedLang.includes('eng') || /^[a-zA-Z0-9\s.,!?'"()\-:;\n]+$/.test(nat.slice(0, 150));
 
-NATIVE TRANSCRIPT TO TRANSLATE:
+      if (isEnglishSpoken) {
+        // Audio was spoken in English: English transcript MUST be the verbatim native transcript!
+        if (!eng || eng.length < 5) {
+          parsed.english_transcript = nat;
+        }
+      } else if (nat && (!eng || eng.length < 10 || eng === nat)) {
+        console.info("English translation was missing from initial pass. Running dedicated translation pass...");
+        const transPrompt = `You are a precise verbatim translator.
+Translate the following transcript into natural, accurate English.
+Translate ONLY what is written below.
+DO NOT summarize, add conversational filler, or add greetings like 'Hello, welcome'.
+If speaker labels exist (e.g. 'Speaker 1:', 'Speaker 2:'), preserve them. If there are NO speaker labels, do NOT add any.
+
+TEXT TO TRANSLATE:
 ${nat}
 
-Output ONLY the verbatim English translation dialogue turns:`;
+Output ONLY the exact translated English text:`;
 
         try {
           const transResult = await callGeminiTextTranslation(transPrompt, activeKey);
@@ -1947,7 +1962,7 @@ Output ONLY the verbatim English translation dialogue turns:`;
           `;
         } else {
           html += `
-            <div class="p-2 rounded-lg text-slate-700 dark:text-slate-300">
+            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs text-slate-800 dark:text-slate-200 leading-relaxed">
               ${escapeHTML(line)}
             </div>
           `;

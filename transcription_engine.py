@@ -204,42 +204,45 @@ class GeminiAudioEngine(BaseEngine):
 
         b64_audio = base64.b64encode(audio_bytes).decode("utf-8")
 
-        prompt = f"""You are an elite, world-class ethnographic field-interview transcriptionist.
-Analyze this interview audio recording carefully.
-There are two primary speakers:
-1. Interviewer: The researcher conducting the interview, asking questions, prompting for explanations.
-2. Artisan / Interviewee: The master craftsman, artist, or person being interviewed{f" (Candidate/expected name: '{artisan_hint}')" if artisan_hint else ""}.
+        prompt = f"""You are a precise, professional verbatim audio transcription and translation engine.
+Listen carefully to the provided audio file.
 
-CRITICAL INSTRUCTIONS:
-1. SPEAKER DIARIZATION (NO TIMESTAMPS):
-   - You MUST label EVERY single conversational turn clearly.
-   - Use "Interviewer:" for the person asking questions.
-   - Use the Artisan's verified name (e.g. "Deepak Prajapati:" or "{artisan_hint or 'Artisan'}:") for the artisan answering questions.
-   - If a second artisan or another person speaks, label them clearly (e.g. "Reena Prajapati:" or "Artisan 2:").
-   - Example dialogue turn format:
-     Interviewer: Aap apna naam bataye?
-     Deepak Prajapati: Mera naam Deepak Prajapati hai.
-     Interviewer: Yeh kariagari ki history aapke parivar se judi hai?
-     Deepak Prajapati: Yeh jo art hai yeh lagbhag 600 varsh purv...
+CORE OBJECTIVE:
+Transcribe EXACTLY what was actually spoken in the recording.
+ABSOLUTE ZERO-HALLUCINATION RULE:
+- NEVER invent, assume, or fabricate any dialogue, greetings, or filler.
+- NEVER add introductory phrases like "Hello, welcome to today's interview" or imaginary questions if they were not explicitly spoken in the audio.
+- If there is background silence, low murmur, or brief speech, transcribe ONLY the actual audible words spoken.
 
-2. EXACTLY TWO OUTPUT TRANSCRIPTS REQUIRED (NO TIMESTAMPS):
-   - "native_transcript": Complete verbatim dialogue in the authentic spoken native script (Devanagari for Hindi, Bengali script বাংলা লিপি for Bengali, Tamil தமிழ், etc.). Every turn MUST begin with "Interviewer: " or "<Artisan Name>: ". Do NOT transcribe in English or Romanized letters (e.g. do not write 'Ami bhalo achi' - write 'আমি ভালো আছি'). Use genuine native script. Do NOT include timestamps or timecodes.
-   - "english_transcript": Flawless, genuine, pure raw English translation of the exact same spoken dialogue, with identical matching speaker turns ("Interviewer: ..." and "<Artisan Name>: ..."). Do NOT summarize, omit, or add editorial commentary.
+SPEAKER RULES:
+1. SINGLE SPEAKER (Monologue, Dictation, Voice Note, Lecture, Solo Speech):
+   - If only ONE person is speaking in the audio:
+   - Output the pure verbatim text directly.
+   - DO NOT prefix with "Interviewer:", "Interviewee:", "Speaker 1:", or any speaker tags. Just provide the clean spoken words.
+2. MULTIPLE SPEAKERS (Actual Conversation / Interview):
+   - ONLY if two or more distinct people are genuinely conversing or taking turns speaking:
+   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:" (or "Interviewer:", "{artisan_hint or 'Artisan'}:" if an actual interview conversation is taking place).
 
-3. DETECTED ENTITIES:
-   - "confirmed_artisan_name": The verified full name of the artisan / interviewee (e.g. '{artisan_hint or 'Deepak Prajapati'}').
-   - "confirmed_section": The interview section if identifiable from speech or context (e.g. '{section_hint or 'Section A'}').
-   - "detected_language": Primary spoken language (e.g. 'Hindi', 'Bengali', etc.).
-   - "confidence": 0.98
+REQUIRED OUTPUT FIELDS (JSON):
+1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script বাংলা লিপি for Bengali, etc.). No timestamps.
+2. "english_transcript":
+   - If the audio is already in English: output the identical verbatim English transcription.
+   - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
+3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
+4. "is_multi_speaker": boolean (true if 2+ speakers conversing; false if single speaker).
+5. "confirmed_artisan_name": verified speaker name or "{artisan_hint or ''}".
+6. "confirmed_section": "{section_hint or 'General'}".
+7. "confidence": 0.99
 
-Output STRICTLY a JSON object with EXACTLY these keys:
+Output STRICTLY a JSON object with this structure:
 {{
-  "confirmed_artisan_name": "{artisan_hint or 'Artisan'}",
-  "confirmed_section": "{section_hint or 'Section'}",
-  "detected_language": "Hindi",
-  "confidence": 0.98,
-  "native_transcript": "Interviewer: ...\\n\\n<Artisan Name>: ...",
-  "english_transcript": "Interviewer: ...\\n\\n<Artisan Name>: ..."
+  "detected_language": "English",
+  "is_multi_speaker": false,
+  "confirmed_artisan_name": "{artisan_hint or ''}",
+  "confirmed_section": "{section_hint or 'General'}",
+  "confidence": 0.99,
+  "native_transcript": "...",
+  "english_transcript": "..."
 }}
 Output only the valid JSON without any other conversational commentary."""
 
@@ -304,16 +307,21 @@ Output only the valid JSON without any other conversational commentary."""
                         romanized_text = parsed.get("romanized_transcript", "").strip()
 
                         # Guarantee English translation is never omitted
-                        if native_text and (not english_text or len(english_text) < 10 or english_text == native_text):
-                            trans_prompt = f"""You are an elite bilingual ethnographic field-interview translator.
-Translate this verbatim interview transcription into accurate, natural, fluent English dialogue turns.
-Preserve the exact same speaker names (e.g. 'Interviewer:', '{artisan_hint or 'Artisan'}:', etc.) for every single line.
-Do NOT summarize, omit, or add editorial commentary.
+                        is_eng_audio = "eng" in detected_lang.lower() or bool(re.match(r'^[a-zA-Z0-9\s.,!?\'"()\-:;\n]+$', native_text[:120])) if native_text else False
+                        if is_eng_audio:
+                            if not english_text or len(english_text) < 5:
+                                english_text = native_text
+                        elif native_text and (not english_text or len(english_text) < 10 or english_text == native_text):
+                            trans_prompt = f"""You are a precise verbatim translator.
+Translate the following transcript into natural, accurate English.
+Translate ONLY what is written below.
+DO NOT summarize, add conversational filler, or add greetings like 'Hello, welcome'.
+If speaker labels exist (e.g. 'Speaker 1:', 'Speaker 2:'), preserve them. If there are NO speaker labels, do NOT add any.
 
-NATIVE TRANSCRIPT TO TRANSLATE:
+TEXT TO TRANSLATE:
 {native_text}
 
-Output ONLY the verbatim English translation dialogue turns:"""
+Output ONLY the exact translated English text:"""
                             for t_model in fallback_models:
                                 try:
                                     t_url = f"{self.base_url}/{t_model}:generateContent?key={self.api_key}"
