@@ -233,7 +233,7 @@
           <span class="text-[10px] text-slate-400">e.g. C:\Users\gmano\OneDrive\Desktop\Interviews</span>
         </div>
         <div class="flex gap-2">
-          <input id="inputFolderPath" type="text" placeholder="Enter folder path on your computer..." class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+          <input id="inputFolderPath" type="text" placeholder="Enter or paste folder path (e.g. C:\Users\...\Audio)..." class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono" onkeydown="if(event.key==='Enter'){event.preventDefault(); scanFolder();}">
           <button onclick="scanFolder()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs transition flex items-center gap-1.5 shrink-0">
             <i data-lucide="search" class="w-3.5 h-3.5"></i>
             <span>Scan</span>
@@ -587,12 +587,16 @@
       return `${API_BASE}${path}`;
     }
 
-    // Supported extensions
-    const AUDIO_EXTS = ['.m4a', '.mp3', '.wav', '.aac', '.ogg', '.flac', '.mp4', '.mkv', '.webm', '.alac', '.opus', '.wma', '.3gp'];
+    // Supported extensions (all standard audio and video formats)
+    const AUDIO_EXTS = [
+      '.m4a', '.mp3', '.wav', '.wave', '.aac', '.ogg', '.oga', '.flac', '.mp4', 
+      '.mkv', '.webm', '.alac', '.opus', '.wma', '.3gp', '.amr', '.caf', '.m4b', 
+      '.m4r', '.aiff', '.aif', '.mov', '.avi', '.wmv', '.flv', '.mka', '.mp2'
+    ];
 
     function isAudioFilename(name) {
       if (!name) return false;
-      const lower = name.toLowerCase();
+      const lower = name.toLowerCase().trim();
       return AUDIO_EXTS.some(e => lower.endsWith(e));
     }
 
@@ -702,10 +706,14 @@
           }
         } else if (entry.isDirectory) {
           const reader = entry.createReader();
-          const entries = await new Promise(res => {
-            reader.readEntries(res, () => res([]));
-          });
-          queue.push(...entries);
+          // Chromium returns at most 100 entries per readEntries call: read until empty
+          let batch = [];
+          do {
+            batch = await new Promise(res => reader.readEntries(res, () => res([])));
+            if (batch && batch.length > 0) {
+              queue.push(...batch);
+            }
+          } while (batch && batch.length > 0);
         }
       }
 
@@ -715,43 +723,70 @@
     async function handleFolderOrFilesUpload(fileList) {
       if (!fileList || fileList.length === 0) return;
       const validFiles = Array.from(fileList).filter(f => isAudioFilename(f.name));
+      
+      // Reset input values so user can select the same folder again or re-select
+      const folderInput = document.getElementById('folderInput');
+      if (folderInput) folderInput.value = '';
+      const filesInput = document.getElementById('filesInput');
+      if (filesInput) filesInput.value = '';
+
       if (validFiles.length === 0) {
-        alert("No audio files detected in the selected folder/files.");
+        alert(`No supported audio files detected in the selected folder.\n(Found ${fileList.length} files. Supported formats: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
         return;
       }
+
       await uploadFileList(validFiles);
     }
 
     async function uploadFileList(files) {
       const dropZone = document.getElementById('dropZone');
       const origText = dropZone.innerHTML;
-      dropZone.innerHTML = `
-        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 animate-spin">
-          <i data-lucide="loader" class="w-6 h-6"></i>
-        </div>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Uploading and organizing ${files.length} audio file(s)...</span>
-      `;
-      lucide.createIcons();
-
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
-      }
+      
+      // Upload in manageable batches of 5 files to avoid server timeouts on huge audio files
+      const BATCH_SIZE = 5;
+      const totalBatches = Math.ceil(files.length / BATCH_SIZE);
+      let successCount = 0;
 
       try {
-        const res = await apiFetch('/api/upload-files', {
-          method: 'POST',
-          body: formData
-        });
-        if (!res.ok) throw new Error("Upload server error");
-        const data = await res.json();
-        selectedFiles = selectedFiles.concat(data.files || []);
-        renderSelectedFiles();
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+          const slice = files.slice(i, i + BATCH_SIZE);
+          const currentBatch = Math.floor(i / BATCH_SIZE) + 1;
+
+          dropZone.innerHTML = `
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 animate-spin">
+              <i data-lucide="loader" class="w-6 h-6"></i>
+            </div>
+            <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Processing ${files.length} audio file(s) (Batch ${currentBatch} of ${totalBatches})...</span>
+          `;
+          if (window.lucide) lucide.createIcons();
+
+          const formData = new FormData();
+          for (let f of slice) {
+            formData.append('files', f);
+          }
+
+          const res = await apiFetch('/api/upload-files', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || "Server error while receiving uploaded audio files.");
+          }
+
+          const data = await res.json();
+          if (data.files && data.files.length > 0) {
+            selectedFiles = selectedFiles.concat(data.files);
+            successCount += data.files.length;
+            renderSelectedFiles(); // Immediately show audio files on screen!
+          }
+        }
       } catch (e) {
-        alert("Failed to upload files: " + e.message);
+        alert("Upload error: " + e.message);
       } finally {
         dropZone.innerHTML = origText;
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
       }
     }
 
@@ -782,7 +817,7 @@
         `;
         list.appendChild(item);
       });
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function clearSelectedFiles() {
@@ -791,10 +826,23 @@
     }
 
     async function scanFolder() {
-      const path = document.getElementById('inputFolderPath').value.trim();
+      let path = document.getElementById('inputFolderPath').value.trim();
+      // Clean quotes, backticks, file:// protocols, and whitespace
+      path = path.replace(/^["'`]|["'`]$/g, '').trim();
+      if (path.startsWith('file:///')) path = decodeURIComponent(path.replace('file:///', ''));
+      else if (path.startsWith('file://')) path = decodeURIComponent(path.replace('file://', ''));
+      document.getElementById('inputFolderPath').value = path;
+
       if (!path) {
-        alert("Please enter a folder path on your computer.");
+        alert("Please enter a folder path on your computer (e.g. C:\\Users\\...\\Recordings).");
         return;
+      }
+
+      const scanBtn = document.querySelector('button[onclick="scanFolder()"]');
+      const origBtnHtml = scanBtn ? scanBtn.innerHTML : '';
+      if (scanBtn) {
+        scanBtn.disabled = true;
+        scanBtn.innerHTML = '<span>Scanning...</span>';
       }
 
       try {
@@ -805,15 +853,28 @@
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          alert(err.detail || "Directory path does not exist on this machine.");
+          alert(err.detail || `Directory path does not exist on your computer:\n${path}\n\nPlease verify the path.`);
           return;
         }
 
         const data = await res.json();
+        if (!data.files || data.files.length === 0) {
+          alert(`Scanned: ${data.folder_path}\n\nNo supported audio files found inside this directory.\n(Checked for: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
+          selectedFiles = [];
+          renderSelectedFiles();
+          return;
+        }
+
         selectedFiles = data.files || [];
         renderSelectedFiles();
       } catch (e) {
         alert("Error scanning folder: " + e.message);
+      } finally {
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = origBtnHtml;
+        }
+        if (window.lucide) lucide.createIcons();
       }
     }
 

@@ -127,23 +127,69 @@ def save_keys(req: SaveKeysRequest):
 @app.post("/api/scan-folder")
 def scan_folder(req: ScanFolderRequest):
     """Scans a local folder on the machine for all media files."""
-    folder = Path(req.folder_path).resolve()
+    raw = req.folder_path.strip() if req.folder_path else ""
+    # Strip any leading and trailing quotes (double quotes, single quotes, backticks)
+    raw = raw.strip('"\'`').strip()
+    
+    # Strip file:// or file:/// URL prefixes if copied from browser
+    if raw.startswith("file:///"):
+        raw = raw[8:]
+    elif raw.startswith("file://"):
+        raw = raw[7:]
+        
+    # URL-decode any percent-encoded characters (like %20 for spaces)
+    raw = urllib.parse.unquote(raw)
+    
+    # Expand user home (~) or environment variables
+    raw = os.path.expanduser(os.path.expandvars(raw))
+
+    if not raw:
+        raise HTTPException(status_code=400, detail="Please enter a valid folder path.")
+
+    folder = Path(raw).resolve()
+
+    # If the user pasted a path directly to an audio file instead of a folder:
+    if folder.exists() and folder.is_file():
+        if folder.suffix.lower() in ALL_SUPPORTED_EXTENSIONS:
+            size = folder.stat().st_size
+            return {
+                "folder_path": str(folder.parent),
+                "total_files": 1,
+                "total_size_mb": round(size / (1024 * 1024), 2),
+                "files": [{
+                    "name": folder.name,
+                    "path": str(folder),
+                    "size_mb": round(size / (1024 * 1024), 2),
+                    "extension": folder.suffix.lower()
+                }]
+            }
+        else:
+            # Fall back to parent folder
+            folder = folder.parent
+
     if not folder.exists() or not folder.is_dir():
-        raise HTTPException(status_code=400, detail=f"Directory does not exist: {req.folder_path}")
+        clean_display = req.folder_path.strip().strip('"\'`')
+        raise HTTPException(
+            status_code=400,
+            detail=f"Directory does not exist on your computer: {clean_display}. Please check the path and try again."
+        )
 
     files = BatchOrchestrator.scan_folder_for_media(folder, recursive=req.recursive)
 
     file_info = []
     total_bytes = 0
     for f in files:
-        size = f.stat().st_size
-        total_bytes += size
-        file_info.append({
-            "name": f.name,
-            "path": str(f),
-            "size_mb": round(size / (1024 * 1024), 2),
-            "extension": f.suffix.lower()
-        })
+        try:
+            size = f.stat().st_size
+            total_bytes += size
+            file_info.append({
+                "name": f.name,
+                "path": str(f),
+                "size_mb": round(size / (1024 * 1024), 2),
+                "extension": f.suffix.lower()
+            })
+        except Exception:
+            continue
 
     return {
         "folder_path": str(folder),
@@ -162,13 +208,24 @@ async def upload_files(files: List[UploadFile] = File(...)):
 
     saved_files = []
     for f in files:
-        dest = upload_dir / f.filename
+        raw_name = f.filename or "audio_file.mp3"
+        clean_name = Path(raw_name.replace('\\', '/')).name
+        if not clean_name:
+            clean_name = f"audio_{uuid.uuid4().hex[:6]}.mp3"
+
+        dest = upload_dir / clean_name
+        if dest.exists():
+            dest = upload_dir / f"{uuid.uuid4().hex[:4]}_{clean_name}"
+
+        dest.parent.mkdir(parents=True, exist_ok=True)
         with open(dest, "wb") as buffer:
             shutil.copyfileobj(f.file, buffer)
+
+        size = dest.stat().st_size
         saved_files.append({
-            "name": f.filename,
+            "name": clean_name,
             "path": str(dest),
-            "size_mb": round(dest.stat().st_size / (1024 * 1024), 2),
+            "size_mb": round(size / (1024 * 1024), 2),
             "extension": dest.suffix.lower()
         })
 

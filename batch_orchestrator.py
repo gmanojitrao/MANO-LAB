@@ -79,11 +79,32 @@ class BatchOrchestrator:
         if not folder_path.exists() or not folder_path.is_dir():
             return []
 
-        pattern = "**/*" if recursive else "*"
+        IGNORED_DIR_NAMES = {
+            "node_modules", ".git", ".svn", ".hg", "__pycache__", ".venv", "venv",
+            "env", ".env", ".next", ".nuxt", "dist", "build", ".cache", ".idea",
+            ".vscode", "windows", "appdata", "$recycle.bin", "system volume information",
+            "temp_processing", "temp", "tmp", ".temp"
+        }
+
         found_files: List[Path] = []
-        for p in folder_path.glob(pattern):
-            if p.is_file() and p.suffix.lower() in ALL_SUPPORTED_EXTENSIONS:
-                found_files.append(p)
+        try:
+            if recursive:
+                for root, dirs, filenames in os.walk(folder_path):
+                    # Prune ignored and hidden directories in-place so os.walk skips them
+                    dirs[:] = [
+                        d for d in dirs 
+                        if not d.startswith('.') and d.lower() not in IGNORED_DIR_NAMES
+                    ]
+                    for fn in filenames:
+                        suffix = os.path.splitext(fn)[1].lower()
+                        if suffix in ALL_SUPPORTED_EXTENSIONS:
+                            found_files.append(Path(root) / fn)
+            else:
+                for entry in folder_path.iterdir():
+                    if entry.is_file() and entry.suffix.lower() in ALL_SUPPORTED_EXTENSIONS:
+                        found_files.append(entry)
+        except Exception as e:
+            logger.warning(f"Error scanning folder {folder_path}: {e}")
 
         found_files.sort(key=lambda x: natural_sort_key(x.name))
         return found_files

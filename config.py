@@ -76,12 +76,12 @@ except ImportError:
 
 # Supported media extensions (Audio + Video containers)
 SUPPORTED_AUDIO_EXTENSIONS = {
-    ".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus", 
-    ".wma", ".aiff", ".aif", ".alac", ".pcm"
+    ".mp3", ".wav", ".wave", ".m4a", ".m4b", ".m4r", ".aac", ".flac", ".ogg", ".oga",
+    ".opus", ".wma", ".aiff", ".aif", ".alac", ".pcm", ".amr", ".caf", ".mka", ".mp2"
 }
 
 SUPPORTED_VIDEO_EXTENSIONS = {
-    ".mp4", ".mkv", ".mov", ".webm", ".avi", ".ts", ".wmv", ".flv", ".3gp"
+    ".mp4", ".mkv", ".mov", ".webm", ".avi", ".wmv", ".flv", ".3gp"
 }
 
 ALL_SUPPORTED_EXTENSIONS = SUPPORTED_AUDIO_EXTENSIONS.union(SUPPORTED_VIDEO_EXTENSIONS)
