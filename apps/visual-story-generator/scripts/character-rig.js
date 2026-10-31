@@ -483,6 +483,9 @@ class CharacterRig {
     ctx.translate(this.worldX + ox, this.worldY + oy + this.bones.rootY);
     ctx.scale(this.facing * scale, scale * this.bones.breathScaleY);
 
+    // Layer 0: Divine Prabhavali (Sacred Radiance & Aura)
+    this.renderPrabhavali(ctx);
+
     // Layer 1: Back Cape & Hair
     if (this.profile.cape.enabled) {
       this.renderCape(ctx);
@@ -515,6 +518,55 @@ class CharacterRig {
     ctx.restore();
   }
 
+  /* ------------------- SACRED DIVINE PRABHAVALI (AURA & HALO) ------------------- */
+
+  renderPrabhavali(ctx) {
+    ctx.save();
+    ctx.translate(this.bones.headOffsetX * 0.5, -150);
+    const pulse = 1.0 + Math.sin(this.time * 2.2) * 0.04;
+    const auraRadius = 115 * pulse;
+    const auraColor = this.profile.eyes.glow || this.profile.torso.trim || '#facc15';
+
+    // Soft outer celestial radiance
+    const auraGrad = ctx.createRadialGradient(0, 0, 30, 0, 0, auraRadius);
+    auraGrad.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+    auraGrad.addColorStop(0.35, auraColor + '28');
+    auraGrad.addColorStop(0.75, auraColor + '10');
+    auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sacred golden halo ring with delicate rays
+    ctx.strokeStyle = auraColor + '55';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 75, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Subtle radiating sacred needles
+    ctx.save();
+    ctx.rotate(this.time * 0.15);
+    ctx.strokeStyle = auraColor + '40';
+    ctx.lineWidth = 1.2;
+    for (let r = 0; r < 16; r++) {
+      const angle = (r / 16) * Math.PI * 2;
+      const x1 = Math.cos(angle) * 76;
+      const y1 = Math.sin(angle) * 76;
+      const x2 = Math.cos(angle) * 92;
+      const y2 = Math.sin(angle) * 92;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.restore();
+  }
+
   /* ------------------- ARTICULATED LIMB RENDERING ------------------- */
 
   renderLegs(ctx) {
@@ -524,67 +576,147 @@ class CharacterRig {
     const trimColor = this.profile.legs?.trim || '#facc15';
 
     // Left Leg (Behind / Lead)
-    this.renderSingleLeg(ctx, -26, this.bones.leftLegAngle, this.bones.leftKneeAngle, mainColor, trimColor, legType);
+    this.renderSingleLeg(ctx, -26, this.bones.leftLegAngle, this.bones.leftKneeAngle, mainColor, trimColor, legType, -1);
 
     // Right Leg (Front / Trail)
-    this.renderSingleLeg(ctx, 26, this.bones.rightLegAngle, this.bones.rightKneeAngle, mainColor, trimColor, legType);
+    this.renderSingleLeg(ctx, 26, this.bones.rightLegAngle, this.bones.rightKneeAngle, mainColor, trimColor, legType, 1);
 
     ctx.restore();
   }
 
-  renderSingleLeg(ctx, hipX, hipAngle, kneeAngle, color, trim, type) {
+  renderSingleLeg(ctx, hipX, hipAngle, kneeAngle, color, trim, type, side = 1) {
     ctx.save();
     ctx.translate(hipX, 110);
     ctx.rotate(hipAngle);
 
-    // Thigh
-    ctx.fillStyle = color;
+    // 1. Thigh & Cascading Pleated Dhoti / Greave
+    const thighGrad = ctx.createLinearGradient(-18, 0, 18, 90);
+    thighGrad.addColorStop(0, color);
+    thighGrad.addColorStop(0.5, color);
+    thighGrad.addColorStop(1, '#1e1104');
+
+    ctx.fillStyle = thighGrad;
     ctx.strokeStyle = trim;
     ctx.lineWidth = 2.5;
 
     ctx.beginPath();
-    ctx.moveTo(-16, 0);
-    ctx.lineTo(16, 0);
-    ctx.lineTo(13, 85);
-    ctx.lineTo(-13, 85);
+    ctx.moveTo(-18, 0);
+    ctx.quadraticCurveTo(-22, 45, -14, 88);
+    ctx.lineTo(14, 88);
+    ctx.quadraticCurveTo(22, 45, 18, 0);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Knee joint
-    ctx.translate(0, 85);
+    // Dhoti Silk Pleats (diagonal fold highlights)
+    ctx.strokeStyle = trim + '77';
+    ctx.lineWidth = 1.5;
+    for (let p = 15; p <= 75; p += 18) {
+      ctx.beginPath();
+      ctx.moveTo(-14, p);
+      ctx.lineTo(12, p + 6);
+      ctx.stroke();
+    }
+
+    // Embroidered Zari border along thigh hem
+    ctx.strokeStyle = trim;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(-15, 84);
+    ctx.lineTo(15, 84);
+    ctx.stroke();
+
+    // 2. Articulated Knee Cop / Rondel
+    ctx.translate(0, 88);
     ctx.rotate(kneeAngle);
 
+    // Golden knee medallion
+    const kneeGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 13);
+    kneeGrad.addColorStop(0, '#ffffff');
+    kneeGrad.addColorStop(0.3, trim);
+    kneeGrad.addColorStop(1, '#b45309');
+
+    ctx.fillStyle = kneeGrad;
     ctx.beginPath();
-    ctx.arc(0, 0, 11, 0, Math.PI * 2);
-    ctx.fillStyle = trim;
+    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Center jewel in knee rondel
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Shin & Calf
-    ctx.fillStyle = color;
+    // 3. Shin, Calf & Lower Dhoti / Greave
+    ctx.fillStyle = thighGrad;
+    ctx.strokeStyle = trim;
+    ctx.lineWidth = 2.2;
+
     ctx.beginPath();
-    ctx.moveTo(-11, 0);
-    ctx.lineTo(11, 0);
-    ctx.lineTo(9, 85);
-    ctx.lineTo(-9, 85);
+    ctx.moveTo(-13, 0);
+    ctx.quadraticCurveTo(-16, 45, -10, 85);
+    ctx.lineTo(10, 85);
+    ctx.quadraticCurveTo(16, 45, 13, 0);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Foot / Sandal / Greave
-    ctx.translate(0, 85);
-    ctx.fillStyle = trim;
+    // Shin highlights / pleats
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
-    ctx.moveTo(-10, 0);
-    ctx.lineTo(24, 0);
-    ctx.lineTo(22, 14);
-    ctx.lineTo(-10, 14);
+    ctx.moveTo(0, 6);
+    ctx.lineTo(0, 75);
+    ctx.stroke();
+
+    // 4. Ankle & Sacred Ornate Payal / Ghungroos
+    ctx.translate(0, 85);
+
+    // Multi-tier Golden Payal
+    ctx.fillStyle = trim;
+    ctx.fillRect(-12, -4, 24, 5);
+    // Ghungroo bells
+    for (let g = -10; g <= 10; g += 5) {
+      ctx.beginPath();
+      ctx.arc(g, 3, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 5. Foot Anatomy & Royal Paduka / Sandal
+    // Foot arch
+    ctx.fillStyle = this.profile.skin.base;
+    ctx.beginPath();
+    ctx.moveTo(-10, 2);
+    ctx.lineTo(24, 2);
+    ctx.quadraticCurveTo(26, 12, 22, 16);
+    ctx.lineTo(-10, 16);
     ctx.closePath();
     ctx.fill();
 
-    // Gold Payal / Anklet
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(-11, -3, 22, 4);
+    // Golden Sandal Sole
+    ctx.fillStyle = trim;
+    ctx.beginPath();
+    ctx.roundRect(-12, 14, 38, 5, 2);
+    ctx.fill();
+
+    // Royal Sandal Straps & Golden Toe Ring (Angutha)
+    ctx.strokeStyle = trim;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-8, 3);
+    ctx.lineTo(14, 14);
+    ctx.moveTo(8, 3);
+    ctx.lineTo(20, 14);
+    ctx.stroke();
+
+    // Golden Toe Stud
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(22, 9, 2.5, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }
@@ -592,22 +724,52 @@ class CharacterRig {
   renderCape(ctx) {
     ctx.save();
     const sway = this.bones.capeSway;
-    ctx.fillStyle = this.profile.cape.color;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-    ctx.shadowBlur = 16;
+    const capeColor = this.profile.cape.color;
+    const trimColor = this.profile.cape.trim || '#facc15';
 
+    // Rich shaded velvet / royal silk gradient
+    const capeGrad = ctx.createLinearGradient(0, -110, sway * 0.8, 330);
+    capeGrad.addColorStop(0, '#0a0a0f');
+    capeGrad.addColorStop(0.35, capeColor);
+    capeGrad.addColorStop(0.85, capeColor);
+    capeGrad.addColorStop(1, '#05070d');
+
+    ctx.fillStyle = capeGrad;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 22;
+
+    // Fluid royal drape geometry
     ctx.beginPath();
-    ctx.moveTo(-100, -110);
-    ctx.quadraticCurveTo(-130 + sway, 120, -150 + sway * 1.5, 330);
-    ctx.lineTo(150 + sway * 1.5, 330);
-    ctx.quadraticCurveTo(130 + sway, 120, 100, -110);
+    ctx.moveTo(-105, -110);
+    ctx.quadraticCurveTo(-135 + sway * 0.7, 110, -165 + sway * 1.4, 335);
+    ctx.quadraticCurveTo(-70 + sway * 0.9, 320, 0 + sway * 0.5, 338);
+    ctx.quadraticCurveTo(70 + sway * 0.9, 320, 165 + sway * 1.4, 335);
+    ctx.quadraticCurveTo(135 + sway * 0.7, 110, 105, -110);
     ctx.closePath();
     ctx.fill();
 
-    // Gold trim
-    ctx.strokeStyle = this.profile.cape.trim || '#facc15';
+    ctx.shadowBlur = 0;
+
+    // Embroidered Golden Zari Border Hem
+    ctx.strokeStyle = trimColor;
     ctx.lineWidth = 3.5;
     ctx.stroke();
+
+    // Inner embroidered filigree line
+    ctx.strokeStyle = trimColor + '66';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-155 + sway * 1.4, 325);
+    ctx.quadraticCurveTo(-70 + sway * 0.9, 312, 0 + sway * 0.5, 328);
+    ctx.quadraticCurveTo(70 + sway * 0.9, 312, 155 + sway * 1.4, 325);
+    ctx.stroke();
+
+    // Corner Golden Medallions / Tassels
+    ctx.fillStyle = trimColor;
+    ctx.beginPath();
+    ctx.arc(-165 + sway * 1.4, 335, 5, 0, Math.PI * 2);
+    ctx.arc(165 + sway * 1.4, 335, 5, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }
@@ -615,20 +777,51 @@ class CharacterRig {
   renderBackHair(ctx) {
     ctx.save();
     const sway = this.bones.hairSway;
-    ctx.fillStyle = this.profile.hair.color;
+    const hairColor = this.profile.hair.color;
 
-    // Flowing hair strands down the back
+    // Multi-lock flowing hair with depth gradients
+    const hairGrad = ctx.createLinearGradient(0, -160, 0, 120);
+    hairGrad.addColorStop(0, '#020306');
+    hairGrad.addColorStop(0.6, hairColor);
+    hairGrad.addColorStop(1, '#090d16');
+
+    ctx.fillStyle = hairGrad;
+
+    // Left flowing locks (cascading layers)
     ctx.beginPath();
-    ctx.moveTo(-65, -160);
-    ctx.quadraticCurveTo(-95 + sway, -40, -80 + sway * 1.2, 70);
-    ctx.quadraticCurveTo(-55, 35, -35, -120);
+    ctx.moveTo(-60, -160);
+    ctx.quadraticCurveTo(-110 + sway * 0.8, -40, -95 + sway * 1.2, 85);
+    ctx.quadraticCurveTo(-70 + sway * 0.5, 50, -45, -120);
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(65, -160);
-    ctx.quadraticCurveTo(95 + sway, -40, 80 + sway * 1.2, 70);
-    ctx.quadraticCurveTo(55, 35, 35, -120);
+    ctx.moveTo(-45, -140);
+    ctx.quadraticCurveTo(-90 + sway * 1.1, -10, -75 + sway * 1.6, 120);
+    ctx.quadraticCurveTo(-50 + sway * 0.7, 70, -25, -100);
     ctx.fill();
+
+    // Right flowing locks (cascading layers)
+    ctx.beginPath();
+    ctx.moveTo(60, -160);
+    ctx.quadraticCurveTo(110 + sway * 0.8, -40, 95 + sway * 1.2, 85);
+    ctx.quadraticCurveTo(70 + sway * 0.5, 50, 45, -120);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(45, -140);
+    ctx.quadraticCurveTo(90 + sway * 1.1, -10, 75 + sway * 1.6, 120);
+    ctx.quadraticCurveTo(50 + sway * 0.7, 70, 25, -100);
+    ctx.fill();
+
+    // Lustrous sheen strands
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-52, -130);
+    ctx.quadraticCurveTo(-82 + sway, 0, -68 + sway * 1.3, 75);
+    ctx.moveTo(52, -130);
+    ctx.quadraticCurveTo(82 + sway, 0, 68 + sway * 1.3, 75);
+    ctx.stroke();
 
     ctx.restore();
   }
@@ -638,6 +831,9 @@ class CharacterRig {
     ctx.rotate(this.bones.chestAngle);
 
     const t = this.profile.torso;
+    const skin = this.profile.skin;
+
+    // Muscular Cuirass / Robe Form with 3D volumetric shading
     const grad = ctx.createLinearGradient(-90, -120, 90, 120);
     grad.addColorStop(0, t.highlight);
     grad.addColorStop(0.5, t.main);
@@ -645,41 +841,158 @@ class CharacterRig {
 
     ctx.fillStyle = grad;
     ctx.strokeStyle = t.trim;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.2;
 
-    // Muscular Cuirass / Robe Form
+    // Contoured anatomical chest / armor silhouette
     ctx.beginPath();
-    ctx.moveTo(-68, -110);
-    ctx.lineTo(68, -110);
-    ctx.lineTo(80, 0);
-    ctx.lineTo(58, 120);
+    ctx.moveTo(-70, -112);
+    ctx.quadraticCurveTo(0, -118, 70, -112);
+    ctx.quadraticCurveTo(86, -50, 80, 5);
+    ctx.quadraticCurveTo(72, 65, 58, 120);
     ctx.lineTo(-58, 120);
-    ctx.lineTo(-80, 0);
+    ctx.quadraticCurveTo(-72, 65, -80, 5);
+    ctx.quadraticCurveTo(-86, -50, -70, -112);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Emblem or Royal Sun / Lotus Plate on Chest
-    ctx.save();
-    ctx.fillStyle = t.trim;
+    // Pectoral Plate Contouring
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.lineWidth = 2.0;
+    // Left pec
     ctx.beginPath();
-    ctx.arc(0, -30, 24, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.arc(-26, -50, 28, 0.2, Math.PI - 0.4);
+    ctx.stroke();
+    // Right pec
+    ctx.beginPath();
+    ctx.arc(26, -50, 28, 0.4, Math.PI - 0.2);
+    ctx.stroke();
 
-    ctx.strokeStyle = '#050811';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(0, -30);
-      ctx.lineTo(Math.cos(angle) * 22, -30 + Math.sin(angle) * 22);
-      ctx.stroke();
-    }
+    // Pectoral Highlight Sheen
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(-28, -58, 22, -0.6, 0.6);
+    ctx.moveTo(28, -58);
+    ctx.arc(28, -58, 22, Math.PI - 0.6, Math.PI + 0.6);
+    ctx.stroke();
+
+    // Sacred Diagonal Janeu Thread (Yajnopavita)
+    ctx.save();
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.8;
+    ctx.shadowColor = '#facc15';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(-45, -110);
+    ctx.quadraticCurveTo(-10, 0, 50, 115);
+    ctx.stroke();
+    // Second strand
+    ctx.strokeStyle = '#f1f5f9';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-41, -110);
+    ctx.quadraticCurveTo(-6, 0, 54, 115);
+    ctx.stroke();
     ctx.restore();
 
-    // Sacred Waist Belt (Kamarbandh)
-    ctx.fillStyle = t.trim;
-    ctx.fillRect(-62, 105, 124, 14);
+    // Royal 12-Petaled Padma Sunburst Chest Medallion
+    ctx.save();
+    ctx.translate(0, -32);
+
+    // Golden base disc
+    const medGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, 26);
+    medGrad.addColorStop(0, '#ffffff');
+    medGrad.addColorStop(0.4, t.trim);
+    medGrad.addColorStop(1, '#92400e');
+    ctx.fillStyle = medGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 12 Radiating Embossed Sacred Petals
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10);
+      ctx.lineTo(Math.cos(angle) * 23, Math.sin(angle) * 23);
+      ctx.stroke();
+    }
+
+    // Faceted Center Gemstone (Ruby / Emerald / Sapphire)
+    const gemColor = this.profile.eyes.glow || '#ef4444';
+    const gemGrad = ctx.createRadialGradient(-3, -3, 1, 0, 0, 9);
+    gemGrad.addColorStop(0, '#ffffff');
+    gemGrad.addColorStop(0.3, gemColor);
+    gemGrad.addColorStop(1, '#450a0a');
+    ctx.fillStyle = gemGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Ornate Multi-Tiered Golden Kamarbandh (Waistband & Pleated Sash)
+    // Waistband
+    const beltGrad = ctx.createLinearGradient(-65, 105, 65, 120);
+    beltGrad.addColorStop(0, '#b45309');
+    beltGrad.addColorStop(0.5, t.trim);
+    beltGrad.addColorStop(1, '#b45309');
+    ctx.fillStyle = beltGrad;
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-64, 104, 128, 16, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Gem studs on belt
+    for (let bx = -50; bx <= 50; bx += 20) {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(bx, 112, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Central Royal Buckle
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(0, 112, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#92400e';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Cascading Center Pleated Sash (Patka)
+    ctx.fillStyle = t.main;
+    ctx.strokeStyle = t.trim;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-16, 120);
+    ctx.lineTo(16, 120);
+    ctx.lineTo(20, 185);
+    ctx.lineTo(0, 195);
+    ctx.lineTo(-20, 185);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Golden fringe at bottom of sash
+    ctx.strokeStyle = t.trim;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-18, 183);
+    ctx.lineTo(0, 193);
+    ctx.lineTo(18, 183);
+    ctx.stroke();
 
     ctx.restore();
   }
@@ -687,45 +1000,165 @@ class CharacterRig {
   renderNeck(ctx) {
     ctx.save();
     const skin = this.profile.skin;
-    ctx.fillStyle = skin.shadow;
+
+    // Muscular neck cylinder with anatomical sternocleidomastoid shading
+    const neckGrad = ctx.createLinearGradient(-30, -160, 30, -110);
+    neckGrad.addColorStop(0, skin.shadow);
+    neckGrad.addColorStop(0.5, skin.base);
+    neckGrad.addColorStop(1, skin.shadow);
+
+    ctx.fillStyle = neckGrad;
     ctx.beginPath();
     ctx.moveTo(-28, -160);
     ctx.lineTo(28, -160);
-    ctx.lineTo(34, -110);
-    ctx.lineTo(-34, -110);
+    ctx.lineTo(36, -110);
+    ctx.lineTo(-36, -110);
     ctx.closePath();
     ctx.fill();
 
-    // Sacred Neck Ornaments (Rudraksha, Gold Haram, Snake)
+    // Neck tendon shadows & jugular notch
+    ctx.strokeStyle = skin.shadow;
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(-16, -155);
+    ctx.lineTo(-7, -118);
+    ctx.moveTo(16, -155);
+    ctx.lineTo(7, -118);
+    ctx.stroke();
+
+    // Clavicle (Collarbone) Highlight
+    ctx.strokeStyle = skin.highlight;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(-50, -110);
+    ctx.quadraticCurveTo(-18, -112, -4, -116);
+    ctx.moveTo(50, -110);
+    ctx.quadraticCurveTo(18, -112, 4, -116);
+    ctx.stroke();
+
+    // Sacred Neck Ornaments
     const orn = this.profile.ornaments?.necklace;
+
     if (orn === 'RUDRAKSHA_COBRA') {
-      // Emerald Cobra wrapped around neck
-      ctx.strokeStyle = '#10b981';
-      ctx.lineWidth = 9;
+      // 1. Coiled Emerald Naga Cobra around neck
+      ctx.save();
+      // Cobra body
+      const cobraGrad = ctx.createLinearGradient(-35, -135, 35, -115);
+      cobraGrad.addColorStop(0, '#064e3b');
+      cobraGrad.addColorStop(0.5, '#10b981');
+      cobraGrad.addColorStop(1, '#022c22');
+      ctx.strokeStyle = cobraGrad;
+      ctx.lineWidth = 11;
       ctx.beginPath();
-      ctx.arc(0, -125, 26, 0.2, Math.PI - 0.2);
+      ctx.arc(0, -125, 27, 0.15, Math.PI - 0.15);
       ctx.stroke();
 
-      // Cobra head
+      // Golden belly bands on serpent
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2;
+      for (let s = 0.4; s < Math.PI - 0.4; s += 0.35) {
+        const sx = Math.cos(s) * 27;
+        const sy = -125 + Math.sin(s) * 27;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 5, s - 0.3, s + 0.3);
+        ctx.stroke();
+      }
+
+      // Flared Cobra Head
       ctx.fillStyle = '#059669';
       ctx.beginPath();
-      ctx.arc(28, -128, 8, 0, Math.PI * 2);
+      ctx.ellipse(29, -128, 10, 7, 0.3, 0, Math.PI * 2);
       ctx.fill();
-    } else if (orn === 'RUDRAKSHA_MALA') {
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 6;
-      ctx.setLineDash([4, 6]);
+
+      // Ruby red cobra eye
+      ctx.fillStyle = '#ef4444';
       ctx.beginPath();
-      ctx.arc(0, -125, 30, 0.1, Math.PI - 0.1);
+      ctx.arc(33, -129, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Forked golden tongue
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(38, -127);
+      ctx.lineTo(44, -126);
+      ctx.lineTo(47, -128);
+      ctx.moveTo(44, -126);
+      ctx.lineTo(47, -124);
       ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.restore();
+
+    } else if (orn === 'RUDRAKSHA_MALA' || orn === 'LOTUS_SEED_MALA') {
+      // 3D Spherical Rudraksha / Sacred Lotus Beads with Golden Capping
+      ctx.save();
+      const beadCount = 14;
+      for (let i = 0; i <= beadCount; i++) {
+        const theta = 0.15 + (i / beadCount) * (Math.PI - 0.3);
+        const bx = Math.cos(theta) * 31;
+        const by = -124 + Math.sin(theta) * 31;
+
+        // Gold bead cap
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(bx, by, 6.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3D Rudraksha bead
+        const beadGrad = ctx.createRadialGradient(bx - 1.5, by - 1.5, 1, bx, by, 5);
+        beadGrad.addColorStop(0, '#b45309');
+        beadGrad.addColorStop(0.6, '#78350f');
+        beadGrad.addColorStop(1, '#291104');
+        ctx.fillStyle = beadGrad;
+        ctx.beginPath();
+        ctx.arc(bx, by, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Central Golden Guru Bead Pendant
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(0, -92, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#b45309';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
     } else {
-      // Golden Choker
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 5;
+      // Ornate Royal Gold Haram / Choker with Cascading Jewel Drops
+      ctx.save();
+      const goldGrad = ctx.createLinearGradient(-35, -135, 35, -115);
+      goldGrad.addColorStop(0, '#facc15');
+      goldGrad.addColorStop(0.5, '#fef08a');
+      goldGrad.addColorStop(1, '#d97706');
+
+      ctx.strokeStyle = goldGrad;
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.arc(0, -125, 28, 0.1, Math.PI - 0.1);
+      ctx.arc(0, -124, 29, 0.12, Math.PI - 0.12);
       ctx.stroke();
+
+      // Dangling Pearl / Ruby Drops
+      for (let i = 2; i <= 8; i++) {
+        const theta = (i / 10) * Math.PI;
+        const dx = Math.cos(theta) * 29;
+        const dy = -124 + Math.sin(theta) * 29;
+
+        // Gold prong
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(dx, dy);
+        ctx.lineTo(dx, dy + 7);
+        ctx.stroke();
+
+        // Teardrop pearl
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(dx, dy + 9, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     ctx.restore();
@@ -735,60 +1168,166 @@ class CharacterRig {
     ctx.save();
     const skin = this.profile.skin;
 
-    // Sculpted jaw and cranial mass
-    const headGrad = ctx.createRadialGradient(0, -25, 15, 0, -20, 80);
+    // Sculpted cranial mass with multi-stop radial lighting
+    const headGrad = ctx.createRadialGradient(-10, -35, 12, 0, -20, 85);
     headGrad.addColorStop(0, skin.highlight);
-    headGrad.addColorStop(0.65, skin.base);
-    headGrad.addColorStop(1, skin.shadow);
+    headGrad.addColorStop(0.55, skin.base);
+    headGrad.addColorStop(0.9, skin.shadow);
+    headGrad.addColorStop(1, skin.rim || skin.shadow);
 
     ctx.fillStyle = headGrad;
-    ctx.strokeStyle = skin.rim;
+    ctx.strokeStyle = skin.rim || skin.highlight;
     ctx.lineWidth = 1.8;
 
+    // Anatomical Head Silhouette: Chiseled zygomatics & sculpted jaw
     ctx.beginPath();
-    ctx.moveTo(-48, -75);
-    ctx.quadraticCurveTo(-52, -20, -42, 35);
-    ctx.quadraticCurveTo(-26, 68, 0, 72); // sculpted chin
-    ctx.quadraticCurveTo(26, 68, 42, 35);
-    ctx.quadraticCurveTo(52, -20, 48, -75);
-    ctx.quadraticCurveTo(0, -105, -48, -75);
+    ctx.moveTo(-50, -78);
+    // Left cranial curve to cheekbone
+    ctx.quadraticCurveTo(-54, -30, -46, 22);
+    // Left jawline to chin
+    ctx.quadraticCurveTo(-38, 54, -20, 68);
+    // Chiseled chin
+    ctx.quadraticCurveTo(0, 74, 20, 68);
+    // Right jawline from chin
+    ctx.quadraticCurveTo(38, 54, 46, 22);
+    // Right cheekbone to temple
+    ctx.quadraticCurveTo(54, -30, 50, -78);
+    // Cranium top
+    ctx.quadraticCurveTo(0, -108, -50, -78);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Ears with Kundalas
-    ctx.fillStyle = skin.base;
+    // Cheekbone (Zygomatic) Soft Warm Highlight
+    const cheekGradL = ctx.createRadialGradient(-32, -6, 2, -32, -6, 20);
+    cheekGradL.addColorStop(0, skin.highlight + 'aa');
+    cheekGradL.addColorStop(1, 'transparent');
+    ctx.fillStyle = cheekGradL;
     ctx.beginPath();
-    ctx.arc(-50, 0, 11, 0, Math.PI * 2);
-    ctx.arc(50, 0, 11, 0, Math.PI * 2);
+    ctx.arc(-32, -6, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Golden Kundala Earrings
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 3.5;
+    const cheekGradR = ctx.createRadialGradient(32, -6, 2, 32, -6, 20);
+    cheekGradR.addColorStop(0, skin.highlight + 'aa');
+    cheekGradR.addColorStop(1, 'transparent');
+    ctx.fillStyle = cheekGradR;
     ctx.beginPath();
-    ctx.arc(-52, 14, 8, 0, Math.PI * 2);
-    ctx.arc(52, 14, 8, 0, Math.PI * 2);
+    ctx.arc(32, -6, 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ambient Occlusion Shadow Under Jaw & Chin
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-36, 52);
+    ctx.quadraticCurveTo(0, 78, 36, 52);
     ctx.stroke();
 
-    // Beard / Mustache
+    // Ears with Sculpted Helix, Tragus & Kundala Earrings
+    [-50, 50].forEach((earX, sideIdx) => {
+      ctx.save();
+      const side = sideIdx === 0 ? -1 : 1;
+
+      // Ear Base
+      ctx.fillStyle = skin.base;
+      ctx.beginPath();
+      ctx.ellipse(earX, -2, 11, 16, side * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner Ear Cartilage (Concha depth shadow)
+      ctx.fillStyle = skin.shadow;
+      ctx.beginPath();
+      ctx.ellipse(earX + side * 2, -2, 6, 9, side * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ear Rim Highlight
+      ctx.strokeStyle = skin.highlight;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(earX, -4, 9, side === -1 ? Math.PI * 0.4 : -Math.PI * 0.4, side === -1 ? Math.PI * 1.6 : Math.PI * 0.6);
+      ctx.stroke();
+
+      // Ornate Heavy Golden Makara Kundala Earring
+      const earAngle = this.bones.headAngle * 0.5;
+      ctx.translate(earX + side * 2, 14);
+      ctx.rotate(earAngle);
+
+      // Gold stud / hook
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(0, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Suspended Filigree Ring
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.arc(0, 9, 8, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Dangling Ruby Teardrop
+      ctx.fillStyle = '#e11d48';
+      ctx.beginPath();
+      ctx.moveTo(0, 17);
+      ctx.quadraticCurveTo(-4, 25, 0, 29);
+      ctx.quadraticCurveTo(4, 25, 0, 17);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    });
+
+    // Facial Hair
     const fh = this.profile.facialHair;
     if (fh === 'FULL_WHITE_BEARD') {
-      ctx.fillStyle = '#f1f5f9';
+      // Flowing Ascetic Sage Beard with Layered Volume
+      const beardGrad = ctx.createLinearGradient(0, 25, 0, 145);
+      beardGrad.addColorStop(0, '#f8fafc');
+      beardGrad.addColorStop(0.7, '#e2e8f0');
+      beardGrad.addColorStop(1, '#94a3b8');
+
+      ctx.fillStyle = beardGrad;
       ctx.beginPath();
-      ctx.moveTo(-36, 25);
-      ctx.quadraticCurveTo(-45, 90, 0, 135);
-      ctx.quadraticCurveTo(45, 90, 36, 25);
-      ctx.quadraticCurveTo(0, 45, -36, 25);
+      ctx.moveTo(-38, 25);
+      ctx.quadraticCurveTo(-52, 95, -12, 145);
+      ctx.quadraticCurveTo(0, 152, 12, 145);
+      ctx.quadraticCurveTo(52, 95, 38, 25);
+      ctx.quadraticCurveTo(0, 48, -38, 25);
+      ctx.closePath();
       ctx.fill();
+
+      // Flowing beard hair strands
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.4;
+      for (let s = -24; s <= 24; s += 8) {
+        ctx.beginPath();
+        ctx.moveTo(s, 40);
+        ctx.quadraticCurveTo(s * 0.7, 95, s * 0.3, 140);
+        ctx.stroke();
+      }
     } else if (fh === 'WARRIOR_MUSTACHE') {
+      // Royal Kshatriya / Rajput Curved Mustache
       ctx.fillStyle = '#09090b';
+      ctx.strokeStyle = '#27272a';
+      ctx.lineWidth = 1.2;
+
       ctx.beginPath();
-      ctx.moveTo(-28, 30);
-      ctx.quadraticCurveTo(-14, 18, 0, 24);
-      ctx.quadraticCurveTo(14, 18, 28, 30);
-      ctx.quadraticCurveTo(12, 38, 0, 31);
-      ctx.quadraticCurveTo(-12, 38, -28, 30);
+      ctx.moveTo(-36, 26);
+      ctx.quadraticCurveTo(-20, 14, 0, 22);
+      ctx.quadraticCurveTo(20, 14, 36, 26);
+      ctx.quadraticCurveTo(44, 20, 42, 14); // upturned tip right
+      ctx.quadraticCurveTo(34, 18, 18, 26);
+      ctx.quadraticCurveTo(0, 31, -18, 26);
+      ctx.quadraticCurveTo(-34, 18, -42, 14); // upturned tip left
+      ctx.quadraticCurveTo(-44, 20, -36, 26);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (fh === 'SHORT_STUBBLE') {
+      // Subtle masculine stubble
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+      ctx.beginPath();
+      ctx.arc(0, 52, 28, 0.1, Math.PI - 0.1);
       ctx.fill();
     }
 
@@ -801,164 +1340,356 @@ class CharacterRig {
     const eyes = this.profile.eyes;
     const eyeScale = eyes.size || 1.0;
 
-    // Sacred Markings / Tilak
+    // 1. Sacred Markings & Tilaks
     const m = this.profile.markings;
     if (m === 'TRIPUNDRA_CHANDAN') {
-      // 3 horizontal sacred ash lines
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 3;
+      // 3 curved sacred vibhuti ash lines
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.lineWidth = 3.5;
       for (let i = -1; i <= 1; i++) {
         ctx.beginPath();
-        ctx.moveTo(-26, -55 + i * 6);
-        ctx.lineTo(26, -55 + i * 6);
+        ctx.moveTo(-28, -55 + i * 6.5);
+        ctx.quadraticCurveTo(0, -58 + i * 6.5, 28, -55 + i * 6.5);
         ctx.stroke();
       }
-      // Red Kumkum center
+      // Center Sacred Kumkum Dot with Golden Sandalwood Core
       ctx.fillStyle = '#dc2626';
       ctx.beginPath();
-      ctx.arc(0, -55, 3.5, 0, Math.PI * 2);
+      ctx.arc(0, -55, 4.2, 0, Math.PI * 2);
       ctx.fill();
-    } else if (m === 'CHANDAN_TILAK') {
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.moveTo(-6, -68);
-      ctx.lineTo(6, -68);
-      ctx.lineTo(3, -42);
-      ctx.lineTo(-3, -42);
-      ctx.closePath();
-      ctx.fill();
-    } else if (m === 'DEVI_RED_BINDI') {
-      ctx.fillStyle = '#dc2626';
-      ctx.beginPath();
-      ctx.arc(0, -50, 6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Third Eye (Trinetra)
-    if (eyes.thirdEye) {
-      ctx.strokeStyle = '#facc15';
-      ctx.fillStyle = '#ef4444';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(0, -68);
-      ctx.quadraticCurveTo(8, -55, 0, -42);
-      ctx.quadraticCurveTo(-8, -55, 0, -68);
-      ctx.fill();
-      ctx.stroke();
-
-      // Burning spark inside
       ctx.fillStyle = '#fef08a';
       ctx.beginPath();
-      ctx.arc(0, -55, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Brows
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.moveTo(-36, -32);
-    ctx.quadraticCurveTo(-20, -38, -6, -30);
-    ctx.lineTo(-6, -26);
-    ctx.quadraticCurveTo(-20, -32, -36, -28);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(36, -32);
-    ctx.quadraticCurveTo(20, -38, 6, -30);
-    ctx.lineTo(6, -26);
-    ctx.quadraticCurveTo(20, -32, 36, -28);
-    ctx.fill();
-
-    // Eyes with parametric sizing & blinking
-    const blink = this.bones.eyeBlink;
-    const lookX = this.bones.eyeLookX * 4;
-    const lookY = this.bones.eyeLookY * 3;
-
-    [-22, 22].forEach((eyeX, idx) => {
-      ctx.save();
-      ctx.translate(eyeX, -15);
-      ctx.scale(eyeScale, eyeScale * (1.0 - blink));
-
-      // Sclera
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 14, 7.5, 0, 0, Math.PI * 2);
+      ctx.arc(0, -55, 1.8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Iris & Glowing Pupil
-      ctx.save();
+    } else if (m === 'CHANDAN_TILAK' || m === 'VISHNU_TILAK') {
+      // Urdhva Pundra (Sacred Chandan U-Shape & Central Vermillion Line)
+      ctx.fillStyle = '#fef08a';
       ctx.beginPath();
-      ctx.ellipse(0, 0, 14, 7.5, 0, 0, Math.PI * 2);
-      ctx.clip();
-
-      ctx.fillStyle = eyes.iris || '#facc15';
-      ctx.beginPath();
-      ctx.arc(lookX, lookY, 5.5, 0, Math.PI * 2);
+      ctx.moveTo(-7, -72);
+      ctx.lineTo(7, -72);
+      ctx.lineTo(4, -40);
+      ctx.lineTo(0, -34);
+      ctx.lineTo(-4, -40);
+      ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.arc(lookX, lookY, 2.8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Light catch
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(lookX - 1.5, lookY - 1.5, 1.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Eyelid stroke
-      ctx.strokeStyle = '#050811';
+      // Central Sri Churna red line
+      ctx.strokeStyle = '#dc2626';
       ctx.lineWidth = 2.2;
       ctx.beginPath();
-      ctx.arc(0, 0, 14, Math.PI + 0.2, -0.2);
+      ctx.moveTo(0, -70);
+      ctx.lineTo(0, -36);
+      ctx.stroke();
+
+    } else if (m === 'DEVI_RED_BINDI') {
+      // Royal Vermillion Bindi with Chandana Chhaya (Pearl/Chandan ring dots)
+      ctx.save();
+      ctx.fillStyle = '#b91c1c';
+      ctx.shadowColor = '#dc2626';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(0, -48, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Inner gold dot
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(0, -48, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Delicate sandalwood chandan dots arching above brows
+      ctx.fillStyle = '#fef9c3';
+      for (let dot = -22; dot <= 22; dot += 5.5) {
+        if (Math.abs(dot) < 4) continue;
+        const dY = -42 - Math.cos((dot / 22) * Math.PI * 0.5) * 8;
+        ctx.beginPath();
+        ctx.arc(dot, dY, 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+    } else if (m === 'ASURA_WAR_RUNES') {
+      // Glowing Obsidian / Crimson Battle War Glyphs
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(-24, -62);
+      ctx.lineTo(-12, -52);
+      ctx.lineTo(-20, -42);
+      ctx.moveTo(24, -62);
+      ctx.lineTo(12, -52);
+      ctx.lineTo(20, -42);
+      ctx.stroke();
+    }
+
+    // 2. Cosmic Third Eye (Trinetra)
+    if (eyes.thirdEye) {
+      ctx.save();
+      // Golden lotus frame
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(0, -72);
+      ctx.quadraticCurveTo(9, -56, 0, -40);
+      ctx.quadraticCurveTo(-9, -56, 0, -72);
+      ctx.stroke();
+
+      // Burning cosmic ruby core
+      const triGrad = ctx.createRadialGradient(0, -56, 1, 0, -56, 8);
+      triGrad.addColorStop(0, '#ffffff');
+      triGrad.addColorStop(0.35, '#fef08a');
+      triGrad.addColorStop(0.7, '#ef4444');
+      triGrad.addColorStop(1, '#7f1d1d');
+      ctx.fillStyle = triGrad;
+      ctx.fill();
+
+      // Cosmic flare sparks
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, -56, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 3. Arched Sculpted Eyebrows
+    ctx.fillStyle = '#09090b';
+    [-1, 1].forEach(side => {
+      ctx.beginPath();
+      ctx.moveTo(side * 38, -32);
+      ctx.quadraticCurveTo(side * 22, -40, side * 6, -31);
+      ctx.quadraticCurveTo(side * 20, -35, side * 38, -29);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    // 4. Luminous Expressive Eyes (Parametric Blinking, Gaze & Limbal Ring Depth)
+    const blink = this.bones.eyeBlink;
+    const lookX = this.bones.eyeLookX * 4.5;
+    const lookY = this.bones.eyeLookY * 3.5;
+
+    [-23, 23].forEach((eyeX, idx) => {
+      ctx.save();
+      const side = idx === 0 ? -1 : 1;
+      ctx.translate(eyeX, -16);
+      ctx.scale(eyeScale, eyeScale * (1.0 - blink));
+
+      // Sclera with subtle top ambient occlusion shadow
+      const scleraGrad = ctx.createLinearGradient(0, -9, 0, 9);
+      scleraGrad.addColorStop(0, '#cbd5e1');
+      scleraGrad.addColorStop(0.35, '#f8fafc');
+      scleraGrad.addColorStop(1, '#f1f5f9');
+
+      ctx.fillStyle = scleraGrad;
+      ctx.beginPath();
+      // Classical Almond Eye Contour
+      ctx.moveTo(-16, 0);
+      ctx.quadraticCurveTo(0, -9.5, 16, 0);
+      ctx.quadraticCurveTo(0, 9.0, -16, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Eyelid Clip for Iris & Pupil
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(-16, 0);
+      ctx.quadraticCurveTo(0, -9.5, 16, 0);
+      ctx.quadraticCurveTo(0, 9.0, -16, 0);
+      ctx.closePath();
+      ctx.clip();
+
+      // Outer Limbal Ring (Dark intense rim gives deep lifelike eyes)
+      ctx.fillStyle = '#050811';
+      ctx.beginPath();
+      ctx.arc(lookX, lookY, 6.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Multi-Layered Luminous Iris Radial Gradient
+      const irisGrad = ctx.createRadialGradient(lookX, lookY, 1, lookX, lookY, 6.2);
+      irisGrad.addColorStop(0, '#ffffff');
+      irisGrad.addColorStop(0.3, eyes.glow || eyes.iris);
+      irisGrad.addColorStop(0.8, eyes.iris || '#facc15');
+      irisGrad.addColorStop(1, '#0f172a');
+
+      ctx.fillStyle = irisGrad;
+      ctx.beginPath();
+      ctx.arc(lookX, lookY, 6.0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Deep Obsidian Pupil
+      ctx.fillStyle = '#020617';
+      ctx.beginPath();
+      ctx.arc(lookX, lookY, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Primary Specular Keylight Glint (Top-Left)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(lookX - 1.8, lookY - 1.8, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Secondary Bounce Light Glint (Bottom-Right)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.beginPath();
+      ctx.arc(lookX + 1.6, lookY + 1.5, 0.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore(); // end clip
+
+      // Upper Eyeliner (Winged Kohl / Kajal)
+      ctx.strokeStyle = '#050811';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(-17, 1);
+      ctx.quadraticCurveTo(0, -10.5, 17, 0);
+      // Winged tip
+      ctx.lineTo(19 * side, -2.5);
+      ctx.stroke();
+
+      // Delicate Lower Waterline
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.moveTo(-15, 1);
+      ctx.quadraticCurveTo(0, 9.2, 15, 1);
+      ctx.stroke();
+
+      // Eyelid Upper Crease Fold
+      ctx.strokeStyle = skin.shadow;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -4, 15, Math.PI + 0.35, -0.35);
       ctx.stroke();
 
       ctx.restore();
     });
 
-    // Sculpted Nose
+    // 5. Sculpted 3D Anatomical Nose
+    ctx.save();
+    // Nose Bridge Lateral Shading
     ctx.strokeStyle = skin.shadow;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(0, -22);
-    ctx.lineTo(0, 18);
-    ctx.lineTo(6, 22);
+    ctx.moveTo(-3, -24);
+    ctx.quadraticCurveTo(-4, 0, -6, 17);
     ctx.stroke();
 
-    // Real-Time Lip-Sync Mouth
+    // Nose Bridge Highlight
+    ctx.strokeStyle = skin.highlight;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -22);
+    ctx.lineTo(0, 16);
+    ctx.stroke();
+
+    // Nasal Tip Bulb (Soft Highlighted Dome)
+    ctx.fillStyle = skin.highlight;
+    ctx.beginPath();
+    ctx.arc(0, 18, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nostril Wings & Cavity
+    ctx.fillStyle = skin.shadow;
+    ctx.beginPath();
+    ctx.ellipse(-6, 20, 3.2, 1.8, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(6, 20, 3.2, 1.8, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Devi / Divine Nose Ring (Nath / Mukku Pudaka)
+    if (this.profile.id === 'DEVI' || this.profile.id === 'YAKSHI') {
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(9, 20, 4.5, 0, Math.PI * 2);
+      ctx.stroke();
+      // Tiny Pearl Drop
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(12, 24, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 6. Real-Time Expressive Lip-Sync Mouth (Cupid's Bow, Shaded Cavity & Gloss)
     ctx.save();
     ctx.translate(0, 44);
     const jaw = this.bones.jawOpen;
     const mw = this.bones.mouthWidth;
 
-    ctx.fillStyle = '#831843'; // deep rose lip
-    ctx.strokeStyle = '#500724';
-    ctx.lineWidth = 1.8;
-
     if (jaw < 0.12) {
-      // Resting closed lips
+      // Closed Rest Lips: Sculpted Cupid's Bow & Glossy Lower Lip
+      // Upper lip
+      ctx.fillStyle = '#9f1239'; // rich rose
       ctx.beginPath();
       ctx.moveTo(-16 * mw, 0);
-      ctx.quadraticCurveTo(0, -3.5, 16 * mw, 0);
-      ctx.quadraticCurveTo(0, 4.5, -16 * mw, 0);
-      ctx.fill();
-      ctx.stroke();
-    } else {
-      // Dynamic talking mouth opening
-      ctx.beginPath();
-      ctx.moveTo(-16 * mw, 0);
-      ctx.quadraticCurveTo(0, -6 * jaw, 16 * mw, 0);
-      ctx.quadraticCurveTo(0, 16 * jaw, -16 * mw, 0);
+      ctx.quadraticCurveTo(-7 * mw, -4.2, 0, -2.5); // left crest
+      ctx.quadraticCurveTo(7 * mw, -4.2, 16 * mw, 0); // right crest
+      ctx.quadraticCurveTo(0, 1.5, -16 * mw, 0);
       ctx.closePath();
-      ctx.fillStyle = '#1c0a13'; // mouth cavity
       ctx.fill();
+
+      // Lower lip
+      ctx.fillStyle = '#be123c';
+      ctx.beginPath();
+      ctx.moveTo(-15 * mw, 0);
+      ctx.quadraticCurveTo(0, 1.2, 15 * mw, 0);
+      ctx.quadraticCurveTo(0, 7.5, -15 * mw, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Lower lip specular gloss highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.beginPath();
+      ctx.ellipse(0, 3.5, 5 * mw, 1.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subtle lip separation line
+      ctx.strokeStyle = '#4c0519';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-16 * mw, 0);
+      ctx.quadraticCurveTo(0, 1.0, 16 * mw, 0);
       ctx.stroke();
 
-      // Teeth
+    } else {
+      // Dynamic Talking Oral Cavity (with Teeth & Soft Tongue Depth)
+      ctx.beginPath();
+      ctx.moveTo(-17 * mw, 0);
+      ctx.quadraticCurveTo(0, -8 * jaw, 17 * mw, 0);
+      ctx.quadraticCurveTo(0, 18 * jaw, -17 * mw, 0);
+      ctx.closePath();
+
+      // Shaded deep oral interior
+      ctx.fillStyle = '#1c0712';
+      ctx.fill();
+      ctx.strokeStyle = '#881337';
+      ctx.lineWidth = 2.0;
+      ctx.stroke();
+
+      // Upper Dental Arch (Teeth)
       ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(-8 * mw, -2 * jaw, 16 * mw, 4 * jaw);
+      ctx.beginPath();
+      ctx.roundRect(-9 * mw, -4 * jaw, 18 * mw, 6 * jaw, [0, 0, 3, 3]);
+      ctx.fill();
+
+      // Soft Tongue Contour
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath();
+      ctx.ellipse(0, 11 * jaw, 8 * mw, 4 * jaw, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Lip Borders
+      ctx.strokeStyle = '#9f1239';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(-17 * mw, 0);
+      ctx.quadraticCurveTo(0, -8 * jaw, 17 * mw, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-17 * mw, 0);
+      ctx.quadraticCurveTo(0, 18 * jaw, 17 * mw, 0);
+      ctx.stroke();
     }
 
     ctx.restore();
@@ -970,74 +1701,231 @@ class CharacterRig {
     const hg = this.profile.headgear;
     const hairColor = this.profile.hair.color;
 
+    // 1. Front Forehead Hair Strands
+    ctx.fillStyle = hairColor;
+    ctx.beginPath();
+    ctx.moveTo(-48, -75);
+    ctx.quadraticCurveTo(-25, -60, 0, -74);
+    ctx.quadraticCurveTo(25, -60, 48, -75);
+    ctx.quadraticCurveTo(0, -95, -48, -75);
+    ctx.fill();
+
+    // 2. Specialized Iconic Headgear Archetypes
     if (hg === 'CRESCENT_MOON_SERPENT') {
-      // Matted Jata bun
-      ctx.fillStyle = hairColor;
+      // Rudra's Matted Jata Bun, Crescent Chandra & Coiled Naga
+      // Jata Bun
+      const jataGrad = ctx.createRadialGradient(-10, -105, 5, 0, -100, 42);
+      jataGrad.addColorStop(0, '#334155');
+      jataGrad.addColorStop(0.5, hairColor);
+      jataGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = jataGrad;
       ctx.beginPath();
-      ctx.arc(0, -95, 38, 0, Math.PI * 2);
+      ctx.arc(0, -100, 42, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glowing Crescent Moon (Chandra)
-      ctx.fillStyle = '#fef08a';
-      ctx.shadowColor = '#facc15';
-      ctx.shadowBlur = 12;
+      // Woven golden jata cords
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.0;
+      for (let j = -20; j <= 20; j += 10) {
+        ctx.beginPath();
+        ctx.arc(j, -100, 36, 0.4, Math.PI - 0.4);
+        ctx.stroke();
+      }
+
+      // Glowing Silver Crescent Moon (Chandra)
+      ctx.save();
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.arc(28, -98, 16, 0, Math.PI * 2);
+      ctx.arc(32, -104, 18, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = hairColor;
       ctx.beginPath();
-      ctx.arc(23, -98, 14, 0, Math.PI * 2);
+      ctx.arc(26, -104, 16, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // Coiled Kundalini Serpent Crowning Jata
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(0, -135, 14, 0.2, Math.PI * 2 - 0.2);
+      ctx.stroke();
+      ctx.fillStyle = '#059669';
+      ctx.beginPath();
+      ctx.arc(14, -137, 5, 0, Math.PI * 2);
+      ctx.fill();
+
     } else if (hg === 'SPIKED_HORNED_CROWN') {
-      // Obsidian Asura Horns
-      ctx.fillStyle = '#18181b';
-      ctx.strokeStyle = '#e11d48';
-      ctx.lineWidth = 2.5;
+      // Ravana / Asura Obsidian Spiked Horns with Fiery Magma Veins
+      [-1, 1].forEach(side => {
+        ctx.save();
+        // Obsidian Horn Base
+        const hornGrad = ctx.createLinearGradient(0, -75, side * 85, -185);
+        hornGrad.addColorStop(0, '#27272a');
+        hornGrad.addColorStop(0.5, '#18181b');
+        hornGrad.addColorStop(1, '#09090b');
 
-      ctx.beginPath();
-      ctx.moveTo(-45, -75);
-      ctx.quadraticCurveTo(-90, -135, -75, -175);
-      ctx.quadraticCurveTo(-65, -120, -35, -85);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+        ctx.fillStyle = hornGrad;
+        ctx.strokeStyle = '#e11d48';
+        ctx.lineWidth = 2.5;
 
-      ctx.beginPath();
-      ctx.moveTo(45, -75);
-      ctx.quadraticCurveTo(90, -135, 75, -175);
-      ctx.quadraticCurveTo(65, -120, 35, -85);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    } else if (hg === 'GOLDEN_LOTUS_TIARA' || hg === 'SILVER_GOLD_WAR_MUKUT' || hg === 'VAJRA_DIAMOND_CROWN') {
-      // Ornate Golden Mukut
-      ctx.fillStyle = '#facc15';
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(side * 42, -75);
+        ctx.quadraticCurveTo(side * 95, -130, side * 82, -185);
+        ctx.quadraticCurveTo(side * 68, -125, side * 30, -85);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(-50, -75);
-      ctx.lineTo(-30, -135);
-      ctx.lineTo(0, -165);
-      ctx.lineTo(30, -135);
-      ctx.lineTo(50, -75);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+        // Fiery Magma Fissure Veins
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(side * 36, -80);
+        ctx.lineTo(side * 52, -110);
+        ctx.lineTo(side * 64, -145);
+        ctx.lineTo(side * 78, -180);
+        ctx.stroke();
 
-      // Center glowing ruby gem
+        ctx.restore();
+      });
+
+      // Central Skull / War Crest
       ctx.fillStyle = '#e11d48';
       ctx.beginPath();
-      ctx.arc(0, -115, 8, 0, Math.PI * 2);
+      ctx.moveTo(0, -105);
+      ctx.lineTo(12, -85);
+      ctx.lineTo(0, -75);
+      ctx.lineTo(-12, -85);
+      ctx.closePath();
       ctx.fill();
-    } else if (hg === 'RUDRAKSHA_BEAD_BAND') {
-      ctx.fillStyle = '#78350f';
-      for (let x = -40; x <= 40; x += 12) {
+
+    } else if (hg === 'GOLDEN_LOTUS_TIARA' || hg === 'SILVER_GOLD_WAR_MUKUT' || hg === 'VAJRA_DIAMOND_CROWN' || hg === 'SUN_SURYA_MUKUT') {
+      // Ornate Multi-Tiered Vedic Golden Mukut (Repoussé Filigree & Faceted Jewels)
+      ctx.save();
+
+      // Tier 1: Gold Crown Base Band
+      const baseGrad = ctx.createLinearGradient(-55, -78, 55, -78);
+      baseGrad.addColorStop(0, '#d97706');
+      baseGrad.addColorStop(0.5, '#fef08a');
+      baseGrad.addColorStop(1, '#b45309');
+      ctx.fillStyle = baseGrad;
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 2.0;
+
+      ctx.beginPath();
+      ctx.moveTo(-52, -76);
+      ctx.lineTo(52, -76);
+      ctx.lineTo(56, -90);
+      ctx.lineTo(-56, -90);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Tier 2: Architectural Tiered Peaks (5 Lotus Spires)
+      const mukutGrad = ctx.createLinearGradient(0, -90, 0, -185);
+      mukutGrad.addColorStop(0, '#facc15');
+      mukutGrad.addColorStop(0.5, '#fef08a');
+      mukutGrad.addColorStop(1, '#b45309');
+
+      ctx.fillStyle = mukutGrad;
+      ctx.beginPath();
+      ctx.moveTo(-54, -90);
+      ctx.lineTo(-38, -135);
+      ctx.lineTo(-24, -120);
+      ctx.lineTo(0, -182); // tall center peak
+      ctx.lineTo(24, -120);
+      ctx.lineTo(38, -135);
+      ctx.lineTo(54, -90);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Embossed Filigree Inlay Lines
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(0, -180);
+      ctx.lineTo(0, -90);
+      ctx.moveTo(-24, -120);
+      ctx.lineTo(0, -145);
+      ctx.lineTo(24, -120);
+      ctx.stroke();
+
+      // Large Faceted Glowing Ruby/Emerald Gemstone in Center Peak
+      const crownGemColor = hg === 'VAJRA_DIAMOND_CROWN' ? '#38bdf8' : (hg === 'SUN_SURYA_MUKUT' ? '#f59e0b' : '#dc2626');
+      const gemGrad = ctx.createRadialGradient(-2, -126, 1, 0, -124, 11);
+      gemGrad.addColorStop(0, '#ffffff');
+      gemGrad.addColorStop(0.35, crownGemColor);
+      gemGrad.addColorStop(1, '#450a0a');
+
+      ctx.fillStyle = gemGrad;
+      ctx.beginPath();
+      ctx.arc(0, -124, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // Dangling Pearl Fringe along Mukut Rim
+      ctx.fillStyle = '#ffffff';
+      for (let p = -48; p <= 48; p += 12) {
         ctx.beginPath();
-        ctx.arc(x, -76, 5.5, 0, Math.PI * 2);
+        ctx.arc(p, -72, 2.8, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      ctx.restore();
+
+    } else if (hg === 'RUDRAKSHA_BEAD_BAND') {
+      // Ascetic Sage Rudraksha Mala Band
+      ctx.save();
+      for (let x = -44; x <= 44; x += 11) {
+        // Gold capping
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(x, -76, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rudraksha bead
+        const beadGrad = ctx.createRadialGradient(x - 1, -77, 1, x, -76, 5);
+        beadGrad.addColorStop(0, '#b45309');
+        beadGrad.addColorStop(0.7, '#78350f');
+        beadGrad.addColorStop(1, '#291104');
+        ctx.fillStyle = beadGrad;
+        ctx.beginPath();
+        ctx.arc(x, -76, 4.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+    } else if (hg === 'JASMINE_FLOWER_TIARA') {
+      // Yakshi's Fresh Jasmine Garland Tiara
+      ctx.save();
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 3.0;
+      ctx.beginPath();
+      ctx.arc(0, -76, 48, 0.4, Math.PI - 0.4);
+      ctx.stroke();
+
+      for (let fl = -40; fl <= 40; fl += 10) {
+        // 5 white jasmine petals
+        ctx.fillStyle = '#ffffff';
+        for (let pet = 0; pet < 5; pet++) {
+          const pa = (pet / 5) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(fl + Math.cos(pa) * 4, -76 + Math.sin(pa) * 4, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Gold pollen center
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(fl, -76, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     ctx.restore();
@@ -1048,10 +1936,10 @@ class CharacterRig {
     const skin = this.profile.skin;
     const t = this.profile.torso;
 
-    // Left Arm
+    // Left Arm (Back / Lead)
     this.renderSingleArm(ctx, -75, -100, this.bones.leftArmAngle, this.bones.leftForearmAngle, skin, t.trim, -1);
 
-    // Right Arm
+    // Right Arm (Front / Gesture)
     this.renderSingleArm(ctx, 75, -100, this.bones.rightArmAngle, this.bones.rightForearmAngle, skin, t.trim, 1);
 
     ctx.restore();
@@ -1061,47 +1949,152 @@ class CharacterRig {
     ctx.save();
     ctx.translate(shoulderX, shoulderY);
 
-    // Pauldron / Shoulder Armor
-    ctx.fillStyle = trim;
+    // 1. Ornate Shoulder Pauldron (Kandhadhara / Armor Cop)
+    const pauldronGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, 24);
+    pauldronGrad.addColorStop(0, '#ffffff');
+    pauldronGrad.addColorStop(0.35, trim);
+    pauldronGrad.addColorStop(1, '#92400e');
+
+    ctx.fillStyle = pauldronGrad;
     ctx.beginPath();
     ctx.arc(0, 0, 22, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
 
-    // Upper Arm
-    ctx.rotate(armAngle);
-    ctx.fillStyle = skin.base;
+    // Embossed concentric ring
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.roundRect(-12, 0, 24, 75, 10);
-    ctx.fill();
+    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.stroke();
 
-    // Forearm & Hand
+    // 2. Upper Bicep
+    ctx.rotate(armAngle);
+
+    const bicepGrad = ctx.createLinearGradient(-13, 0, 13, 75);
+    bicepGrad.addColorStop(0, skin.highlight);
+    bicepGrad.addColorStop(0.5, skin.base);
+    bicepGrad.addColorStop(1, skin.shadow);
+
+    ctx.fillStyle = bicepGrad;
+    ctx.strokeStyle = skin.rim || skin.highlight;
+    ctx.lineWidth = 1.2;
+
+    ctx.beginPath();
+    ctx.moveTo(-13, 0);
+    ctx.quadraticCurveTo(-16, 38, -11, 75);
+    ctx.lineTo(11, 75);
+    ctx.quadraticCurveTo(16, 38, 13, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Golden Armlet (Bajubandh / Vanki) around Bicep
+    ctx.save();
+    ctx.translate(0, 32);
+    ctx.fillStyle = trim;
+    ctx.fillRect(-14, -4, 28, 8);
+    // Center gem on armlet
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3. Elbow, Forearm & Wrist Bracer (Kada)
     ctx.translate(0, 75);
     ctx.rotate(forearmAngle);
 
-    // Gold Bracer / Kadha
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(-13, 0, 26, 18);
+    // Ornate Golden Kada / Wrist Bracer
+    const kadaGrad = ctx.createLinearGradient(-14, 0, 14, 20);
+    kadaGrad.addColorStop(0, '#fef08a');
+    kadaGrad.addColorStop(0.5, trim);
+    kadaGrad.addColorStop(1, '#b45309');
 
-    // Forearm
-    ctx.fillStyle = skin.base;
+    ctx.fillStyle = kadaGrad;
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.roundRect(-11, 18, 22, 60, 8);
+    ctx.roundRect(-14, 0, 28, 18, 3);
     ctx.fill();
+    ctx.stroke();
 
-    // Hand with Mudra gesture
+    // Forearm with muscle contour
+    ctx.fillStyle = bicepGrad;
+    ctx.strokeStyle = skin.rim || skin.highlight;
+    ctx.lineWidth = 1.2;
+
+    ctx.beginPath();
+    ctx.moveTo(-11, 18);
+    ctx.quadraticCurveTo(-13, 48, -9, 78);
+    ctx.lineTo(9, 78);
+    ctx.quadraticCurveTo(13, 48, 11, 18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // 4. Expressive Sculpted Hand with Classical Mudra
     ctx.translate(0, 78);
+
+    // Palm base
     ctx.fillStyle = skin.highlight;
     ctx.beginPath();
-    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+    ctx.ellipse(0, 6, 11, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Fingers
-    ctx.fillStyle = skin.base;
-    for (let f = -8; f <= 8; f += 5.5) {
+    // Sacred Red Alta / Henna Dye on Palm Center
+    const isDivine = this.profile.id === 'DEVI' || this.profile.id === 'YAKSHI' || this.profile.id === 'RUDRA';
+    if (isDivine) {
+      ctx.fillStyle = '#dc2626';
       ctx.beginPath();
-      ctx.roundRect(f - 2, 8, 4, 14, 2);
+      ctx.arc(0, 6, 4.5, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Natural Thumb
+    ctx.save();
+    ctx.translate(side === 1 ? -9 : 9, 3);
+    ctx.rotate(side === 1 ? -0.45 : 0.45);
+    ctx.fillStyle = skin.base;
+    ctx.beginPath();
+    ctx.roundRect(-3.5, 0, 7, 14, 3.5);
+    ctx.fill();
+    if (isDivine) {
+      // Red Alta on thumb tip
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(0, 11, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 4 Tapered Graceful Fingers (held in classical Mudra posture)
+    const fingerOffsets = [-7, -2.5, 2.5, 7];
+    const fingerLengths = [15, 18, 17, 14];
+
+    fingerOffsets.forEach((fx, fIdx) => {
+      const fl = fingerLengths[fIdx];
+      ctx.save();
+      ctx.translate(fx, 11);
+      ctx.rotate((fx / 12) * 0.15); // gentle fan
+
+      ctx.fillStyle = skin.base;
+      ctx.beginPath();
+      ctx.roundRect(-2.8, 0, 5.6, fl, 2.8);
+      ctx.fill();
+
+      // Red Alta on fingertip
+      if (isDivine) {
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(0, fl - 2, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    });
 
     ctx.restore();
   }
@@ -1114,4 +2107,5 @@ if (typeof window !== 'undefined') {
 }
 if (typeof global !== 'undefined') {
   global.CharacterRig = CharacterRig;
+  global.CHARACTER_PROFILES = CHARACTER_PROFILES;
 }
