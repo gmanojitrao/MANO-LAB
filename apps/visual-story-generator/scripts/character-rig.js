@@ -595,6 +595,19 @@ class CharacterRig {
     ctx.translate(this.worldX + ox, this.worldY + oy + this.bones.rootY);
     ctx.scale(this.facing * scale, scale * this.bones.breathScaleY);
 
+    // Layer -1: Soft Ground Contact Ambient Occlusion Shadow (Grounded realism)
+    ctx.save();
+    const shadowStretch = 1.0 + Math.abs(Math.sin(this.walkPhase || 0)) * 0.12;
+    const groundShadow = ctx.createRadialGradient(0, 182, 3, 0, 182, 70 * shadowStretch);
+    groundShadow.addColorStop(0, 'rgba(15, 23, 42, 0.40)');
+    groundShadow.addColorStop(0.45, 'rgba(15, 23, 42, 0.16)');
+    groundShadow.addColorStop(1, 'transparent');
+    ctx.fillStyle = groundShadow;
+    ctx.beginPath();
+    ctx.ellipse(0, 182, 70 * shadowStretch, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     // Layer 0: Divine Prabhavali (Sacred Radiance & Aura) - only if enabled
     this.renderPrabhavali(ctx);
 
@@ -779,7 +792,17 @@ class CharacterRig {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(-2, 0, 11, 4);
 
-      // Crisscross Laces
+      // Sneaker Side Panel Accent Chevron / Swoosh
+      ctx.fillStyle = this.profile.torso?.trim || '#38bdf8';
+      ctx.beginPath();
+      ctx.moveTo(-4, 9);
+      ctx.lineTo(7, 5);
+      ctx.lineTo(11, 8);
+      ctx.lineTo(5, 11);
+      ctx.closePath();
+      ctx.fill();
+
+      // Crisscross Laces with Tied Bow Loops
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.4;
       ctx.beginPath();
@@ -789,8 +812,15 @@ class CharacterRig {
       ctx.moveTo(8, 8); ctx.lineTo(-2, 11);
       ctx.stroke();
 
+      // Tied shoelace bow loops
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.ellipse(1, 2, 3.2, 1.8, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(5, 2, 3.2, 1.8, 0.4, 0, Math.PI * 2);
+      ctx.stroke();
+
       // Rear Heel Pull Tab
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = this.profile.torso?.trim || '#38bdf8';
       ctx.fillRect(-13, 3, 2.5, 6);
 
     } else {
@@ -887,28 +917,96 @@ class CharacterRig {
     }
 
     ctx.save();
-    const sway = this.bones.hairSway;
+    const sway = this.bones.hairSway || 0;
     const hairColor = this.profile.hair?.color || '#18181b';
 
     const hairGrad = ctx.createLinearGradient(0, -160, 0, 120);
     hairGrad.addColorStop(0, '#020306');
-    hairGrad.addColorStop(0.6, hairColor);
+    hairGrad.addColorStop(0.55, hairColor);
     hairGrad.addColorStop(1, '#090d16');
-
     ctx.fillStyle = hairGrad;
 
-    // Natural flowing hair layers for long hair styles
-    ctx.beginPath();
-    ctx.moveTo(-55, -150);
-    ctx.quadraticCurveTo(-95 + sway * 0.8, -30, -80 + sway * 1.2, 80);
-    ctx.quadraticCurveTo(-55 + sway * 0.5, 45, -35, -110);
-    ctx.fill();
+    if (hairStyle === 'PONYTAIL') {
+      // High Arching Ponytail Plume with Physics Sway
+      ctx.save();
+      ctx.translate(0, -170);
+      ctx.rotate((sway * 0.04) + (this.bones.headAngle || 0) * 0.6);
 
-    ctx.beginPath();
-    ctx.moveTo(55, -150);
-    ctx.quadraticCurveTo(95 + sway * 0.8, -30, 80 + sway * 1.2, 80);
-    ctx.quadraticCurveTo(55 + sway * 0.5, 45, 35, -110);
-    ctx.fill();
+      // Tail volume
+      ctx.beginPath();
+      ctx.moveTo(-10, -5);
+      ctx.quadraticCurveTo(-28 + sway * 0.5, 45, -16 + sway * 1.2, 110);
+      ctx.quadraticCurveTo(0 + sway * 0.9, 125, 12 + sway * 0.6, 95);
+      ctx.quadraticCurveTo(22 + sway * 0.3, 45, 10, -5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hair strands highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-4, 10);
+      ctx.quadraticCurveTo(-15 + sway * 0.4, 55, -8 + sway * 0.9, 100);
+      ctx.moveTo(3, 10);
+      ctx.quadraticCurveTo(12 + sway * 0.3, 55, 4 + sway * 0.7, 90);
+      ctx.stroke();
+
+      // Scrunchie tie band
+      ctx.fillStyle = this.profile.torso?.trim || '#f43f5e';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 11, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+      ctx.restore();
+
+    } else if (hairStyle === 'LONG_WAVES') {
+      // Cascading S-Curve Waves with Layered Highlights
+      // Left Cascading Wave
+      ctx.beginPath();
+      ctx.moveTo(-52, -150);
+      ctx.quadraticCurveTo(-98 + sway * 0.8, -40, -82 + sway * 1.2, 85);
+      ctx.quadraticCurveTo(-65 + sway * 0.6, 125, -45 + sway * 0.4, 95);
+      ctx.quadraticCurveTo(-62 + sway * 0.4, 30, -32, -100);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right Cascading Wave
+      ctx.beginPath();
+      ctx.moveTo(52, -150);
+      ctx.quadraticCurveTo(98 + sway * 0.8, -40, 82 + sway * 1.2, 85);
+      ctx.quadraticCurveTo(65 + sway * 0.6, 125, 45 + sway * 0.4, 95);
+      ctx.quadraticCurveTo(62 + sway * 0.4, 30, 32, -100);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wave Sheen Lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-60, -90);
+      ctx.quadraticCurveTo(-82 + sway * 0.7, -10, -68 + sway * 0.9, 65);
+      ctx.moveTo(60, -90);
+      ctx.quadraticCurveTo(82 + sway * 0.7, -10, 68 + sway * 0.9, 65);
+      ctx.stroke();
+
+    } else {
+      // Sleek Bob / Medium Back Locks
+      ctx.beginPath();
+      ctx.moveTo(-54, -150);
+      ctx.quadraticCurveTo(-80 + sway * 0.5, -45, -68 + sway * 0.7, 45);
+      ctx.quadraticCurveTo(-45, 30, -32, -100);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(54, -150);
+      ctx.quadraticCurveTo(80 + sway * 0.5, -45, 68 + sway * 0.7, 45);
+      ctx.quadraticCurveTo(45, 30, 32, -100);
+      ctx.closePath();
+      ctx.fill();
+    }
 
     ctx.restore();
   }
@@ -1322,6 +1420,15 @@ class CharacterRig {
     ctx.fill();
     ctx.stroke();
 
+    // Soft Ambient Hairline Contact Shadow cast onto upper forehead
+    const hairlineShadow = ctx.createLinearGradient(0, -92, 0, -68);
+    hairlineShadow.addColorStop(0, 'rgba(15, 23, 42, 0.32)');
+    hairlineShadow.addColorStop(1, 'transparent');
+    ctx.fillStyle = hairlineShadow;
+    ctx.beginPath();
+    ctx.ellipse(0, -78, 42, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     // Soft Chin Cleft & Highlight
     ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
     ctx.beginPath();
@@ -1330,7 +1437,7 @@ class CharacterRig {
 
     // Subtle Cheekbone Warm Highlights & Natural Healthy Blush
     const cheekGradL = ctx.createRadialGradient(-28, -2, 2, -28, -2, 20);
-    cheekGradL.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+    cheekGradL.addColorStop(0, 'rgba(244, 63, 94, 0.24)');
     cheekGradL.addColorStop(0.6, (skin.highlight || '#fff') + '44');
     cheekGradL.addColorStop(1, 'transparent');
     ctx.fillStyle = cheekGradL;
@@ -1339,7 +1446,7 @@ class CharacterRig {
     ctx.fill();
 
     const cheekGradR = ctx.createRadialGradient(28, -2, 2, 28, -2, 20);
-    cheekGradR.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+    cheekGradR.addColorStop(0, 'rgba(244, 63, 94, 0.24)');
     cheekGradR.addColorStop(0.6, (skin.highlight || '#fff') + '44');
     cheekGradR.addColorStop(1, 'transparent');
     ctx.fillStyle = cheekGradR;
@@ -1347,7 +1454,7 @@ class CharacterRig {
     ctx.arc(28, -2, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sculpted Human Ears with Concha & Antihelix
+    // Sculpted Human Ears with Concha & Antihelix & Subsurface Glow
     [-48, 48].forEach((earX, sideIdx) => {
       ctx.save();
       const side = sideIdx === 0 ? -1 : 1;
@@ -1359,6 +1466,13 @@ class CharacterRig {
       ctx.beginPath();
       ctx.ellipse(earX, -2, 10, 16, side * 0.15, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
+
+      // Subsurface ear rim glow (translucent ear cartilage)
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.28)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(earX, -2, 9, 15, side * 0.15, -Math.PI * 0.45, Math.PI * 0.45);
       ctx.stroke();
 
       // Inner concha shadow
@@ -1527,7 +1641,7 @@ class CharacterRig {
       ctx.arc(side === -1 ? 14 : -14, 0, 1.8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Eye Clip for Iris and Pupil
+      // Eye Clip for Iris, Pupil & Cornea Shading
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(-15, 0);
@@ -1545,30 +1659,50 @@ class CharacterRig {
       // Iris Gradient with rich radial depth
       const irisGrad = ctx.createRadialGradient(lookX, lookY, 1, lookX, lookY, 6.2);
       irisGrad.addColorStop(0, '#ffffff');
-      irisGrad.addColorStop(0.28, eyes.glow || eyes.iris || '#3e2723');
-      irisGrad.addColorStop(0.75, eyes.iris || '#3e2723');
+      irisGrad.addColorStop(0.25, eyes.glow || eyes.iris || '#3e2723');
+      irisGrad.addColorStop(0.72, eyes.iris || '#3e2723');
       irisGrad.addColorStop(1, '#090d16');
       ctx.fillStyle = irisGrad;
       ctx.beginPath();
       ctx.arc(lookX, lookY, 6.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Delicate Iris Radial Fibers (Striations)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      // Delicate Iris Radial Fibers (16 Micro-Striations for Soulful Living Eyes)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
       ctx.lineWidth = 0.7;
-      for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
         ctx.beginPath();
-        ctx.moveTo(lookX + Math.cos(a) * 2.8, lookY + Math.sin(a) * 2.8);
-        ctx.lineTo(lookX + Math.cos(a) * 5.6, lookY + Math.sin(a) * 5.6);
+        ctx.moveTo(lookX + Math.cos(a) * 2.6, lookY + Math.sin(a) * 2.6);
+        ctx.lineTo(lookX + Math.cos(a) * 5.7, lookY + Math.sin(a) * 5.7);
         ctx.stroke();
       }
 
+      // Pupillary Collarette Ring
+      ctx.strokeStyle = (eyes.glow || '#f59e0b') + '66';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.arc(lookX, lookY, 4.0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Lower Iris Caustic Bounce Reflection (Living Inner Glow)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.26)';
+      ctx.beginPath();
+      ctx.ellipse(lookX, lookY + 3.2, 4.2, 1.8, 0, 0, Math.PI);
+      ctx.fill();
+
       // Pupil with subtle breathing dilation
-      const pupilRadius = 3.0 + Math.sin(this.time * 1.5) * 0.2;
+      const pupilRadius = 3.0 + Math.sin(this.time * 1.5) * 0.22;
       ctx.fillStyle = '#020617';
       ctx.beginPath();
       ctx.arc(lookX, lookY, pupilRadius, 0, Math.PI * 2);
       ctx.fill();
+
+      // Upper Eyelid Cast Shadow across top of cornea (Realistic 3D Orbital Depth)
+      const eyeLidShadow = ctx.createLinearGradient(0, -9, 0, 1.5);
+      eyeLidShadow.addColorStop(0, 'rgba(15, 23, 42, 0.45)');
+      eyeLidShadow.addColorStop(1, 'transparent');
+      ctx.fillStyle = eyeLidShadow;
+      ctx.fillRect(-16, -10, 32, 11);
 
       // Primary Crisp Specular Keylight Glint
       ctx.fillStyle = '#ffffff';
@@ -1583,6 +1717,14 @@ class CharacterRig {
       ctx.fill();
 
       ctx.restore(); // end clip
+
+      // Wet Lower Waterline Gloss Highlight (Glistening living moisture)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(-11, 6.2);
+      ctx.quadraticCurveTo(0, 8.5, 11, 6.2);
+      ctx.stroke();
 
       // Upper Eyelash line with delicate winged corner
       ctx.strokeStyle = '#050811';
@@ -1703,40 +1845,56 @@ class CharacterRig {
     ctx.stroke();
 
     if (jaw < 0.12) {
-      // Natural closed resting lips with Cupid's bow and corner nodes
+      // Natural closed resting lips with sculpted Cupid's bow, dual cushions & labiomental groove
+      // Philtrum crest highlights
+      ctx.strokeStyle = (skin.highlight || '#fff') + '88';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-1.8, -14); ctx.lineTo(-1.2, -4);
+      ctx.moveTo(1.8, -14); ctx.lineTo(1.2, -4);
+      ctx.stroke();
+
+      // Labiomental groove (soft anatomical shadow under lower lip)
+      ctx.fillStyle = skin.shadow + '55';
+      ctx.beginPath();
+      ctx.ellipse(0, 10.5, 7.5 * mw, 2.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Upper lip (in soft ambient top shadow)
       ctx.fillStyle = '#9f1239'; // soft rose
       ctx.beginPath();
       ctx.moveTo(-15 * mw, 0);
-      ctx.quadraticCurveTo(-6 * mw, -4.0, 0, -2.2);
-      ctx.quadraticCurveTo(6 * mw, -4.0, 15 * mw, 0);
+      ctx.quadraticCurveTo(-6 * mw, -4.2, 0, -2.4);
+      ctx.quadraticCurveTo(6 * mw, -4.2, 15 * mw, 0);
       ctx.quadraticCurveTo(0, 1.2, -15 * mw, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Lower lip fullness
+      // Lower lip fullness with dual cushions
       ctx.fillStyle = '#be123c';
       ctx.beginPath();
       ctx.moveTo(-14 * mw, 0);
       ctx.quadraticCurveTo(0, 1.0, 14 * mw, 0);
-      ctx.quadraticCurveTo(0, 7.5, -14 * mw, 0);
+      ctx.quadraticCurveTo(0, 7.8, -14 * mw, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Curved specular gloss reflection
+      // Dual pillowy specular gloss highlights (left & right cushions)
       ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(0, 3.4, 5.0 * mw, 1.8, 0, 0, Math.PI * 2);
+      ctx.ellipse(-3.2 * mw, 3.8, 3.0, 1.4, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(3.2 * mw, 3.8, 3.0, 1.4, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Subtle Lip Corner Dimples
+      // Subtle Lip Corner Dimples (Commissures)
       ctx.fillStyle = skin.shadow;
       ctx.beginPath();
-      ctx.arc(-15 * mw, 0, 1.0, 0, Math.PI * 2);
-      ctx.arc(15 * mw, 0, 1.0, 0, Math.PI * 2);
+      ctx.arc(-15 * mw, 0, 1.2, 0, Math.PI * 2);
+      ctx.arc(15 * mw, 0, 1.2, 0, Math.PI * 2);
       ctx.fill();
 
     } else {
-      // Talking Mouth Cavity with Shaded Throat, Enamel Incisors, and Tongue
+      // Talking Mouth Cavity with Shaded Throat, Individual Incisors, and Tongue Sulcus
       ctx.beginPath();
       ctx.moveTo(-16 * mw, 0);
       ctx.quadraticCurveTo(0, -8 * jaw, 16 * mw, 0);
@@ -1749,24 +1907,39 @@ class CharacterRig {
       ctx.lineWidth = 2.0;
       ctx.stroke();
 
-      // Upper Enamel Incisors (Translucent edge)
+      // Upper Enamel Incisors (Translucent edge with central incisor separation)
       ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
       ctx.roundRect(-8.5 * mw, -4 * jaw, 17 * mw, 6.5 * jaw, [0, 0, 3, 3]);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(203, 213, 225, 0.6)';
+      ctx.strokeStyle = 'rgba(203, 213, 225, 0.7)';
       ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Tongue Articulation with soft specular bounce
+      // Central incisor separation line
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.beginPath();
+      ctx.moveTo(0, -4 * jaw);
+      ctx.lineTo(0, 2.2 * jaw);
+      ctx.stroke();
+
+      // Tongue Articulation with central groove (sulcus) and soft gloss bounce
       ctx.fillStyle = '#f43f5e';
       ctx.beginPath();
       ctx.ellipse(0, 12 * jaw, 7.5 * mw, 4.5 * jaw, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      // Tongue central groove (sulcus)
+      ctx.strokeStyle = 'rgba(190, 18, 60, 0.6)';
+      ctx.lineWidth = 1.0;
       ctx.beginPath();
-      ctx.ellipse(0, 10 * jaw, 4.0 * mw, 2.0 * jaw, 0, 0, Math.PI * 2);
+      ctx.moveTo(0, 9 * jaw);
+      ctx.lineTo(0, 14 * jaw);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, 10.5 * jaw, 4.2 * mw, 2.0 * jaw, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1786,60 +1959,135 @@ class CharacterRig {
       ctx.fillStyle = hairColor;
 
       if (hairStyle === 'MODERN_FADE' || hairStyle === 'SHORT_CROP') {
-        // Modern fade / sharp textured crop
+        // Modern Fade with Volumetric Textured Quiff & Precision Side Fade
         ctx.beginPath();
         ctx.moveTo(-48, -75);
-        ctx.quadraticCurveTo(-45, -95, 0, -100);
-        ctx.quadraticCurveTo(45, -95, 48, -75);
-        ctx.quadraticCurveTo(25, -68, 0, -74);
-        ctx.quadraticCurveTo(-25, -68, -48, -75);
+        ctx.quadraticCurveTo(-46, -98, 0, -104);
+        ctx.quadraticCurveTo(46, -98, 48, -75);
+        ctx.quadraticCurveTo(28, -66, 0, -74);
+        ctx.quadraticCurveTo(-28, -66, -48, -75);
         ctx.closePath();
         ctx.fill();
 
-        // Top texture strands
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1.5;
-        for (let s = -25; s <= 25; s += 10) {
+        // High skin fade sideburn gradients
+        const fadeL = ctx.createLinearGradient(-48, -75, -36, -75);
+        fadeL.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
+        fadeL.addColorStop(1, 'transparent');
+        ctx.fillStyle = fadeL;
+        ctx.fillRect(-48, -80, 12, 24);
+
+        // Individual scissor-textured quiff locks on top
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1.4;
+        for (let s = -28; s <= 28; s += 8) {
           ctx.beginPath();
-          ctx.moveTo(s, -98);
-          ctx.lineTo(s * 0.8, -80);
+          ctx.moveTo(s, -102);
+          ctx.lineTo(s * 0.75, -82);
           ctx.stroke();
         }
 
-      } else if (hairStyle === 'SLEEK_BOB' || hairStyle === 'LONG_WAVES') {
-        // Sleek bob / wavy framing locks
+        // Anisotropic Crown Sheen Highlight
+        const sheen = ctx.createLinearGradient(-25, -96, 25, -96);
+        sheen.addColorStop(0, 'transparent');
+        sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.28)');
+        sheen.addColorStop(1, 'transparent');
+        ctx.fillStyle = sheen;
+        ctx.fillRect(-28, -98, 56, 5);
+
+      } else if (hairStyle === 'SLEEK_BOB') {
+        // Sleek Bob with Inward-Curling Cheek Framing Locks
         ctx.beginPath();
         ctx.moveTo(-48, -75);
-        ctx.quadraticCurveTo(-52, -20, -42, 25);
-        ctx.quadraticCurveTo(-34, -30, -22, -68);
-        ctx.quadraticCurveTo(0, -80, 22, -68);
-        ctx.quadraticCurveTo(34, -30, 42, 25);
-        ctx.quadraticCurveTo(52, -20, 48, -75);
-        ctx.quadraticCurveTo(0, -102, -48, -75);
+        ctx.quadraticCurveTo(-54, -20, -44, 28);
+        ctx.quadraticCurveTo(-34, -28, -22, -68);
+        ctx.quadraticCurveTo(0, -82, 22, -68);
+        ctx.quadraticCurveTo(34, -28, 44, 28);
+        ctx.quadraticCurveTo(54, -20, 48, -75);
+        ctx.quadraticCurveTo(0, -105, -48, -75);
         ctx.closePath();
         ctx.fill();
 
-      } else if (hairStyle === 'PONYTAIL') {
-        // Pulled back hair with high ponytail
+        // Inner lock edge highlights
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-40, -50);
+        ctx.quadraticCurveTo(-48, 0, -42, 24);
+        ctx.moveTo(40, -50);
+        ctx.quadraticCurveTo(48, 0, 42, 24);
+        ctx.stroke();
+
+        // Crown sheen ribbon
+        const sheen = ctx.createLinearGradient(-30, -96, 30, -96);
+        sheen.addColorStop(0, 'transparent');
+        sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.32)');
+        sheen.addColorStop(1, 'transparent');
+        ctx.fillStyle = sheen;
+        ctx.fillRect(-32, -98, 64, 6);
+
+      } else if (hairStyle === 'LONG_WAVES') {
+        // Long Waves Framing Strands with S-Curve Wisps
         ctx.beginPath();
         ctx.moveTo(-48, -75);
-        ctx.quadraticCurveTo(0, -100, 48, -75);
+        ctx.quadraticCurveTo(-55, -20, -40, 35);
+        ctx.quadraticCurveTo(-30, -25, -20, -68);
+        ctx.quadraticCurveTo(0, -80, 20, -68);
+        ctx.quadraticCurveTo(30, -25, 40, 35);
+        ctx.quadraticCurveTo(55, -20, 48, -75);
+        ctx.quadraticCurveTo(0, -104, -48, -75);
+        ctx.closePath();
+        ctx.fill();
+
+        // S-Curve wave shine accents
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-36, -45);
+        ctx.quadraticCurveTo(-46, -10, -38, 25);
+        ctx.moveTo(36, -45);
+        ctx.quadraticCurveTo(46, -10, 38, 25);
+        ctx.stroke();
+
+      } else if (hairStyle === 'PONYTAIL') {
+        // Pulled back sleek hair sweep lines with high bun base
+        ctx.beginPath();
+        ctx.moveTo(-48, -75);
+        ctx.quadraticCurveTo(0, -102, 48, -75);
         ctx.quadraticCurveTo(0, -78, -48, -75);
         ctx.fill();
 
-        // Ponytail bunch at back top
+        // Radial sweep lines converging back towards high ponytail
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 1.0;
+        for (let a = -35; a <= 35; a += 14) {
+          ctx.beginPath();
+          ctx.moveTo(a, -78);
+          ctx.lineTo(a * 0.3, -98);
+          ctx.stroke();
+        }
+
+        // Ponytail base gathering
         ctx.beginPath();
-        ctx.arc(0, -104, 14, 0, Math.PI * 2);
+        ctx.arc(0, -102, 14, 0, Math.PI * 2);
         ctx.fill();
 
       } else {
-        // Textured casual hair
+        // Side Part / Gentleman's Pompadour
         ctx.beginPath();
         ctx.moveTo(-48, -75);
-        ctx.quadraticCurveTo(-25, -62, 0, -74);
-        ctx.quadraticCurveTo(25, -62, 48, -75);
-        ctx.quadraticCurveTo(0, -98, -48, -75);
+        ctx.quadraticCurveTo(-25, -60, 0, -74);
+        ctx.quadraticCurveTo(28, -62, 48, -75);
+        ctx.quadraticCurveTo(15, -104, -48, -75);
+        ctx.closePath();
         ctx.fill();
+
+        // Comb part line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-24, -72);
+        ctx.lineTo(-20, -96);
+        ctx.stroke();
       }
 
     } else if (hg === 'CRESCENT_MOON_SERPENT') {
@@ -1876,32 +2124,69 @@ class CharacterRig {
       ctx.stroke();
     }
 
-    // 2. Modern Accessories: Studio Headphones around neck
+    // 2. Modern Accessories: Studio Headphones around neck (High-Fidelity)
     if (this.profile.accessories === 'STUDIO_HEADPHONES') {
       ctx.save();
-      ctx.translate(0, 52); // Resting around the neck
+      ctx.translate(0, 52); // Resting comfortably around the neck
 
-      // Headphone padded band
+      // Headphone padded mesh band with stitch segments
       ctx.strokeStyle = '#09090b';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 7;
       ctx.beginPath();
       ctx.arc(0, -38, 40, 0.4, Math.PI - 0.4);
       ctx.stroke();
 
-      // Left Ear Cup
-      ctx.fillStyle = '#1e293b';
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2.0;
+      // Cushion stitch accents on band
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.2;
+      for (let ba = 0.6; ba < Math.PI - 0.6; ba += 0.35) {
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(ba) * 36, -38 + Math.sin(ba) * 36);
+        ctx.lineTo(Math.cos(ba) * 44, -38 + Math.sin(ba) * 44);
+        ctx.stroke();
+      }
+
+      // Brushed Steel Adjustment Sliders
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(-45, -34, 4, 10);
+      ctx.fillRect(41, -34, 4, 10);
+
+      // Left Ear Cup (Ergonomic cushion + glowing LED ring)
+      ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.roundRect(-46, -25, 14, 26, 6);
+      ctx.roundRect(-48, -25, 16, 28, 7);
       ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // Right Ear Cup
+      // Glowing Cyan Audio Ring
+      ctx.save();
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#38bdf8';
       ctx.beginPath();
-      ctx.roundRect(32, -25, 14, 26, 6);
+      ctx.arc(-40, -11, 3.5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+
+      // Right Ear Cup
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(32, -25, 16, 28, 7);
+      ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.8;
       ctx.stroke();
+
+      ctx.save();
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(40, -11, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
       ctx.restore();
     }
