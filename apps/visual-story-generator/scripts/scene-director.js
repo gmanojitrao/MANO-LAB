@@ -242,7 +242,7 @@ class SceneDirector {
       if (isSpeaking && this.isDualMode) {
         this.renderSpeakerFocusRing(ctx, this.characters[0].worldX, 160);
       }
-      this.characters[0].render(ctx, 0, 0, 1.0);
+      this.characters[0].render(ctx, 1.0);
     }
 
     // Render Character 2 (In Dual Mode)
@@ -251,7 +251,7 @@ class SceneDirector {
       if (isSpeaking) {
         this.renderSpeakerFocusRing(ctx, this.characters[1].worldX, 160);
       }
-      this.characters[1].render(ctx, 0, 0, 1.0);
+      this.characters[1].render(ctx, 1.0);
     }
 
     ctx.restore();
@@ -852,4 +852,12 @@ class SceneDirector {
       startX += wordWidth;
     }
   }
+}
+
+// Global window registration
+if (typeof window !== 'undefined') {
+  window.SceneDirector = SceneDirector;
+}
+if (typeof global !== 'undefined') {
+  global.SceneDirector = SceneDirector;
 }

@@ -441,7 +441,10 @@ class AudioStudio {
   }
 }
 
-// Attach to window
+// Attach to window and global
 if (typeof window !== 'undefined') {
   window.AudioStudio = AudioStudio;
+}
+if (typeof global !== 'undefined') {
+  global.AudioStudio = AudioStudio;
 }

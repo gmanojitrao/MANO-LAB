@@ -464,11 +464,23 @@ class CharacterRig {
   /**
    * Main Hierarchical 2.5D Render Function
    */
-  render(ctx, scale = 1.0) {
+  render(ctx, arg1 = 0, arg2 = 0, arg3 = 1.0) {
+    let scale = 1.0;
+    let ox = 0;
+    let oy = 0;
+    if (typeof arg3 === 'number' && arg3 > 0) {
+      ox = arg1 || 0;
+      oy = arg2 || 0;
+      scale = arg3;
+    } else if (typeof arg1 === 'number' && arg1 > 0) {
+      scale = arg1;
+    }
+    if (!scale || scale <= 0) scale = 1.0;
+
     ctx.save();
 
     // Stage Translation & Facing Direction Flip
-    ctx.translate(this.worldX, this.worldY + this.bones.rootY);
+    ctx.translate(this.worldX + ox, this.worldY + oy + this.bones.rootY);
     ctx.scale(this.facing * scale, scale * this.bones.breathScaleY);
 
     // Layer 1: Back Cape & Hair
@@ -1093,4 +1105,13 @@ class CharacterRig {
 
     ctx.restore();
   }
+}
+
+// Global window registration for browser and module environments
+if (typeof window !== 'undefined') {
+  window.CharacterRig = CharacterRig;
+  window.CHARACTER_PROFILES = CHARACTER_PROFILES;
+}
+if (typeof global !== 'undefined') {
+  global.CharacterRig = CharacterRig;
 }

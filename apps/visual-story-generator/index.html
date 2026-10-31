@@ -3,16 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Character Animation & Visual Story Studio | MANO LAB</title>
-  <meta name="description" content="Parametric 2.5D Rigged Character Engine, Articulated Walking Limbs, Multi-Character Staging, 8 Living Backgrounds, and AI Visual Storytelling.">
+  <title>AI Visual Story Generator | MANO LAB</title>
+  <meta name="description" content="One-click Automated AI Visual Story Generator. Instant articulated character animation, voice-driven lip-sync, and cinematic scene direction.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23facc15%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22black%22>👑</text></svg>">
 
-  <!-- Google Fonts: Plus Jakarta Sans, Montserrat & JetBrains Mono -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles/story.css">
+  <style>
+    /* Clean, high-end automated generator UI */
+    .generator-hero {
+      background: linear-gradient(135deg, rgba(24, 20, 48, 0.7) 0%, rgba(10, 12, 20, 0.9) 100%);
+      border: 1px solid rgba(250, 204, 21, 0.25);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      margin-bottom: 20px;
+    }
+
+    .hero-prompt-box {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .hero-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 15px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .hero-input:focus {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 20px rgba(250, 204, 21, 0.25);
+    }
+
+    .btn-generate-main {
+      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      padding: 0 28px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 24px rgba(250, 204, 21, 0.4);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-generate-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 32px rgba(250, 204, 21, 0.6);
+    }
+
+    .preset-chips-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .preset-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #d1d5db;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-chip:hover {
+      background: rgba(250, 204, 21, 0.15);
+      border-color: var(--accent-gold);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .preset-chip.active {
+      background: rgba(250, 204, 21, 0.22);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    /* Auto Director Status Banner */
+    .director-badge-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .cast-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cast-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(250, 204, 21, 0.15);
+      border: 1px solid var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .accordion-trigger {
+      font-size: 11px;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
@@ -21,8 +155,8 @@
     <div class="brand-wrap">
       <div class="brand-icon">👑</div>
       <div>
-        <div class="brand-title">CHARACTER ANIMATION & VISUAL STORY STUDIO</div>
-        <div class="brand-pill">PARAMETRIC 2.5D RIGS • ARTICULATED WALKING LIMBS • DUAL-CHARACTER SCENES • 8 LIVING WORLDS</div>
+        <div class="brand-title">VISUAL STORY GENERATOR</div>
+        <div class="brand-pill">ONE-CLICK AI ANIMATION • FULL AUTOMATED CINEMATOGRAPHY</div>
       </div>
     </div>
 
@@ -36,322 +170,122 @@
   <!-- Studio Main Grid -->
   <main class="studio-main">
 
-    <!-- Left Column: Character Engine, Staging, Worlds & Story Generator -->
+    <!-- Left Column: Automated 1-Click Story Maker -->
     <section class="workspace-pane">
 
-      <!-- 1. Parametric Character Selection & Staging -->
-      <div class="card-panel">
-        <div class="card-panel-header">
-          <div class="card-panel-title">
-            <span>👤</span> <span>1. Parametric Characters & Articulated Staging</span>
-          </div>
-          <button class="btn-action btn-action-primary" id="btn-randomize-char" title="Generate an infinite new unique character procedurally">
-            <span>🎲</span> <span>Randomize Character</span>
-          </button>
-        </div>
-
-        <!-- Character Tabs: Char 1 vs Char 2 -->
-        <div class="char-tabs-wrap">
-          <button class="char-tab-btn active" id="tab-edit-char1">
-            <span>👑</span> <span>Character 1 (Primary / Left)</span>
-          </button>
-          <button class="char-tab-btn" id="tab-edit-char2" style="display: none;">
-            <span>🕉️</span> <span>Character 2 (Secondary / Right)</span>
-          </button>
-        </div>
-
-        <!-- 12 Parametric Character Archetypes Grid -->
-        <div class="archetype-grid" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
-          <button class="btn-archetype active" data-archetype="RUDRA">
-            <span class="arch-emoji">👑</span>
-            <div class="arch-info">
-              <strong>Rudra: Divine Warrior King</strong>
-              <small>Surya Mukut, obsidian cuirass, commanding presence</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="RISHI">
-            <span class="arch-emoji">🕉️</span>
-            <div class="arch-info">
-              <strong>Rishi: The Ascetic Sage</strong>
-              <small>Tripundra vibhuti, jata hair bun, rudraksha mala</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="ASURA">
-            <span class="arch-emoji">⚔️</span>
-            <div class="arch-info">
-              <strong>Asura: Shadow Sovereign</strong>
-              <small>Horned war helm, blazing crimson eyes, dark battle plate</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="DEVI">
-            <span class="arch-emoji">🌸</span>
-            <div class="arch-info">
-              <strong>Devi: The Celestial Queen</strong>
-              <small>Lotus tiara, radiant peach skin, flowing silk physics</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="VASUKI">
-            <span class="arch-emoji">🐍</span>
-            <div class="arch-info">
-              <strong>Vasuki: Golden Serpent King</strong>
-              <small>Serpent hood crown, emerald jewels, golden scales</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="SHESHANAGA">
-            <span class="arch-emoji">✨</span>
-            <div class="arch-info">
-              <strong>Sheshanaga: Cosmic Multi-Headed Lord</strong>
-              <small>Ash-blue skin, silver tilak, eternal cosmic aura</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="ARJUNA">
-            <span class="arch-emoji">🏹</span>
-            <div class="arch-info">
-              <strong>Arjuna: Peerless Archer</strong>
-              <small>Silver archer crown, Gandiva bracers, royal sash</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="KARNA">
-            <span class="arch-emoji">☀️</span>
-            <div class="arch-info">
-              <strong>Karna: Solar Benefactor</strong>
-              <small>Kavacha & Kundala solar earrings, golden armor</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="INDRA">
-            <span class="arch-emoji">⚡</span>
-            <div class="arch-info">
-              <strong>Indra: King of the Celestials</strong>
-              <small>Lightning mukut, diamond vajra chestplate</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="GARUDA">
-            <span class="arch-emoji">🦅</span>
-            <div class="arch-info">
-              <strong>Garuda: Solar Sky Sovereign</strong>
-              <small>Avian feather helm, sun-crested armor plate</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="YAKSHI">
-            <span class="arch-emoji">🌿</span>
-            <div class="arch-info">
-              <strong>Yakshi: Enchanted Forest Spirit</strong>
-              <small>Forest jade skin, floral garland, bioluminescent glow</small>
-            </div>
-          </button>
-
-          <button class="btn-archetype" data-archetype="SHISHYA">
-            <span class="arch-emoji">📜</span>
-            <div class="arch-info">
-              <strong>Shishya: Dedicated Devotee</strong>
-              <small>Simple saffron dhoti, choti hair lock, eager student</small>
-            </div>
-          </button>
-        </div>
-
-        <!-- Parametric Customizer (Skin, Eye Size, Crown) -->
-        <div class="customizer-box">
+      <!-- 1. The Main Hero Story Generator -->
+      <div class="generator-hero">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
           <div>
-            <label class="form-label">Skin Tone Palette</label>
-            <select id="select-skin-tone" class="form-select">
-              <option value="ASH_BLUE">Ash Blue (Shiva / Divine)</option>
-              <option value="WHEATISH" selected>Warm Wheatish (Natural Indic)</option>
-              <option value="OBSIDIAN">Obsidian Bronze (Asura / Warrior)</option>
-              <option value="GOLDEN">Radiant Gold (Celestial Solar)</option>
-              <option value="EMERALD">Emerald Serpent (Vasuki)</option>
-              <option value="SAPPHIRE">Deep Sapphire (Krishna / Cosmic)</option>
-              <option value="PEACH">Peach Lotus (Devi / Celestial)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="form-label">Crown / Mukut Headgear</label>
-            <select id="select-crown-type" class="form-select">
-              <option value="SURYA_MUKUT">Surya Divine Mukut</option>
-              <option value="JATA_BUN">Ascetic Jata Locks</option>
-              <option value="HORNED_HELM">Obsidian Horned Helm</option>
-              <option value="LOTUS_TIARA">Lotus Tiara & Jewels</option>
-              <option value="SNAKE_COODHA">Golden Serpent Hood</option>
-              <option value="ROYAL_CROWN" selected>Royal Vedic Crown</option>
-              <option value="FEATHER_HELM">Feather Solar Helm</option>
-              <option value="NONE">None / Bare Locks</option>
-            </select>
-          </div>
-
-          <div style="grid-column: 1 / -1;">
-            <div class="scene-meta-row" style="margin-bottom: 4px;">
-              <label class="form-label" style="margin: 0;">Eye Size & Expression</label>
-              <span id="lbl-eye-size" style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-gold);">1.0x</span>
-            </div>
-            <div class="slider-wrap">
-              <span style="font-size: 10px; color: var(--text-dim);">0.6x</span>
-              <input type="range" id="slider-eye-size" min="0.6" max="1.8" step="0.1" value="1.0">
-              <span style="font-size: 10px; color: var(--text-dim);">1.8x</span>
-            </div>
+            <h2 style="font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px;">✨ What story do you want to create?</h2>
+            <p style="font-size: 12px; color: var(--text-dim);">Type any topic or select a story below. The AI automatically directs the characters, walks them, changes backgrounds, and creates the full animated video.</p>
           </div>
         </div>
 
-        <!-- Staging & Locomotion Controls -->
-        <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
-          <div class="scene-meta-row">
+        <!-- Main Prompt Box -->
+        <div class="hero-prompt-box">
+          <input type="text" id="input-story-topic" class="hero-input" placeholder="e.g. The meeting of serpent kings before the churning of the cosmic ocean..." value="The meeting of serpent kings before the churning of the cosmic ocean">
+          <button class="btn-generate-main" id="btn-generate-topic-story">
+            <span>✨</span> <span>Create Video</span>
+          </button>
+        </div>
+
+        <!-- 4 Quick Curated Story Pills -->
+        <div class="preset-chips-row">
+          <span style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center;">Try Instant Stories:</span>
+          <button class="preset-chip active" data-story="SHESHANAGA_VASUKI">
+            <span>🐍</span> <span>Sheshanaga & Vasuki (Cosmic Ocean)</span>
+          </button>
+          <button class="preset-chip" data-story="RUDRA_RISHI">
+            <span>👑</span> <span>Rudra & Sage (Secret of Time)</span>
+          </button>
+          <button class="preset-chip" data-story="ARJUNA_KARNA">
+            <span>🏹</span> <span>Arjuna & Karna (Vow of Honor)</span>
+          </button>
+          <button class="preset-chip" data-story="DEVI_YAKSHI">
+            <span>🌸</span> <span>Devi & Yakshi (Enchanted Grove)</span>
+          </button>
+        </div>
+
+        <!-- Active Auto Director Strip -->
+        <div class="director-badge-strip">
+          <div class="cast-pill">
+            <div class="cast-avatar" id="cast-avatar-icon">👑</div>
             <div>
-              <label class="form-label">Staging Mode</label>
-              <select id="select-staging-mode" class="form-select">
-                <option value="SOLO_HERO" selected>Solo Character (Center Focus)</option>
-                <option value="DUAL_SCENE">Dual-Character Scene (Face-to-Face Plot)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label">Active Speaker Turn</label>
-              <select id="select-active-speaker" class="form-select">
-                <option value="0" selected>Character 1 (Left)</option>
-                <option value="1">Character 2 (Right)</option>
-              </select>
+              <div style="font-size: 13px; font-weight: 700; color: #fff;" id="cast-display-name">Active Cast: Sheshanaga & Vasuki</div>
+              <div style="font-size: 11px; color: var(--text-dim);" id="world-display-name">World: Himalayan Summit & Cosmic Void</div>
             </div>
           </div>
 
-          <!-- Articulated Locomotion Buttons -->
-          <div class="locomotion-bar">
-            <button class="btn-locomotion" id="btn-walk-left">
-              <span>◀</span> <span>Walk Left</span>
-            </button>
-            <button class="btn-locomotion" id="btn-walk-center">
-              <span>●</span> <span>Center</span>
-            </button>
-            <button class="btn-locomotion" id="btn-walk-right">
-              <span>▶</span> <span>Walk Right</span>
-            </button>
-            <button class="btn-locomotion" id="btn-flip-facing">
-              <span>⇄</span> <span>Turn</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Dynamic Changeable Backgrounds (8 Environments) -->
-      <div class="card-panel">
-        <div class="card-panel-header">
-          <div class="card-panel-title">
-            <span>🌌</span> <span>2. Dynamic Living Environments (8 Worlds)</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Select Active Landscape (Smooth Cross-Fade)</label>
-          <select id="select-env" class="form-select">
-            <option value="GOLDEN_TEMPLE" selected>🏛️ Golden Temple & Surya Halo</option>
-            <option value="SACRED_ASHRAMA">🌳 Sacred Ashrama & Havan Fire Altar</option>
-            <option value="COSMIC_VOID">🌌 Cosmic Void & Ocean of Milk (Kshir Sagar)</option>
-            <option value="VOLCANIC_WAR">🌋 Volcanic War Realm & Lava Fissures</option>
-            <option value="HIMALAYAN_SUMMIT">❄️ Himalayan Summit (Kailash & Glaciers)</option>
-            <option value="ROYAL_DARBAR">👑 Royal Darbar & Flaming Mashaal Torches</option>
-            <option value="KURUKSHETRA_BATTLEFIELD">⚔️ Kurukshetra War Battlefield & Sunset</option>
-            <option value="ENCHANTED_FOREST">🌿 Enchanted Dandakaranya Forest & Fireflies</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- 3. Visual Story Director & Topic Generator -->
-      <div class="card-panel story-generator-panel">
-        <div class="card-panel-header">
-          <div class="card-panel-title" style="color: #c7d2fe;">
-            <span>✨</span> <span>3. Multi-Scene Visual Story Director</span>
-          </div>
-        </div>
-
-        <!-- Presets -->
-        <div class="scene-meta-row" style="margin-bottom: 12px;">
-          <div style="flex: 2;">
-            <label class="form-label">Curated Cinematic Stories</label>
-            <select id="select-story-preset" class="form-select">
-              <option value="SHESHANAGA_VASUKI" selected>The Eternal Brothers: Sheshanaga & Vasuki (3 Scenes)</option>
-              <option value="RUDRA_RISHI">Cosmic Dialogue: Rudra & Rishi on Time (3 Scenes)</option>
-              <option value="ARJUNA_KARNA">The Vow of Honor: Arjuna & Karna (3 Scenes)</option>
-              <option value="DEVI_YAKSHI">Divine Radiance: Devi & Yakshi (3 Scenes)</option>
-            </select>
-          </div>
-
-          <div style="flex: 1; display: flex; align-items: flex-end;">
-            <button class="btn-action btn-action-primary" id="btn-play-preset-story" style="width: 100%; height: 38px; justify-content: center;">
-              <span>🎬</span> <span>Play Story</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Custom Topic Story Generator -->
-        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-          <label class="form-label">Or Direct from Any Topic / Script Prompt</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="input-story-topic" class="input-topic" placeholder="e.g. Dialogue between two ancient masters at the mountain peak..." value="The meeting of serpent kings before the churning of the cosmic ocean">
-            <button class="btn-action btn-action-primary" id="btn-generate-topic-story" style="white-space: nowrap; padding: 0 16px;">
-              <span>✨</span> <span>Generate & Direct</span>
-            </button>
-          </div>
-          <p style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">Automatically generates 3-act plot, changes backgrounds, walks characters into position, and alternates dialogues with speech synthesis and lip sync!</p>
-        </div>
-      </div>
-
-      <!-- 4. Studio Voice & Lip-Sync Controls -->
-      <div class="card-panel">
-        <div class="card-panel-header">
-          <div class="card-panel-title">
-            <span>🎙️</span> <span>4. Voice Mastering & Real Lip-Sync</span>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
-          <button class="btn-action btn-action-primary" id="btn-record-mic">
-            <span>🎙️</span> <span>Record My Voice (Mic)</span>
+          <button class="btn-action" id="btn-randomize-char" title="Instantly randomize character appearance & styles">
+            <span>🎲</span> <span>Surprise Me (Random Cast)</span>
           </button>
+        </div>
+      </div>
 
-          <label class="btn-action" style="cursor: pointer;">
-            <span>📂</span> <span>Upload Custom Voice (MP3/WAV)</span>
-            <input type="file" id="input-upload-audio" accept="audio/*" style="display: none;">
-          </label>
+      <!-- 2. Simple Controls (Direct & Clear) -->
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">
+            <span>🎬</span> <span>Quick Adjustments</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-dim);">Automated by default</span>
         </div>
 
-        <div class="scene-meta-row">
+        <div class="scene-meta-row" style="grid-template-columns: 1fr 1fr;">
           <div>
-            <label class="form-label">Studio Voice FX Chain</label>
-            <select id="select-voice-fx" class="form-select">
-              <option value="DEEP_NARRATOR" selected>Deep Baritone Narrator (Warm EQ + Reverb)</option>
-              <option value="DIVINE_DEITY">Divine Deity (Spacious Hall Reverb)</option>
-              <option value="SHADOW_LORD">Shadow Lord (Heavy Low-End)</option>
-              <option value="CLEAN_STUDIO">Clean Studio Master</option>
+            <label class="form-label">Hero Archetype</label>
+            <select id="select-hero-archetype" class="form-select">
+              <option value="RUDRA">👑 Rudra (Divine Warrior King)</option>
+              <option value="RISHI">🕉️ Rishi (Ascetic Sage)</option>
+              <option value="ASURA">⚔️ Asura (Shadow Sovereign)</option>
+              <option value="DEVI">🌸 Devi (Celestial Queen)</option>
+              <option value="SHESHANAGA" selected>✨ Sheshanaga (Cosmic Serpent Lord)</option>
+              <option value="VASUKI">🐍 Vasuki (Golden Serpent King)</option>
+              <option value="ARJUNA">🏹 Arjuna (Peerless Archer)</option>
+              <option value="KARNA">☀️ Karna (Solar Benefactor)</option>
+              <option value="INDRA">⚡ Indra (King of the Gods)</option>
+              <option value="GARUDA">🦅 Garuda (Solar Sky Sovereign)</option>
+              <option value="YAKSHI">🌿 Yakshi (Forest Spirit)</option>
+              <option value="SHISHYA">📜 Shishya (Dedicated Student)</option>
             </select>
           </div>
 
           <div>
-            <label class="form-label">Camera Shot Angle</label>
-            <select class="form-select" onchange="window.storyStudioApp?.director.setShotMode(this.value)">
-              <option value="MEDIUM_ACTION" selected>🎬 Medium Action Shot</option>
-              <option value="HERO_CLOSEUP">🔍 Hero Close-Up</option>
-              <option value="DUTCH_LOW_ANGLE">📐 Dutch Low-Angle Tilt</option>
-              <option value="WIDE_ESTABLISHING">🌐 Wide Establishing Panorama</option>
+            <label class="form-label">Background World</label>
+            <select id="select-env" class="form-select">
+              <option value="HIMALAYAN_SUMMIT" selected>❄️ Himalayan Summit (Kailash)</option>
+              <option value="COSMIC_VOID">🌌 Cosmic Void & Ocean of Milk</option>
+              <option value="GOLDEN_TEMPLE">🏛️ Golden Temple & Surya Halo</option>
+              <option value="SACRED_ASHRAMA">🌳 Sacred Ashrama & Havan Fire</option>
+              <option value="VOLCANIC_WAR">🌋 Volcanic War Realm</option>
+              <option value="ROYAL_DARBAR">👑 Royal Darbar & Flaming Torches</option>
+              <option value="KURUKSHETRA_BATTLEFIELD">⚔️ Kurukshetra War Sunset</option>
+              <option value="ENCHANTED_FOREST">🌿 Enchanted Dandakaranya Forest</option>
             </select>
           </div>
         </div>
 
         <div class="form-group" style="margin-top: 14px;">
-          <label class="form-label">Spoken Subtitle / Script Line</label>
-          <input type="text" id="input-subtitle-text" class="input-topic" value="एक ही माँ के दो बेटे... शेषनाग और वासुकि!">
+          <label class="form-label">Active Spoken Line / Subtitle</label>
+          <input type="text" id="input-subtitle-text" class="input-topic" value="एक ही माँ के दो अमर पुत्र... शेषनाग और वासुकि!">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+          <button class="btn-action" id="btn-record-mic">
+            <span>🎙️</span> <span>Record My Voice</span>
+          </button>
+
+          <label class="btn-action" style="cursor: pointer;">
+            <span>📂</span> <span>Upload Voice Track</span>
+            <input type="file" id="input-upload-audio" accept="audio/*" style="display: none;">
+          </label>
         </div>
       </div>
 
     </section>
 
-    <!-- Right Column: 9:16 Vertical Video Canvas Preview & Player -->
+    <!-- Right Column: 9:16 Vertical Video Screen Preview & Player -->
     <section class="preview-pane">
 
       <!-- Smartphone Bezel Mockup -->
@@ -366,14 +300,14 @@
       <!-- Player Controls -->
       <div class="player-transport">
         <div class="transport-buttons">
-          <button class="btn-transport primary" id="btn-play-pause" style="width: 100%; border-radius: 12px; height: 48px; font-size: 14px; font-weight: 700;">
-            ▶ Play Narration / Story
+          <button class="btn-transport primary" id="btn-play-pause" style="width: 100%; border-radius: 12px; height: 50px; font-size: 15px; font-weight: 800;">
+            ▶ Play Animated Story
           </button>
         </div>
 
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 8px;">
           <button class="btn-action btn-action-primary" id="btn-record-video" style="width: 100%; justify-content: center; padding: 14px; font-size: 13px;">
-            <span>🔴</span> <span>Record & Export 9:16 Video</span>
+            <span>⬇</span> <span>Export 9:16 Video (MP4 / WebM)</span>
           </button>
         </div>
       </div>
