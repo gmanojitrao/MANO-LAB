@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Story Generator | MANO LAB</title>
+  <meta name="description" content="AI Visual Story & 9:16 Animation Generator. Turn any topic into dramatic viral animated shorts with cinematic camera motion, procedural WebAudio score, and viral karaoke subtitles.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23facc15%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22black%22>🎬</text></svg>">
+
+  <!-- Google Fonts: Plus Jakarta Sans, Montserrat & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles/story.css">
+</head>
+<body>
+
+  <!-- Studio Header -->
+  <header class="studio-header">
+    <div class="brand-wrap">
+      <div class="brand-icon">🎬</div>
+      <div>
+        <div class="brand-title">VISUAL STORY GENERATOR</div>
+        <div class="brand-pill">AI STORY & 9:16 MOTION STUDIO</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-action" id="btn-export-script">
+        <span>📄</span> <span>Export Script</span>
+      </button>
+      <button class="btn-action" id="btn-copy-all-prompts">
+        <span>📋</span> <span>Copy AI Art Prompts</span>
+      </button>
+      <a href="../../index.html" class="btn-action">
+        <span>⌂</span> <span>Mano Lab</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Studio Main Layout -->
+  <main class="studio-main">
+
+    <!-- Left Column: Topic & Script Director -->
+    <section class="workspace-pane">
+
+      <!-- Topic Generator Card -->
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">
+            <span>✨</span> <span>1. Story Topic & Viral Script Engine</span>
+          </div>
+        </div>
+
+        <div class="topic-input-group">
+          <input type="text" id="input-topic" class="input-topic" placeholder="Enter any topic (e.g., Sheshnag & Vasuki, Karna's Destiny, What's Inside a Black Hole)..." value="Sheshnag & Vasuki: The Serpent Brothers">
+          <button class="btn-action btn-action-primary" id="btn-generate-story">
+            <span>⚡ Generate Story</span>
+          </button>
+        </div>
+
+        <div class="preset-pills-wrap">
+          <span style="font-size: 11px; color: var(--text-dim); margin-right: 4px;">Viral Templates:</span>
+          <button class="preset-pill" data-preset="sheshnag-vasuki">🐍 Sheshnag & Vasuki (Mythology)</button>
+          <button class="preset-pill" data-preset="karna-destiny">🏹 Karna: The Tragic Daanveer</button>
+          <button class="preset-pill" data-preset="black-hole-mystery">🌌 Inside a Black Hole</button>
+        </div>
+      </div>
+
+      <!-- Audio & Subtitle Customizer Card -->
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">
+            <span>🎙️</span> <span>2. Voiceover, Audio Score & Subtitles</span>
+          </div>
+        </div>
+
+        <div class="scene-meta-row" style="margin-bottom: 12px;">
+          <div>
+            <label class="form-label">Narrator Voice</label>
+            <select id="select-voice" class="form-select">
+              <option value="">Loading Browser Voices...</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Atmospheric Score (BGM)</label>
+            <select id="select-bgm" class="form-select">
+              <option value="mythic-epic">Mythic Epic (Damru + Tanpura Drone)</option>
+              <option value="cosmic-drone">Cosmic / Sci-Fi Mystery</option>
+              <option value="off">Mute Score</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Viral Subtitle Style</label>
+            <select id="select-subtitle-style" class="form-select">
+              <option value="#facc15">Viral Gold Highlight</option>
+              <option value="#38bdf8">Neon Cyan Highlight</option>
+              <option value="#4ade80">Emerald Glow</option>
+              <option value="#f472b6">Pink Rebel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene Director & Editor Card -->
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <div class="card-panel-title">
+            <span>🎬</span> <span id="story-display-title">3. Scene Director & Script Breakdown</span>
+          </div>
+          <span class="scene-badge" id="scene-counter-badge">6 Scenes</span>
+        </div>
+
+        <div class="scene-cards-list" id="scenes-container">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right Column: 9:16 Video Canvas Preview & Player -->
+    <section class="preview-pane">
+
+      <!-- Smartphone Bezel Mockup -->
+      <div class="phone-mockup-frame">
+        <div class="phone-notch"></div>
+        <div class="recording-badge" id="recording-badge">
+          <span>●</span> <span>RECORDING VIDEO</span>
+        </div>
+        <canvas id="story-canvas" width="540" height="960"></canvas>
+      </div>
+
+      <!-- Player Controls -->
+      <div class="player-transport">
+        <div class="transport-buttons">
+          <button class="btn-transport" id="btn-prev-scene" title="Previous Scene">⏮</button>
+          <button class="btn-transport primary" id="btn-play-pause" title="Play / Pause">▶</button>
+          <button class="btn-transport" id="btn-next-scene" title="Next Scene">⏭</button>
+        </div>
+
+        <div class="export-actions-grid">
+          <button class="btn-action btn-action-primary" id="btn-record-video" style="justify-content: center; padding: 12px;">
+            <span>🔴</span> <span id="record-btn-text">Record & Download Video</span>
+          </button>
+          <button class="btn-action" id="btn-restart-video" style="justify-content: center; padding: 12px;">
+            <span>↺</span> <span>Replay from Scene 1</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="toast-notice" id="toast-notice">Action successful!</div>
+
+  <!-- Scripts -->
+  <script src="scripts/story-engine.js"></script>
+  <script src="scripts/audio-engine.js"></script>
+  <script src="scripts/video-renderer.js"></script>
+
+  <!-- Studio Controller Script -->
+  <script>
+    class VisualStoryStudio {
+      constructor() {
+        this.storyEngine = new StoryEngine();
+        this.audioEngine = new StoryAudioEngine();
+        this.canvas = document.getElementById('story-canvas');
+        this.renderer = new StoryVideoRenderer(this.canvas, this.audioEngine);
+
+        this.currentStory = null;
+        this.init();
+      }
+
+      init() {
+        // 1. Load default story (Sheshnag & Vasuki)
+        const defaultStory = this.storyEngine.PRESET_STORIES['sheshnag-vasuki'];
+        this.loadStory(defaultStory);
+
+        // 2. Bind UI elements
+        this.bindEvents();
+
+        // 3. Populate TTS Voice Dropdown
+        setTimeout(() => {
+          this.populateVoiceSelect();
+        }, 300);
+      }
+
+      loadStory(story) {
+        this.currentStory = story;
+        document.getElementById('input-topic').value = story.title;
+        document.getElementById('story-display-title').textContent = `3. Scene Breakdown: ${story.title}`;
+        document.getElementById('scene-counter-badge').textContent = `${story.scenes.length} Scenes`;
+
+        this.renderSceneEditorCards();
+        this.renderer.loadStory(story);
+      }
+
+      bindEvents() {
+        // Generate Story Button
+        document.getElementById('btn-generate-story').addEventListener('click', () => {
+          const topic = document.getElementById('input-topic').value.trim();
+          if (!topic) return;
+          const generated = this.storyEngine.generateScriptFromTopic(topic);
+          this.loadStory(generated);
+          this.showToast(`Generated viral script for "${generated.title}"!`);
+        });
+
+        // Preset Pills
+        document.querySelectorAll('.preset-pill').forEach(pill => {
+          pill.addEventListener('click', () => {
+            const presetKey = pill.getAttribute('data-preset');
+            if (this.storyEngine.PRESET_STORIES[presetKey]) {
+              this.loadStory(this.storyEngine.PRESET_STORIES[presetKey]);
+              this.showToast(`Loaded ${this.storyEngine.PRESET_STORIES[presetKey].title}!`);
+            }
+          });
+        });
+
+        // Transport: Play / Pause
+        const playBtn = document.getElementById('btn-play-pause');
+        playBtn.addEventListener('click', () => {
+          if (this.renderer.isPlaying) {
+            this.renderer.pause();
+            playBtn.textContent = '▶';
+          } else {
+            this.renderer.play();
+            playBtn.textContent = '⏸';
+          }
+        });
+
+        // Prev / Next Scene
+        document.getElementById('btn-prev-scene').addEventListener('click', () => {
+          this.renderer.jumpToScene(this.renderer.currentSceneIndex - 1);
+          this.highlightActiveSceneCard(this.renderer.currentSceneIndex);
+        });
+
+        document.getElementById('btn-next-scene').addEventListener('click', () => {
+          this.renderer.jumpToScene(this.renderer.currentSceneIndex + 1);
+          this.highlightActiveSceneCard(this.renderer.currentSceneIndex);
+        });
+
+        // Restart from Scene 1
+        document.getElementById('btn-restart-video').addEventListener('click', () => {
+          this.renderer.jumpToScene(0);
+          this.renderer.play();
+          playBtn.textContent = '⏸';
+          this.highlightActiveSceneCard(0);
+        });
+
+        // Subtitle Style Color
+        document.getElementById('select-subtitle-style').addEventListener('change', (e) => {
+          this.renderer.subtitleConfig.activeColor = e.target.value;
+          this.renderer.renderFrame(0);
+        });
+
+        // Background Music Select
+        document.getElementById('select-bgm').addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (val === 'off') {
+            this.audioEngine.stopBgm();
+          } else {
+            this.audioEngine.startBgm(val);
+          }
+        });
+
+        // Voice Select
+        document.getElementById('select-voice').addEventListener('change', (e) => {
+          this.audioEngine.setVoice(e.target.value);
+        });
+
+        // Record Video Button
+        const recBtn = document.getElementById('btn-record-video');
+        const recBadge = document.getElementById('recording-badge');
+        const recText = document.getElementById('record-btn-text');
+
+        recBtn.addEventListener('click', () => {
+          if (this.renderer.isRecording) {
+            this.renderer.stopRecording();
+            recBadge.classList.remove('active');
+            recText.textContent = 'Record & Download Video';
+          } else {
+            recBadge.classList.add('active');
+            recText.textContent = '⏹ Stop & Save Video';
+            playBtn.textContent = '⏸';
+
+            this.renderer.onRecordingComplete = (blob) => {
+              recBadge.classList.remove('active');
+              recText.textContent = 'Record & Download Video';
+              playBtn.textContent = '▶';
+
+              // Download video file
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `VisualStory_${this.currentStory.title.replace(/[^a-zA-Z0-9]/g, '_')}.webm`;
+              a.click();
+              URL.revokeObjectURL(url);
+              this.showToast('Video exported and downloaded successfully!');
+            };
+
+            this.renderer.startRecording();
+          }
+        });
+
+        // Copy All Prompts
+        document.getElementById('btn-copy-all-prompts').addEventListener('click', () => {
+          this.copyAllPrompts();
+        });
+
+        // Export Script
+        document.getElementById('btn-export-script').addEventListener('click', () => {
+          this.exportScriptDocument();
+        });
+      }
+
+      populateVoiceSelect() {
+        const select = document.getElementById('select-voice');
+        const voices = this.audioEngine.getVoices();
+        select.innerHTML = '';
+
+        if (voices.length === 0) {
+          select.innerHTML = '<option value="">Default System Voice</option>';
+          return;
+        }
+
+        voices.forEach((v) => {
+          const opt = document.createElement('option');
+          opt.value = v.voiceURI;
+          opt.textContent = `${v.name} (${v.lang})`;
+          if (v === this.audioEngine.selectedVoice) {
+            opt.selected = true;
+          }
+          select.appendChild(opt);
+        });
+      }
+
+      renderSceneEditorCards() {
+        const container = document.getElementById('scenes-container');
+        container.innerHTML = '';
+
+        this.currentStory.scenes.forEach((sc, idx) => {
+          const card = document.createElement('div');
+          card.className = `scene-card-item ${idx === 0 ? 'active' : ''}`;
+          card.id = `scene-card-${idx}`;
+
+          card.innerHTML = `
+            <div class="scene-card-top">
+              <span class="scene-badge">SCENE ${sc.id}: ${sc.title}</span>
+              <button class="btn-action btn-preview-scene" data-idx="${idx}" style="padding: 4px 10px; font-size: 11px;">
+                ▶ Jump Here
+              </button>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Narration (Hindi / Voiceover)</label>
+              <textarea class="form-textarea input-narration-hi" data-idx="${idx}" rows="2">${sc.narrationHindi || ''}</textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">English Translation / Transcript</label>
+              <textarea class="form-textarea input-narration-en" data-idx="${idx}" rows="2">${sc.narrationEnglish || ''}</textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Midjourney / Flux AI Art Prompt</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="input-topic input-art-prompt" data-idx="${idx}" value="${sc.artPrompt || ''}" style="font-size: 11px; padding: 8px;">
+                <button class="btn-action btn-copy-prompt" data-idx="${idx}" title="Copy Art Prompt">📋</button>
+              </div>
+            </div>
+
+            <div class="scene-meta-row">
+              <div>
+                <label class="form-label">Camera Motion</label>
+                <select class="form-select select-camera" data-idx="${idx}">
+                  <option value="ZOOM_IN" ${sc.cameraMotion === 'ZOOM_IN' ? 'selected' : ''}>Slow Zoom In</option>
+                  <option value="ZOOM_OUT" ${sc.cameraMotion === 'ZOOM_OUT' ? 'selected' : ''}>Cinematic Reveal (Zoom Out)</option>
+                  <option value="PAN_UP" ${sc.cameraMotion === 'PAN_UP' ? 'selected' : ''}>Pan Up (Majestic)</option>
+                  <option value="PAN_LEFT" ${sc.cameraMotion === 'PAN_LEFT' ? 'selected' : ''}>Pan Horizontal</option>
+                  <option value="SHAKE_PULSE" ${sc.cameraMotion === 'SHAKE_PULSE' ? 'selected' : ''}>Shake & Pulse (Battle)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="form-label">Atmospheric VFX</label>
+                <select class="form-select select-vfx" data-idx="${idx}">
+                  <option value="DIVINE_RAYS" ${sc.vfx === 'DIVINE_RAYS' ? 'selected' : ''}>Divine God Rays</option>
+                  <option value="SNOW_EMBERS" ${sc.vfx === 'SNOW_EMBERS' ? 'selected' : ''}>Snow & Fire Embers</option>
+                  <option value="OCEAN_EMBERS" ${sc.vfx === 'OCEAN_EMBERS' ? 'selected' : ''}>Ocean Mist & Venom</option>
+                  <option value="CELESTIAL_SPARKS" ${sc.vfx === 'CELESTIAL_SPARKS' ? 'selected' : ''}>Celestial Sparks</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="form-label">Custom Image Art</label>
+                <input type="file" accept="image/*" class="form-select input-upload-img" data-idx="${idx}" style="font-size: 10px; padding: 4px;">
+              </div>
+            </div>
+          `;
+
+          container.appendChild(card);
+        });
+
+        // Bind interactive edits on scene cards
+        this.bindSceneCardInputs();
+      }
+
+      bindSceneCardInputs() {
+        // Jump to scene
+        document.querySelectorAll('.btn-preview-scene').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            this.renderer.jumpToScene(idx);
+            this.highlightActiveSceneCard(idx);
+          });
+        });
+
+        // Edit narration Hindi
+        document.querySelectorAll('.input-narration-hi').forEach(el => {
+          el.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            this.currentStory.scenes[idx].narrationHindi = e.target.value;
+            this.renderer.renderFrame(0);
+          });
+        });
+
+        // Edit narration English
+        document.querySelectorAll('.input-narration-en').forEach(el => {
+          el.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            this.currentStory.scenes[idx].narrationEnglish = e.target.value;
+          });
+        });
+
+        // Change Camera motion
+        document.querySelectorAll('.select-camera').forEach(el => {
+          el.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            this.currentStory.scenes[idx].cameraMotion = e.target.value;
+            this.renderer.renderFrame(0);
+          });
+        });
+
+        // Change VFX
+        document.querySelectorAll('.select-vfx').forEach(el => {
+          el.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            this.currentStory.scenes[idx].vfx = e.target.value;
+            this.renderer.renderFrame(0);
+          });
+        });
+
+        // Copy individual prompt
+        document.querySelectorAll('.btn-copy-prompt').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const p = this.currentStory.scenes[idx].artPrompt;
+            navigator.clipboard.writeText(p);
+            this.showToast(`Prompt for Scene ${idx + 1} copied!`);
+          });
+        });
+
+        // Upload custom image
+        document.querySelectorAll('.input-upload-img').forEach(input => {
+          input.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                const img = new Image();
+                img.onload = () => {
+                  this.renderer.setUploadedImage(idx, img);
+                  this.renderer.jumpToScene(idx);
+                  this.showToast(`Custom image loaded for Scene ${idx + 1}!`);
+                };
+                img.src = evt.target.result;
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+        });
+      }
+
+      highlightActiveSceneCard(idx) {
+        document.querySelectorAll('.scene-card-item').forEach((c, i) => {
+          c.classList.toggle('active', i === idx);
+        });
+      }
+
+      copyAllPrompts() {
+        let text = `# AI Art Prompts for: ${this.currentStory.title}\n\n`;
+        this.currentStory.scenes.forEach(sc => {
+          text += `### Scene ${sc.id}: ${sc.title}\n${sc.artPrompt} --ar 9:16 --v 6.0 --style raw\n\n`;
+        });
+
+        navigator.clipboard.writeText(text);
+        this.showToast('All 9:16 Midjourney / Flux prompts copied to clipboard!');
+      }
+
+      exportScriptDocument() {
+        let doc = `=====================================================\n`;
+        doc += `VIRAL 9:16 SHORT SCRIPT: ${this.currentStory.title.toUpperCase()}\n`;
+        doc += `Hook: ${this.currentStory.hook}\n`;
+        doc += `=====================================================\n\n`;
+
+        this.currentStory.scenes.forEach(sc => {
+          doc += `[SCENE ${sc.id}: ${sc.title.toUpperCase()} - ~${sc.duration}s]\n`;
+          doc += `Visual Cue: ${sc.visualDesc}\n`;
+          doc += `Camera: ${sc.cameraMotion} | VFX: ${sc.vfx}\n`;
+          doc += `VO (Hindi): ${sc.narrationHindi}\n`;
+          doc += `VO (English): ${sc.narrationEnglish}\n`;
+          doc += `AI Art Prompt: ${sc.artPrompt}\n\n`;
+        });
+
+        const blob = new Blob([doc], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Script_${this.currentStory.title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('Production script downloaded!');
+      }
+
+      showToast(msg) {
+        const t = document.getElementById('toast-notice');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => {
+          t.classList.remove('show');
+        }, 3200);
+      }
+    }
+
+    // Launch Studio when DOM is ready
+    window.addEventListener('DOMContentLoaded', () => {
+      new VisualStoryStudio();
+    });
+  </script>
+</body>
+</html>

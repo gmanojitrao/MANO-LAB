@@ -61,6 +61,20 @@ const MANO_APPS = [
     badge: "Original Art Form"
   },
   {
+    id: "visual-story-generator",
+    name: "Visual Story Generator",
+    tagline: "AI animated 9:16 viral shorts creator with procedural score & karaoke subtitles",
+    description: "Transform any topic into viral, cinematic 9:16 vertical short stories inspired by epic Indian mythology and folklore. Features scene-by-scene script writing, procedural 2.5D camera motions (Ken Burns zoom, pan, shake), dynamic particle VFX (divine rays, floating embers), bilingual narration (Hindi & English), synchronized karaoke captions, and direct video recording (.webm export).",
+    category: "Creative & Art",
+    route: "apps/visual-story-generator/",
+    status: "Available",
+    featured: true,
+    emoji: "🎬",
+    accentColor: "#facc15",
+    tags: ["9:16 Shorts", "Viral Reels", "Mythology & Lore", "AI Script Engine", "Video Export"],
+    badge: "AI Story Studio"
+  },
+  {
     id: "focus-ambient",
     name: "Focus Ambient",
     tagline: "Generative soundscapes & minimalist Pomodoro timer",

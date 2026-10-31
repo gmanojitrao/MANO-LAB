@@ -29,8 +29,11 @@ MANO-LAB focuses on high-utility tools and timeless arcade games:
 ### ✨ Original Art Form (Born from Nothing)
 3. **Aether-Weave (`apps/aether-weave/`):** An original living art medium. Paint not with static pigment, but with multi-dimensional vibrating ribbons of refractive light that breathe, entangle with magnetic gossamer bridges, shift with thin-film optical dispersion, sing with 432Hz crystalline acoustic resonance, and export to pristine 4K wallpapers.
 
+### 🎬 AI Video & Animation Generator
+4. **Visual Story Generator (`apps/visual-story-generator/`):** AI-powered viral 9:16 vertical short story studio inspired by epic Indian mythology and folklore (like Sheshnag & Vasuki). Transforms any topic into multi-scene viral scripts with procedural 2.5D camera motions (Ken Burns zoom, pan, shake), dynamic particle VFX (divine rays, floating embers), bilingual narration (Hindi & English), synchronized karaoke subtitles, and one-click video recording (.webm export).
+
 ### 🎧 Acoustic Focus
-4. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
+5. **Focus Ambient (`apps/focus-ambient/`):** Procedural WebAudio soundscape generator (rain, fireplace, ocean waves, 40Hz binaural beats) with integrated Pomodoro focus timer.
 
 ### 🏎️ Racing & Typing Competition
 5. **Turbo Typist (`apps/turbo-typist/`):** High-speed typing racer on a 3D perspective speedway track. Accelerate your GT supercar by typing fast and accurately, trigger nitro exhaust flames on streaks, overtake AI rivals, and claim the championship podium with live WPM telemetry.
