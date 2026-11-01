@@ -24,10 +24,10 @@
     },
     story_studio_pro: {
       key: 'story_studio_pro',
-      label: 'Visual Story Studio Pro',
-      description: 'AI-directed 2.5D character rigging, lore synthesis & video export',
+      label: 'Visual Story Studio (Private Dev)',
+      description: 'Owner-only private development workspace for character animation',
       url: '/apps/visual-story-generator/',
-      icon: '🎬'
+      icon: '🔒'
     },
     audio_intelligence: {
       key: 'audio_intelligence',
@@ -110,6 +110,9 @@
     if (permission === 'secret_room') permKey = 'private_lounge';
     if (permission === 'extra_features') permKey = 'story_studio_pro';
 
+    // Visual Story Studio Pro is strictly restricted to Owner only during development!
+    if (permKey === 'story_studio_pro') return false;
+
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
     if (!entry || !entry.permissions) return false;
@@ -130,7 +133,11 @@
     }
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
-    return entry && entry.permissions ? entry.permissions : {};
+    const perms = entry && entry.permissions ? { ...entry.permissions } : {};
+    // Ensure story_studio_pro is strictly private to owner
+    delete perms.story_studio_pro;
+    delete perms.extra_features;
+    return perms;
   }
 
   // --- STYLES INJECTION ---
@@ -567,10 +574,16 @@
 
   // --- RENDER HEADER AUTH SLOT ---
   function renderAuthSlot() {
+    const user = getUser();
+    const userIsAdmin = isAdmin(user);
+
+    // Toggle owner-only elements across the page (Visual Story Generator)
+    document.querySelectorAll('[data-owner-only="true"]').forEach(el => {
+      el.style.display = userIsAdmin ? '' : 'none';
+    });
+
     const slot = document.getElementById('mano-auth-btn-slot');
     if (!slot) return;
-
-    const user = getUser();
 
     if (!user) {
       slot.innerHTML = `
@@ -595,7 +608,7 @@
       if (userIsAdmin || perms.private_lounge || perms.secret_room) {
         allowedSections.push(SECTIONS.private_lounge);
       }
-      if (userIsAdmin || perms.story_studio_pro || perms.extra_features) {
+      if (userIsAdmin) {
         allowedSections.push(SECTIONS.story_studio_pro);
       }
       if (userIsAdmin || perms.audio_intelligence) {
