@@ -16,7 +16,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Mano Unified Auth -->
-  <script src="../../src/scripts/auth.js"></script>
+  <script src="/src/scripts/auth.js"></script>
 
   <!-- Official Google Identity Services (GIS) Client Library -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1046,39 +1046,26 @@
 
     // 1. MASTER PERMISSIONS & USER STATE
     const ADMIN_EMAIL = 'gmanojitr@gmail.com';
-    const GOOGLE_CLIENT_ID = '641612906961-0udfabvsrp1g8vto9uq9qvntd6jaa3er.apps.googleusercontent.com';
-    let currentUser = window.ManoAuth ? ManoAuth.getUser() : JSON.parse(localStorage.getItem('mano_auth_user') || 'null');
+    let currentUser = null;
     let p2pRoom = null;
     let sendChatMessage = null;
     let sendRaceSync = null;
     let activePeers = {}; // peerId -> { user, wpm, progress }
 
-    // Listen for auth state changes
+    function getActiveUser() {
+      if (window.ManoAuth) return ManoAuth.getUser();
+      try {
+        return JSON.parse(localStorage.getItem('mano_auth_user') || 'null');
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Listen for auth state changes from unified ManoAuth
     window.onManoAuthChanged = function(user) {
       currentUser = user;
       initApp();
     };
-
-    // Initialize UI on load
-    window.addEventListener('DOMContentLoaded', () => {
-      initApp();
-      if (window.lucide) lucide.createIcons();
-    });
-
-    function initApp() {
-      if (!currentUser && window.ManoAuth) {
-        currentUser = ManoAuth.getUser();
-      }
-
-      if (currentUser && isUserWhitelisted(currentUser.email)) {
-        renderAuthenticatedUI();
-        initP2PNetwork();
-      } else if (currentUser && !isUserWhitelisted(currentUser.email)) {
-        renderDeniedUI(currentUser.email);
-      } else {
-        renderUnauthenticatedUI();
-      }
-    }
 
     function isUserWhitelisted(email) {
       if (!email) return false;
@@ -1089,93 +1076,54 @@
       return false;
     }
 
-    // --- GOOGLE SIGN IN INITIALIZATION ---
-    function initGoogleSignIn() {
-      if (!window.google || !google.accounts || !google.accounts.id) {
-        setTimeout(initGoogleSignIn, 300);
-        return;
+    function initApp() {
+      currentUser = getActiveUser();
+
+      if (currentUser && isUserWhitelisted(currentUser.email)) {
+        renderAuthenticatedUI();
+        initP2PNetwork();
+      } else if (currentUser && !isUserWhitelisted(currentUser.email)) {
+        renderDeniedUI(currentUser.email);
+      } else {
+        renderUnauthenticatedUI();
       }
 
-      const clientId = localStorage.getItem('mano_google_client_id') || GOOGLE_CLIENT_ID;
-      try {
-        google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleCredentialResponse,
-          auto_select: false
-        });
-
-        const btnContainer = document.getElementById('google-signin-btn');
-        if (btnContainer) {
-          google.accounts.id.renderButton(btnContainer, {
-            theme: 'filled_black',
-            size: 'large',
-            shape: 'pill',
-            text: 'continue_with',
-            logo_alignment: 'left',
-            width: 280
-          });
-        }
-      } catch (err) {
-        console.warn("Google GIS init:", err);
-      }
-    }
-    window.initGoogleSignIn = initGoogleSignIn;
-
-    function handleGoogleCredentialResponse(response) {
-      try {
-        // Decode JWT token payload securely
-        const base64Url = response.credential.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        
-        const data = JSON.parse(jsonPayload);
-        const userObj = {
-          email: data.email,
-          name: data.name,
-          picture: data.picture,
-          sub: data.sub,
-          isAdmin: data.email.toLowerCase() === ADMIN_EMAIL.toLowerCase(),
-          authTime: Date.now()
-        };
-
-        currentUser = userObj;
-        localStorage.setItem('mano_auth_user', JSON.stringify(userObj));
-        if (window.ManoAuth) {
-          ManoAuth.renderAuthSlot();
-        }
-
-        if (isUserWhitelisted(userObj.email)) {
-          renderAuthenticatedUI();
-          initP2PNetwork();
-        } else {
-          renderDeniedUI(userObj.email);
-        }
-      } catch (e) {
-        alert("Google Sign-In verification error: " + e.message);
-      }
+      if (window.lucide) lucide.createIcons();
     }
 
     // UI RENDER MODES
     function renderAuthenticatedUI() {
-      document.getElementById('view-gate').classList.add('hidden');
-      document.getElementById('nav-tabs-bar').classList.remove('hidden');
-      document.getElementById('user-header-pill').classList.remove('hidden');
-      document.getElementById('btn-signout').classList.remove('hidden');
+      const gate = document.getElementById('view-gate');
+      if (gate) gate.classList.add('hidden');
 
-      const isOwner = currentUser.email && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-      document.getElementById('user-avatar-img').src = currentUser.picture || 'https://www.gravatar.com/avatar?d=mp';
-      document.getElementById('user-name-text').textContent = currentUser.name || currentUser.email;
-      document.getElementById('user-role-badge').textContent = isOwner ? 'Owner &bull; Admin' : 'Authorized Member';
+      const tabs = document.getElementById('nav-tabs-bar');
+      if (tabs) tabs.classList.remove('hidden');
+
+      const userPill = document.getElementById('user-header-pill');
+      if (userPill) userPill.classList.remove('hidden');
+
+      const signoutBtn = document.getElementById('btn-signout');
+      if (signoutBtn) signoutBtn.classList.remove('hidden');
+
+      const isOwner = currentUser && currentUser.email && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      const avatarEl = document.getElementById('user-avatar-img');
+      if (avatarEl) avatarEl.src = currentUser.picture || 'https://www.gravatar.com/avatar?d=mp';
+
+      const nameEl = document.getElementById('user-name-text');
+      if (nameEl) nameEl.textContent = currentUser.name || currentUser.email;
+
+      const roleEl = document.getElementById('user-role-badge');
+      if (roleEl) roleEl.textContent = isOwner ? 'Owner &bull; Admin' : 'Authorized Member';
 
       // Show/Hide Admin Tab based on email
       const adminTabBtn = document.getElementById('btn-tab-admin');
-      if (isOwner) {
-        adminTabBtn.classList.remove('hidden');
-        renderWhitelistTable();
-      } else {
-        adminTabBtn.classList.add('hidden');
+      if (adminTabBtn) {
+        if (isOwner) {
+          adminTabBtn.classList.remove('hidden');
+          renderWhitelistTable();
+        } else {
+          adminTabBtn.classList.add('hidden');
+        }
       }
 
       // Default to Chat Tab
@@ -1199,7 +1147,10 @@
       document.getElementById('nav-tabs-bar').classList.add('hidden');
       document.getElementById('user-header-pill').classList.add('hidden');
       document.getElementById('btn-signout').classList.add('hidden');
-      initGoogleSignIn();
+
+      if (window.ManoAuth && ManoAuth.renderGoogleButton) {
+        ManoAuth.renderGoogleButton('google-signin-btn');
+      }
     }
 
     function handleSignOut() {
@@ -1210,11 +1161,17 @@
       }
       currentUser = null;
       if (p2pRoom) {
-        try { p2pRoom.leave(); } catch(e) {}
+        try { p2pRoom.leave(); } catch (e) {}
       }
       renderUnauthenticatedUI();
     }
     window.handleSignOut = handleSignOut;
+
+    // RUN IMMEDIATELY on script execution (Do not wait only for DOMContentLoaded)
+    initApp();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    }
 
     // --- P2P WEBRTC REAL-TIME NETWORK (Chat + Multiplayer Race) ---
     function initP2PNetwork() {

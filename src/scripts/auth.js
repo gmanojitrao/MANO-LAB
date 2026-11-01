@@ -430,14 +430,38 @@
     }
   }
 
+  function renderGoogleButton(target) {
+    const el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+
+    const tryMount = () => {
+      if (window.google && google.accounts && google.accounts.id) {
+        initGoogleGIS();
+        el.innerHTML = '';
+        try {
+          google.accounts.id.renderButton(el, {
+            theme: 'filled_black',
+            size: 'large',
+            shape: 'pill',
+            text: 'continue_with',
+            logo_alignment: 'left',
+            width: 280
+          });
+        } catch (e) {}
+      } else {
+        setTimeout(tryMount, 200);
+      }
+    };
+    tryMount();
+  }
+
   // --- RENDER HEADER AUTH SLOT ---
   function renderAuthSlot() {
     const slot = document.getElementById('mano-auth-btn-slot');
     if (!slot) return;
 
     const user = getUser();
-    const isRoot = window.location.pathname.endsWith('/') || window.location.pathname.endsWith('index.html') && !window.location.pathname.includes('/apps/');
-    const roomPath = isRoot ? 'apps/lounge/' : '../lounge/';
+    const roomPath = '/apps/lounge/';
 
     if (!user) {
       slot.innerHTML = `
@@ -784,7 +808,8 @@
     closeAccessManager,
     handleGrantAccessSubmit,
     revokeAccess,
-    renderAuthSlot
+    renderAuthSlot,
+    renderGoogleButton
   };
 
 })();
