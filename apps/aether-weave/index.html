@@ -344,6 +344,22 @@
         <span>🕸️</span>
         <span>Lattice</span>
       </button>
+      <button class="btn-mode" data-brush="nebula" title="Disperse swirling quantum stardust and glowing particle clouds">
+        <span>✨</span>
+        <span>Nebula</span>
+      </button>
+      <button class="btn-mode" data-brush="aurora" title="Cast shimmering vertical curtains of celestial aurora plasma">
+        <span>🌌</span>
+        <span>Aurora</span>
+      </button>
+      <button class="btn-mode" data-brush="caustic" title="Radiate intersecting refractive crystal light rays">
+        <span>💎</span>
+        <span>Caustic</span>
+      </button>
+      <button class="btn-mode" data-brush="mandala_node" title="Blossom sacred geometry fractal nodes and golden petals">
+        <span>☸️</span>
+        <span>Mandala</span>
+      </button>
       <button class="btn-mode" data-brush="vortex" title="Distort and pull light into cosmic vortex eddies">
         <span>🌀</span>
         <span>Vortex</span>
@@ -363,6 +379,10 @@
 
     <!-- Action Tools -->
     <div class="dock-group">
+      <button id="btnPulseWave" class="btn-dock-action" title="Send a resonant harmonic shockwave through all light">
+        <i data-lucide="zap" style="width: 14px; height: 14px; color: #facc15;"></i>
+        <span>Shockwave</span>
+      </button>
       <button id="btnEvolve" class="btn-dock-action" title="Infuse dynamic quantum wave energy into all strands">
         <i data-lucide="wand-2" style="width: 14px; height: 14px; color: #38bdf8;"></i>
         <span>Evolve</span>
@@ -739,6 +759,124 @@
               }
             }
           }
+        } else if (this.type === 'nebula') {
+          // Swirling Quantum Stardust & Interstellar Particle Cloud
+          for (let i = 0; i < this.nodes.length; i++) {
+            const n = this.nodes[i];
+            const orbitR = 14 + Math.sin(time * 2 + i) * 6;
+            
+            // Central celestial ember
+            context.beginPath();
+            context.arc(n.x, n.y, 2.2, 0, Math.PI * 2);
+            context.fillStyle = pal.coreGlow;
+            context.fill();
+
+            // Swirling orbital micro-spark particles
+            const pCount = 5;
+            for (let p = 0; p < pCount; p++) {
+              const ang = time * 2.5 + (p / pCount) * Math.PI * 2 + i * 0.4;
+              const px = n.x + Math.cos(ang) * (orbitR + p * 4);
+              const py = n.y + Math.sin(ang) * (orbitR * 0.7 + p * 3);
+
+              context.beginPath();
+              context.arc(px, py, 1.4, 0, Math.PI * 2);
+              context.fillStyle = pal.spectra(time + p * 0.3 + i * 0.1) + '0.75)';
+              context.fill();
+            }
+
+            // Soft cosmic gas puff
+            const puffGrad = context.createRadialGradient(n.x, n.y, 1, n.x, n.y, 28);
+            puffGrad.addColorStop(0, pal.spectra(i * 0.1 + time) + '0.22)');
+            puffGrad.addColorStop(1, 'transparent');
+            context.fillStyle = puffGrad;
+            context.beginPath();
+            context.arc(n.x, n.y, 28, 0, Math.PI * 2);
+            context.fill();
+          }
+
+        } else if (this.type === 'aurora') {
+          // Undulating Celestial Aurora Borealis Plasma Drapery
+          context.lineWidth = 1.2;
+          for (let i = 1; i < this.nodes.length; i++) {
+            const n1 = this.nodes[i - 1];
+            const n2 = this.nodes[i];
+            const curtainH = 55 + Math.sin(time * 1.8 + i * 0.3) * 25;
+
+            // Vertical shimmering drapery gradient
+            const aGrad = context.createLinearGradient(n1.x, n1.y - curtainH, n2.x, n2.y + curtainH * 0.3);
+            aGrad.addColorStop(0, 'transparent');
+            aGrad.addColorStop(0.35, pal.spectra(i * 0.12 + time) + '0.5)');
+            aGrad.addColorStop(0.65, pal.coreGlow);
+            aGrad.addColorStop(1, 'transparent');
+
+            context.beginPath();
+            context.moveTo(n1.x, n1.y - curtainH);
+            context.lineTo(n2.x, n2.y - curtainH);
+            context.lineTo(n2.x, n2.y + curtainH * 0.3);
+            context.lineTo(n1.x, n1.y + curtainH * 0.3);
+            context.closePath();
+            context.fillStyle = aGrad;
+            context.fill();
+
+            // Core filament line
+            context.beginPath();
+            context.moveTo(n1.x, n1.y);
+            context.lineTo(n2.x, n2.y);
+            context.strokeStyle = pal.coreGlow;
+            context.stroke();
+          }
+
+        } else if (this.type === 'caustic') {
+          // Intersecting Refractive Crystal Light Rays
+          context.lineWidth = 1.2;
+          for (let i = 0; i < this.nodes.length; i++) {
+            const n = this.nodes[i];
+            
+            // Radiating crystal ray spikes
+            const rays = 6;
+            for (let r = 0; r < rays; r++) {
+              const ang = (r / rays) * Math.PI * 2 + time * 0.8 + i * 0.2;
+              const rLen = 22 + Math.sin(time * 3 + r * 2) * 8;
+              context.beginPath();
+              context.moveTo(n.x, n.y);
+              context.lineTo(n.x + Math.cos(ang) * rLen, n.y + Math.sin(ang) * rLen);
+              context.strokeStyle = pal.spectra(time + r * 0.5) + '0.75)';
+              context.stroke();
+            }
+
+            // High-intensity caustic center
+            context.beginPath();
+            context.arc(n.x, n.y, 3.5, 0, Math.PI * 2);
+            context.fillStyle = '#ffffff';
+            context.fill();
+          }
+
+        } else if (this.type === 'mandala_node') {
+          // Sacred Geometry Blossoming Petal Nodes
+          for (let i = 0; i < this.nodes.length; i++) {
+            const n = this.nodes[i];
+            const petalCount = 8;
+            const rBase = 18 + Math.sin(time * 1.5 + i * 0.5) * 5;
+
+            context.strokeStyle = pal.spectra(i * 0.15 + time) + '0.8)';
+            context.lineWidth = 1.0;
+
+            for (let p = 0; p < petalCount; p++) {
+              const ang = (p / petalCount) * Math.PI * 2 + time * 0.4;
+              const px = n.x + Math.cos(ang) * rBase;
+              const py = n.y + Math.sin(ang) * rBase;
+
+              context.beginPath();
+              context.ellipse(px, py, 6, 12, ang, 0, Math.PI * 2);
+              context.stroke();
+            }
+
+            // Center concentric bindu ring
+            context.beginPath();
+            context.arc(n.x, n.y, 4, 0, Math.PI * 2);
+            context.fillStyle = pal.coreGlow;
+            context.fill();
+          }
         }
 
         context.restore();
@@ -981,7 +1119,7 @@
     }
 
     // Launch!
-    spawnInitialHarmony();
+    // Canvas starts pristine blank - user weaves light from nothing
     requestAnimationFrame(render);
 
     // =========================================================================
@@ -1027,6 +1165,23 @@
         strands.forEach(s => s.undulationSpeed = 0.025);
       }, 2000);
     });
+
+    // Harmonic Shockwave action
+    const btnPulse = document.getElementById('btnPulseWave');
+    if (btnPulse) {
+      btnPulse.addEventListener('click', () => {
+        playHarmonicTone(528, 0, 1.2); // 528Hz Solfeggio miracle tone
+        strands.forEach((s, sIdx) => {
+          s.nodes.forEach(n => {
+            const dx = n.x - W / 2;
+            const dy = n.y - H / 2;
+            const dist = Math.hypot(dx, dy) || 1;
+            n.vx += (dx / dist) * 12;
+            n.vy += (dy / dist) * 12;
+          });
+        });
+      });
+    }
 
     // Dissolve action
     document.getElementById('btnClear').addEventListener('click', () => {

@@ -611,8 +611,11 @@ class StoryStudioApp {
     const nameInput = document.getElementById('char-name-input');
     if (nameInput) nameInput.value = p.name || '';
 
-    const archetypeSelect = document.getElementById('char-archetype-select');
-    if (archetypeSelect && p.id) archetypeSelect.value = p.id;
+    const bodySelect = document.getElementById('char-body-select');
+    if (bodySelect && p.bodyType) bodySelect.value = p.bodyType;
+
+    const headSelect = document.getElementById('char-head-select');
+    if (headSelect && p.headShape) headSelect.value = p.headShape;
 
     const outfitSelect = document.getElementById('char-outfit-select');
     if (outfitSelect && p.torso?.type) outfitSelect.value = p.torso.type;
@@ -725,6 +728,19 @@ class StoryStudioApp {
 
     const scene = this.activeScriptScenes[index];
     this.currentSceneIndex = index;
+
+    // 0. Dynamic Multi-Character Swapping (Scenes Change -> Characters Change)
+    if (scene.char1Profile) {
+      this.char1.profile = this.char1.sanitizeProfile(scene.char1Profile);
+      this.char1.heldItem = scene.char1Profile.heldItem || 'NONE';
+      this.char1.pose = scene.char1Pose || scene.char1Profile.pose || 'NEUTRAL_CONVERSATIONAL';
+    }
+    if (scene.char2Profile) {
+      this.char2.profile = this.char2.sanitizeProfile(scene.char2Profile);
+      this.char2.heldItem = scene.char2Profile.heldItem || 'NONE';
+      this.char2.pose = scene.char2Pose || scene.char2Profile.pose || 'NEUTRAL_CONVERSATIONAL';
+    }
+    this.syncCharacterInspector();
 
     // 1. Transition Environment
     if (scene.env) {

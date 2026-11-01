@@ -663,37 +663,17 @@
         <!-- Hero Prompt Box -->
         <div class="card">
           <div class="card-title">
-            <span>✨</span> <span>What conversation or story do you want to create?</span>
+            <span>✨</span> <span>Script & Story Director</span>
           </div>
-          <p class="card-subtitle">Type any topic. The AI directs dialogue scenes, character walking, lip-sync, and camera shots automatically.</p>
+          <p class="card-subtitle">Type any storyline, dialogue scene, or multi-scene script. Characters, backgrounds, dialogue, and lip-sync are generated dynamically.</p>
 
-          <div class="prompt-box">
-            <input type="text" id="input-story-topic" class="prompt-input" placeholder="e.g. Karna from Mahabharata meeting Lord Ram at Kurukshetra, or A simple man from 1950s with a cane..." value="Karna from Mahabharata meets Lord Ram at Kurukshetra">
-            <button class="btn-create-video" id="btn-generate-topic-story">
-              <span>✨</span> <span>Create Video</span>
-            </button>
-          </div>
-
-          <div class="presets-label">Instant Lore & Era Story Presets:</div>
-          <div class="preset-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <button class="preset-chip active" data-story="EPIC_MAHABHARATA">
-              <span>☀️</span> <span>Karna: Sun Warrior (Kurukshetra)</span>
-            </button>
-            <button class="preset-chip" data-story="RAMAYANA_AYODHYA">
-              <span>🏹</span> <span>Lord Ram (Ayodhya Palace)</span>
-            </button>
-            <button class="preset-chip" data-story="VINTAGE_1950S">
-              <span>🎩</span> <span>1950s Gentleman (London Fog)</span>
-            </button>
-            <button class="preset-chip" data-story="TECH_PODCAST">
-              <span>🎙️</span> <span>AI & Creativity (Podcast Studio)</span>
-            </button>
-            <button class="preset-chip" data-story="COFFEE_CHAT">
-              <span>☕</span> <span>Morning Routine (Cozy Café)</span>
-            </button>
-            <button class="preset-chip" data-story="CAREER_LEAP">
-              <span>🌆</span> <span>The Next Leap (City Sunset)</span>
-            </button>
+          <div class="prompt-box" style="display: flex; flex-direction: column; gap: 10px;">
+            <textarea id="input-story-topic" class="prompt-input" style="height: 90px; resize: vertical; font-family: inherit; line-height: 1.45;" placeholder="Enter any story prompt or script (e.g. 'Scene 1: Dr. Evelyn in a lab discovering an energy pulse. Scene 2: Commander Vance outside in the rain watching the sky...')">A researcher and an engineer in a high-tech laboratory analyzing an anomalous power surge, then moving to an observation deck</textarea>
+            <div style="display: flex; justify-content: flex-end;">
+              <button class="btn-create-video" id="btn-generate-topic-story">
+                <span>✨</span> <span>Generate & Direct Story</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -745,19 +725,25 @@
 
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Quick Archetype</label>
-              <select id="char-archetype-select" class="form-select">
-                <option value="KARNA">☀️ Karna (Mahabharata Sun Warrior)</option>
-                <option value="RAM">🏹 Lord Ram (Ramayana Prince)</option>
-                <option value="MAN_1950S">🎩 Arthur (1950s Vintage Gentleman)</option>
-                <option value="ALEX">🎙️ Alex (Creator / Podcaster)</option>
-                <option value="MAYA">💼 Maya (Product Lead)</option>
-                <option value="SAM">☕ Sam (Everyday Casual)</option>
-                <option value="PRIYA">🎨 Priya (Designer / Artist)</option>
-                <option value="DAVID">📊 David (Keynote Speaker)</option>
-                <option value="ELENA">🧭 Elena (Explorer / Traveler)</option>
-                <option value="ROHAN">💻 Rohan (Curious Student)</option>
-                <option value="ZOE">🎧 Zoe (Show Host)</option>
+              <label class="form-label">Body Silhouette</label>
+              <select id="char-body-select" class="form-select">
+                <option value="AVERAGE">Balanced Natural</option>
+                <option value="ATHLETIC">Athletic V-Taper</option>
+                <option value="SLIM_TALL">Slim & Tall</option>
+                <option value="BROAD">Sturdy & Grounded</option>
+                <option value="FEMININE_CURVED">Graceful & Curved</option>
+                <option value="ELDER">Dignified Elder</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Head Shape</label>
+              <select id="char-head-select" class="form-select">
+                <option value="OVAL">Oval (Smooth Classic)</option>
+                <option value="CHISELED">Chiseled (Angular Jaw)</option>
+                <option value="SQUARE">Square (Broad Strong Jaw)</option>
+                <option value="HEART">Heart (Delicate Chin)</option>
+                <option value="ROUND">Round (Soft Contours)</option>
               </select>
             </div>
 
@@ -769,15 +755,12 @@
             <div class="form-group">
               <label class="form-label">Outfit Style</label>
               <select id="char-outfit-select" class="form-select">
-                <option value="KAVACHA_GOLD_ARMOR">☀️ Kavacha (Celestial Golden Sun Armor)</option>
-                <option value="RAMA_PITAMBAR_SILK">🏹 Pitambar Silk Sash & Pearl Muktahara</option>
-                <option value="VINTAGE_1950S_SUIT">🎩 1950s Tweed Suit & Silk Tie</option>
-                <option value="CASUAL_HOODIE">Casual Hoodie</option>
-                <option value="SMART_BLAZER">Tailored Smart Blazer</option>
-                <option value="COTTON_TSHIRT">Classic Cotton T-Shirt</option>
-                <option value="COZY_SWEATER">Cozy Knit Sweater</option>
-                <option value="CLASSIC_SHIRT">Collared Button-Down Shirt</option>
-                <option value="JACKET">Modern Athletic Jacket</option>
+                <option value="MODERN_CASUAL">Modern Casual (Hoodie / Denim)</option>
+                <option value="TAILORED_BLAZER">Tailored Suit (Blazer & Silk Tie)</option>
+                <option value="CLASSIC_OVERCOAT">Vintage Overcoat / Trench</option>
+                <option value="LAB_COAT">Scientific Lab Coat</option>
+                <option value="CASUAL_TEE">Classic Cotton T-Shirt</option>
+                <option value="HISTORICAL_ROBE">Traditional / Draped Robe</option>
               </select>
             </div>
 
@@ -834,25 +817,23 @@
             <div class="form-group">
               <label class="form-label">Held Tool / Prop in Hand</label>
               <select id="char-prop-select" class="form-select">
-                <option value="NONE">No Tool (Bare Hands)</option>
-                <option value="BOW_AND_ARROW">🏹 Divine Recurve Bow & Arrow</option>
-                <option value="VINTAGE_BRIEFCASE">💼 1950s Leather Attache Briefcase</option>
-                <option value="WALKING_CANE">🦯 Polished Mahogany Walking Cane</option>
-                <option value="SWORD">⚔️ Steel Battle Broadsword</option>
-                <option value="MICROPHONE">🎙️ Studio Vocal Microphone</option>
-                <option value="BOOK_SCROLL">📜 Ancient Rolled Manuscript / Scroll</option>
+                <option value="NONE">No Tool (Relaxed Hands)</option>
+                <option value="BRIEFCASE">💼 Leather Briefcase</option>
+                <option value="CANE">🦯 Polished Walking Cane</option>
+                <option value="TABLET">📱 Digital Tablet / Slate</option>
+                <option value="MICROPHONE">🎙️ Vocal Microphone</option>
+                <option value="BOW">🏹 Recurve Bow</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Active Limb Articulation & Pose</label>
+              <label class="form-label">Active Pose & Gestures</label>
               <select id="char-pose-select" class="form-select">
-                <option value="NEUTRAL">Conversational Natural Stance</option>
-                <option value="HEROIC_STANCE">⚔️ Heroic Stance (Wide battle stance, weapon ready)</option>
-                <option value="NAMASTE">🙏 Namaste Greeting (Hands joined at heart)</option>
-                <option value="POINTING">👉 Pointing Forward (Index finger outstretched)</option>
-                <option value="HOLDING_PROP">💼 Grip Held Tool / Cane</option>
-                <option value="TALKING_GESTURE">🗣️ Expressive Speaking Gestures</option>
+                <option value="NEUTRAL_CONVERSATIONAL">Natural Conversational Stance</option>
+                <option value="SPEAKING_GESTURE">🗣️ Expressive Speaking Gesture</option>
+                <option value="ATTENTIVE_LISTENER">👂 Attentive Listener (Subtle Nods)</option>
+                <option value="THOUGHTFUL_CHIN">🤔 Hand to Chin (Thoughtful)</option>
+                <option value="HOLDING_PROP">💼 Grip Held Prop / Cane</option>
                 <option value="WALKING">🚶 Continuous Walking Locomotion</option>
               </select>
             </div>
