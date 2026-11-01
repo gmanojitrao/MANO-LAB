@@ -4,6 +4,36 @@
  */
 
 class SceneDirector {
+
+  static detectEnvironmentFromPrompt(prompt = '') {
+    const text = (prompt || '').toLowerCase();
+    if (text.includes('kurukshetra') || text.includes('karna') || text.includes('battlefield') || text.includes('war') || text.includes('mahabharata')) {
+      return 'KURUKSHETRA';
+    }
+    if (text.includes('ayodhya') || text.includes('ram') || text.includes('rama') || text.includes('palace') || text.includes('temple') || text.includes('ramayana')) {
+      return 'AYODHYA_PALACE';
+    }
+    if (text.includes('1950') || text.includes('1950s') || text.includes('vintage') || text.includes('gentleman') || text.includes('street') || text.includes('noir') || text.includes('rain')) {
+      return 'VINTAGE_1950S_STREET';
+    }
+    if (text.includes('coffee') || text.includes('cafe')) {
+      return 'COFFEE_SHOP';
+    }
+    if (text.includes('office') || text.includes('work') || text.includes('meeting')) {
+      return 'MODERN_OFFICE';
+    }
+    if (text.includes('park') || text.includes('walk') || text.includes('nature')) {
+      return 'SUNNY_PARK';
+    }
+    if (text.includes('sunset') || text.includes('city') || text.includes('skyline')) {
+      return 'CITY_SUNSET';
+    }
+    if (text.includes('cyber') || text.includes('future') || text.includes('tech')) {
+      return 'CYBER_TECH';
+    }
+    return 'PODCAST_STUDIO';
+  }
+
   constructor(canvas, characterRig1, audioStudio, characterRig2 = null) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -358,8 +388,18 @@ class SceneDirector {
       case 'ROYAL_DARBAR':
         this.renderRoyalDarbarEnv(ctx, w, h);
         break;
+      case 'KURUKSHETRA':
       case 'KURUKSHETRA_BATTLEFIELD':
         this.renderKurukshetraEnv(ctx, w, h);
+        break;
+      case 'AYODHYA_PALACE':
+      case 'AYODHYA':
+        this.renderAyodhyaPalaceEnv(ctx, w, h);
+        break;
+      case 'VINTAGE_1950S_STREET':
+      case 'VINTAGE_STREET':
+      case '1950S_STREET':
+        this.renderVintage1950sStreetEnv(ctx, w, h);
         break;
       case 'ENCHANTED_FOREST':
         this.renderEnchantedForestEnv(ctx, w, h);
@@ -1139,6 +1179,165 @@ class SceneDirector {
   }
 
   // 8. ENCHANTED FOREST
+
+  // 9. AYODHYA SACRED PALACE & TEMPLE HORIZON (Lord Ram / Ramayana)
+  renderAyodhyaPalaceEnv(ctx, w, h) {
+    // Serene Dawn Sky over River Sarayu
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+    skyGrad.addColorStop(0, '#1e1b4b');
+    skyGrad.addColorStop(0.3, '#312e81');
+    skyGrad.addColorStop(0.65, '#fde047');
+    skyGrad.addColorStop(0.85, '#fbcfe8');
+    skyGrad.addColorStop(1, '#fed7aa');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Radiant Morning Sun Motes
+    const sunGrad = ctx.createRadialGradient(w * 0.5, h * 0.45, 10, w * 0.5, h * 0.45, 180);
+    sunGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+    sunGrad.addColorStop(0.3, 'rgba(254, 240, 138, 0.6)');
+    sunGrad.addColorStop(0.8, 'rgba(251, 191, 36, 0.2)');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(w * 0.5, h * 0.45, 180, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Distant Ayodhya Golden Temple Spire (Shikhara) Silhouettes
+    ctx.fillStyle = '#ca8a04';
+    // Center Great Temple Shikhara
+    ctx.beginPath();
+    ctx.moveTo(w * 0.44, h * 0.65);
+    ctx.lineTo(w * 0.5, h * 0.32);
+    ctx.lineTo(w * 0.56, h * 0.65);
+    ctx.closePath();
+    ctx.fill();
+    // Temple Kalash finial
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(w * 0.5, h * 0.31, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Side Pavilions
+    ctx.fillStyle = '#a16207';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.2, h * 0.65);
+    ctx.lineTo(w * 0.26, h * 0.42);
+    ctx.lineTo(w * 0.32, h * 0.65);
+    ctx.moveTo(w * 0.68, h * 0.65);
+    ctx.lineTo(w * 0.74, h * 0.42);
+    ctx.lineTo(w * 0.8, h * 0.65);
+    ctx.fill();
+
+    // Marble Pavilion Pillars & Arches
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, h * 0.62, w, 18);
+    // Left & Right Carved Marble Pillars
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(15, h * 0.15, 36, h * 0.55);
+    ctx.fillRect(w - 51, h * 0.15, 36, h * 0.55);
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(15, h * 0.15, 36, h * 0.55);
+    ctx.strokeRect(w - 51, h * 0.15, 36, h * 0.55);
+
+    // Marigold Garland Drapes
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(w * 0.5, h * 0.18, 120, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    // Marble Floor with Lotus Petals
+    const floorGrad = ctx.createLinearGradient(0, h * 0.7, 0, h);
+    floorGrad.addColorStop(0, '#f8fafc');
+    floorGrad.addColorStop(0.5, '#e2e8f0');
+    floorGrad.addColorStop(1, '#cbd5e1');
+    ctx.fillStyle = floorGrad;
+    ctx.fillRect(0, h * 0.7, w, h * 0.3);
+
+    // Floating Pink Lotus Blossoms on Sarayu Shore
+    ctx.fillStyle = '#f43f5e';
+    for (let lx = 60; lx < w - 40; lx += 110) {
+      ctx.beginPath();
+      ctx.ellipse(lx, h * 0.76, 12, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 10. 1950S MID-CENTURY MISTY URBAN STREET (1950s Gentleman / Noir)
+  renderVintage1950sStreetEnv(ctx, w, h) {
+    // Wet Rainy Night City Boulevard
+    const streetSky = ctx.createLinearGradient(0, 0, 0, h);
+    streetSky.addColorStop(0, '#020617');
+    streetSky.addColorStop(0.4, '#0f172a');
+    streetSky.addColorStop(0.7, '#1e293b');
+    streetSky.addColorStop(1, '#020617');
+    ctx.fillStyle = streetSky;
+    ctx.fillRect(0, 0, w, h);
+
+    // Mid-Century Brick Townhouse Silhouettes
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, h * 0.28, w * 0.38, h * 0.42);
+    ctx.fillRect(w * 0.62, h * 0.25, w * 0.38, h * 0.45);
+
+    // Windowpanes with Warm Amber Interior Light
+    ctx.fillStyle = 'rgba(250, 204, 21, 0.45)';
+    for (let wy = h * 0.32; wy < h * 0.62; wy += 45) {
+      ctx.fillRect(20, wy, 24, 32);
+      ctx.fillRect(w * 0.22, wy, 24, 32);
+      ctx.fillRect(w - 45, wy, 24, 32);
+      ctx.fillRect(w - 95, wy, 24, 32);
+    }
+
+    // Vintage Cast Iron Gas Streetlamp (Left & Right)
+    [-1, 1].forEach(side => {
+      const lx = side === -1 ? w * 0.22 : w * 0.78;
+      const ly = h * 0.45;
+
+      // Glowing Amber Gaslight Radius
+      const lampGlow = ctx.createRadialGradient(lx, ly, 6, lx, ly, 110);
+      lampGlow.addColorStop(0, 'rgba(253, 224, 71, 0.85)');
+      lampGlow.addColorStop(0.4, 'rgba(245, 158, 11, 0.35)');
+      lampGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = lampGlow;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 110, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cast-Iron Lamp Post
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(lx - 2.5, ly, 5, h * 0.28);
+      // Lantern Housing
+      ctx.beginPath();
+      ctx.roundRect(lx - 10, ly - 18, 20, 22, 4);
+      ctx.fill();
+    });
+
+    // Rainy Asphalt Boulevard Floor with Warm Reflections
+    const groundGrad = ctx.createLinearGradient(0, h * 0.7, 0, h);
+    groundGrad.addColorStop(0, '#1e293b');
+    groundGrad.addColorStop(0.4, '#0f172a');
+    groundGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, h * 0.7, w, h * 0.3);
+
+    // Wet Reflective Puddles
+    ctx.fillStyle = 'rgba(253, 224, 71, 0.16)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.25, h * 0.82, 65, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(w * 0.75, h * 0.84, 75, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sidewalk Cobblestone Curb
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.72);
+    ctx.lineTo(w, h * 0.72);
+    ctx.stroke();
+  }
+
   renderEnchantedForestEnv(ctx, w, h) {
     const grad = ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, '#021312');
@@ -1360,4 +1559,8 @@ if (typeof window !== 'undefined') {
 }
 if (typeof global !== 'undefined') {
   global.SceneDirector = SceneDirector;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { SceneDirector };
 }

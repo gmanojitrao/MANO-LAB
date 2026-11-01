@@ -1071,7 +1071,7 @@
       if (!email) return false;
       if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return true;
       if (window.ManoAuth) {
-        return ManoAuth.hasAccess('secret_room', { email: email });
+        return ManoAuth.hasAccess('private_lounge', { email: email });
       }
       return false;
     }
@@ -1509,6 +1509,8 @@
         const isOwner = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
         const entry = reg[email] || {};
         const perms = entry.permissions || {};
+        const isLounge = perms.private_lounge || perms.secret_room;
+        const isPro = perms.story_studio_pro || perms.extra_features;
         const row = document.createElement('div');
         row.className = 'whitelist-item';
         row.innerHTML = `
@@ -1518,8 +1520,9 @@
               <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">${email}</span>
               <div style="display: flex; gap: 0.35rem; margin-top: 0.2rem;">
                 ${isOwner ? '<span class="brand-tag">OWNER</span>' : '<span class="brand-tag">MEMBER</span>'}
-                ${perms.secret_room ? '<span class="brand-tag" style="background: rgba(59,130,246,0.2); color: #60a5fa;">Room</span>' : ''}
-                ${perms.extra_features ? '<span class="brand-tag" style="background: rgba(16,185,129,0.2); color: #34d399;">Pro</span>' : ''}
+                ${isLounge ? '<span class="brand-tag" style="background: rgba(59,130,246,0.2); color: #60a5fa;">Lounge</span>' : ''}
+                ${isPro ? '<span class="brand-tag" style="background: rgba(16,185,129,0.2); color: #34d399;">Story Pro</span>' : ''}
+                ${perms.audio_intelligence ? '<span class="brand-tag" style="background: rgba(168,85,247,0.2); color: #c084fc;">Audio</span>' : ''}
               </div>
             </div>
           </div>
@@ -1543,6 +1546,10 @@
         reg[email] = {
           role: email === ADMIN_EMAIL.toLowerCase() ? 'admin' : 'member',
           permissions: {
+            private_lounge: permRoom,
+            story_studio_pro: permPro,
+            audio_intelligence: true,
+            aether_weave: true,
             secret_room: permRoom,
             extra_features: permPro
           },

@@ -668,15 +668,24 @@
           <p class="card-subtitle">Type any topic. The AI directs dialogue scenes, character walking, lip-sync, and camera shots automatically.</p>
 
           <div class="prompt-box">
-            <input type="text" id="input-story-topic" class="prompt-input" placeholder="e.g. Two friends in a coffee shop discussing whether AI will change the future..." value="AI and human creativity">
+            <input type="text" id="input-story-topic" class="prompt-input" placeholder="e.g. Karna from Mahabharata meeting Lord Ram at Kurukshetra, or A simple man from 1950s with a cane..." value="Karna from Mahabharata meets Lord Ram at Kurukshetra">
             <button class="btn-create-video" id="btn-generate-topic-story">
               <span>✨</span> <span>Create Video</span>
             </button>
           </div>
 
-          <div class="presets-label">Try Popular Conversations:</div>
-          <div class="preset-grid">
-            <button class="preset-chip active" data-story="TECH_PODCAST">
+          <div class="presets-label">Instant Lore & Era Story Presets:</div>
+          <div class="preset-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <button class="preset-chip active" data-story="EPIC_MAHABHARATA">
+              <span>☀️</span> <span>Karna: Sun Warrior (Kurukshetra)</span>
+            </button>
+            <button class="preset-chip" data-story="RAMAYANA_AYODHYA">
+              <span>🏹</span> <span>Lord Ram (Ayodhya Palace)</span>
+            </button>
+            <button class="preset-chip" data-story="VINTAGE_1950S">
+              <span>🎩</span> <span>1950s Gentleman (London Fog)</span>
+            </button>
+            <button class="preset-chip" data-story="TECH_PODCAST">
               <span>🎙️</span> <span>AI & Creativity (Podcast Studio)</span>
             </button>
             <button class="preset-chip" data-story="COFFEE_CHAT">
@@ -684,9 +693,6 @@
             </button>
             <button class="preset-chip" data-story="CAREER_LEAP">
               <span>🌆</span> <span>The Next Leap (City Sunset)</span>
-            </button>
-            <button class="preset-chip" data-story="SCIENCE_HABITS">
-              <span>💡</span> <span>Curiosity & Habits (Minimalist Stage)</span>
             </button>
           </div>
         </div>
@@ -741,6 +747,9 @@
             <div class="form-group">
               <label class="form-label">Quick Archetype</label>
               <select id="char-archetype-select" class="form-select">
+                <option value="KARNA">☀️ Karna (Mahabharata Sun Warrior)</option>
+                <option value="RAM">🏹 Lord Ram (Ramayana Prince)</option>
+                <option value="MAN_1950S">🎩 Arthur (1950s Vintage Gentleman)</option>
                 <option value="ALEX">🎙️ Alex (Creator / Podcaster)</option>
                 <option value="MAYA">💼 Maya (Product Lead)</option>
                 <option value="SAM">☕ Sam (Everyday Casual)</option>
@@ -760,6 +769,9 @@
             <div class="form-group">
               <label class="form-label">Outfit Style</label>
               <select id="char-outfit-select" class="form-select">
+                <option value="KAVACHA_GOLD_ARMOR">☀️ Kavacha (Celestial Golden Sun Armor)</option>
+                <option value="RAMA_PITAMBAR_SILK">🏹 Pitambar Silk Sash & Pearl Muktahara</option>
+                <option value="VINTAGE_1950S_SUIT">🎩 1950s Tweed Suit & Silk Tie</option>
                 <option value="CASUAL_HOODIE">Casual Hoodie</option>
                 <option value="SMART_BLAZER">Tailored Smart Blazer</option>
                 <option value="COTTON_TSHIRT">Classic Cotton T-Shirt</option>
@@ -810,11 +822,38 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Accessories</label>
+              <label class="form-label">Accessories & Glasses</label>
               <select id="char-accessory-select" class="form-select">
                 <option value="NONE">None (Clean Look)</option>
+                <option value="VINTAGE_HORN_GLASSES">Vintage 1950s Horn-Rimmed Glasses</option>
                 <option value="STYLISH_GLASSES">Stylish Modern Glasses</option>
                 <option value="STUDIO_HEADPHONES">Studio Headphones (Around Neck)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Held Tool / Prop in Hand</label>
+              <select id="char-prop-select" class="form-select">
+                <option value="NONE">No Tool (Bare Hands)</option>
+                <option value="BOW_AND_ARROW">🏹 Divine Recurve Bow & Arrow</option>
+                <option value="VINTAGE_BRIEFCASE">💼 1950s Leather Attache Briefcase</option>
+                <option value="WALKING_CANE">🦯 Polished Mahogany Walking Cane</option>
+                <option value="SWORD">⚔️ Steel Battle Broadsword</option>
+                <option value="MICROPHONE">🎙️ Studio Vocal Microphone</option>
+                <option value="BOOK_SCROLL">📜 Ancient Rolled Manuscript / Scroll</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Active Limb Articulation & Pose</label>
+              <select id="char-pose-select" class="form-select">
+                <option value="NEUTRAL">Conversational Natural Stance</option>
+                <option value="HEROIC_STANCE">⚔️ Heroic Stance (Wide battle stance, weapon ready)</option>
+                <option value="NAMASTE">🙏 Namaste Greeting (Hands joined at heart)</option>
+                <option value="POINTING">👉 Pointing Forward (Index finger outstretched)</option>
+                <option value="HOLDING_PROP">💼 Grip Held Tool / Cane</option>
+                <option value="TALKING_GESTURE">🗣️ Expressive Speaking Gestures</option>
+                <option value="WALKING">🚶 Continuous Walking Locomotion</option>
               </select>
             </div>
           </div>
@@ -830,7 +869,31 @@
           <p class="card-subtitle">Click any world to instantly transition the background on your video canvas.</p>
 
           <div class="env-grid">
-            <div class="env-card active" data-env="PODCAST_STUDIO">
+            <div class="env-card active" data-env="KURUKSHETRA">
+              <div class="env-card-header">
+                <span class="env-card-icon">⚔️</span>
+                <span class="env-card-title">Kurukshetra Battlefield</span>
+              </div>
+              <p class="env-card-desc">Crimson sunrise, rising spark embers, distant war chariot silhouettes and flags.</p>
+            </div>
+
+            <div class="env-card" data-env="AYODHYA_PALACE">
+              <div class="env-card-header">
+                <span class="env-card-icon">🏛️</span>
+                <span class="env-card-title">Ayodhya Sacred Palace</span>
+              </div>
+              <p class="env-card-desc">Golden temple shikhara spires, Sarayu river shore, blooming lotus petals and marble pillars.</p>
+            </div>
+
+            <div class="env-card" data-env="VINTAGE_1950S_STREET">
+              <div class="env-card-header">
+                <span class="env-card-icon">🌧️</span>
+                <span class="env-card-title">1950s Urban Street</span>
+              </div>
+              <p class="env-card-desc">Misty rain, wet asphalt reflections, brick townhouses, and glowing amber gas streetlamps.</p>
+            </div>
+
+            <div class="env-card" data-env="PODCAST_STUDIO">
               <div class="env-card-header">
                 <span class="env-card-icon">🎙️</span>
                 <span class="env-card-title">Podcast Studio</span>

@@ -263,6 +263,73 @@ const CHARACTER_PROFILES = {
     ornaments: { necklace: 'EMERALD_SERPENT_TORC', earrings: 'NONE', wrists: 'SERPENT_COILS' },
     markings: 'NAGA_SCALES',
     aura: true
+  },
+
+  // --- Iconic Historical, Lore & Mythological Archetypes ---
+  KARNA: {
+    id: 'KARNA',
+    name: 'Karna (Son of Surya)',
+    role: 'Indomitable Hero of the Mahabharata',
+    emoji: '☀️',
+    gender: 'M',
+    skin: { base: '#c27838', highlight: '#f5b064', shadow: '#784318', rim: '#fde047' },
+    eyes: { size: 1.15, shape: 'FIERCE_WARRIOR', iris: '#d97706', glow: '#facc15', thirdEye: false },
+    hair: { color: '#09090b', style: 'WARRIOR_HALF_KNOT', sway: 0.9 },
+    facialHair: 'WARRIOR_STUBBLE',
+    headgear: 'SURYA_WARRIOR_CROWN',
+    accessories: 'NONE',
+    torso: { type: 'KAVACHA_GOLD_ARMOR', main: '#eab308', highlight: '#fef08a', shadow: '#a16207', trim: '#ea580c' },
+    legs: { type: 'WARRIOR_KACHHA_DHOTI', color: '#c2410c', trim: '#facc15' },
+    cape: { enabled: true, color: '#9a3412', trim: '#facc15' },
+    ornaments: { necklace: 'SURYA_CHEST_PENDANT', earrings: 'CELESTIAL_KUNDALAS', wrists: 'GOLDEN_ANGADA' },
+    markings: 'SURYA_TILAK',
+    heldItem: 'BOW_AND_ARROW',
+    pose: 'HEROIC_STANCE',
+    aura: true
+  },
+
+  RAM: {
+    id: 'RAM',
+    name: 'Lord Ram (Maryada Purushottama)',
+    role: 'Virtuous Prince of Ayodhya',
+    emoji: '🏹',
+    gender: 'M',
+    skin: { base: '#2563eb', highlight: '#93c5fd', shadow: '#1e40af', rim: '#dbeafe' },
+    eyes: { size: 1.25, shape: 'ALMOND_DIVINE', iris: '#1e3a8a', glow: '#60a5fa', thirdEye: false },
+    hair: { color: '#09090b', style: 'ROYAL_ASCETIC_LOCKS', sway: 1.0 },
+    facialHair: 'NONE',
+    headgear: 'AYODHYA_PRINCE_DIADEM',
+    accessories: 'NONE',
+    torso: { type: 'RAMA_PITAMBAR_SILK', main: '#eab308', highlight: '#fef08a', shadow: '#ca8a04', trim: '#3b82f6' },
+    legs: { type: 'RAMA_SILK_DHOTI', color: '#facc15', trim: '#ca8a04' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'PEARL_MUKTAHARA', earrings: 'GOLD_KUNDALAS', wrists: 'SACRED_RAKHI_GOLD' },
+    markings: 'RAMA_URDHVA_PUNDRA',
+    heldItem: 'BOW_AND_ARROW',
+    pose: 'SERENE_STANCE',
+    aura: true
+  },
+
+  MAN_1950S: {
+    id: 'MAN_1950S',
+    name: 'Arthur: 1950s Gentleman',
+    role: 'Mid-Century Urban Citizen',
+    emoji: '🎩',
+    gender: 'M',
+    skin: { base: '#e2ba93', highlight: '#fdeddf', shadow: '#a9754f', rim: '#ffffff' },
+    eyes: { size: 1.0, shape: 'SERENE_MEDITATIVE', iris: '#3e2723', glow: '#78350f', thirdEye: false },
+    hair: { color: '#27272a', style: 'VINTAGE_SIDE_PART', sway: 0.3 },
+    facialHair: 'VINTAGE_MOUSTACHE',
+    headgear: 'FEDORA_HAT',
+    accessories: 'VINTAGE_HORN_GLASSES',
+    torso: { type: 'VINTAGE_1950S_SUIT', main: '#334155', highlight: '#475569', shadow: '#1e293b', trim: '#b91c1c' },
+    legs: { type: 'PLEATED_1950S_TROUSERS', color: '#1e293b', trim: '#0f172a' },
+    cape: { enabled: false, color: '#000000', trim: '#000000' },
+    ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'VINTAGE_LEATHER_WATCH' },
+    markings: 'NONE',
+    heldItem: 'VINTAGE_BRIEFCASE',
+    pose: 'HOLDING_PROP',
+    aura: false
   }
 };
 
@@ -317,6 +384,153 @@ class CharacterRig {
     this.hairPos = 0;
     this.capeVel = 0;
     this.capePos = 0;
+
+    // Prop holding & pose articulation
+    this.heldItem = this.profile.heldItem || 'NONE';
+    this.pose = this.profile.pose || 'NEUTRAL';
+    this.propSide = 1; // 1 = front hand
+  }
+
+  setHeldItem(item) {
+    this.heldItem = item;
+    if (this.profile) this.profile.heldItem = item;
+  }
+
+  setPose(pose) {
+    this.pose = pose;
+    if (this.profile) this.profile.pose = pose;
+  }
+
+  /**
+   * Universal Prompt-to-Character Synthesis Engine
+   * Parses natural language prompts (e.g. "Karna from Mahabharata", "Ram from Ramayana", "Simple man from 1950s")
+   * and synthesizes head-to-toe tailored profiles with lore-accurate body, outfit, hair, and props.
+   */
+  static synthesizeFromPrompt(prompt = '') {
+    const raw = (prompt || '').trim();
+    const text = raw.toLowerCase();
+
+    // 1. Karna from Mahabharata
+    if (text.includes('karna') || text.includes('radheya') || text.includes('suryaputra') || (text.includes('sun') && text.includes('warrior'))) {
+      const p = JSON.parse(JSON.stringify(CHARACTER_PROFILES.KARNA));
+      if (text.includes('sword')) p.heldItem = 'SWORD';
+      if (text.includes('cane')) p.heldItem = 'WALKING_CANE';
+      if (text.includes('briefcase')) p.heldItem = 'VINTAGE_BRIEFCASE';
+      if (text.includes('walk')) p.pose = 'WALKING';
+      return p;
+    }
+
+    // 2. Lord Ram from Ramayana
+    if (text.includes('ram') || text.includes('rama') || text.includes('ramayana') || text.includes('raghava') || text.includes('ayodhya')) {
+      const p = JSON.parse(JSON.stringify(CHARACTER_PROFILES.RAM));
+      if (text.includes('sword')) p.heldItem = 'SWORD';
+      if (text.includes('namaste')) p.pose = 'NAMASTE';
+      if (text.includes('walk')) p.pose = 'WALKING';
+      return p;
+    }
+
+    // 3. 1950s Vintage Gentleman
+    if (text.includes('1950') || text.includes('1950s') || text.includes('vintage') || text.includes('gentleman') || text.includes('fedora') || text.includes('detective') || text.includes('noir')) {
+      const p = JSON.parse(JSON.stringify(CHARACTER_PROFILES.MAN_1950S));
+      if (text.includes('cane') || text.includes('walking stick')) p.heldItem = 'WALKING_CANE';
+      if (text.includes('sword')) p.heldItem = 'SWORD';
+      if (text.includes('bow')) p.heldItem = 'BOW_AND_ARROW';
+      if (text.includes('walk')) p.pose = 'WALKING';
+      return p;
+    }
+
+    // 4. Recognized archetypes
+    if (text.includes('alex') || text.includes('creator') || text.includes('podcast')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.ALEX));
+    }
+    if (text.includes('maya') || text.includes('product') || text.includes('lead')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.MAYA));
+    }
+    if (text.includes('priya') || text.includes('designer') || text.includes('artist')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.PRIYA));
+    }
+    if (text.includes('david') || text.includes('speaker') || text.includes('analyst')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.DAVID));
+    }
+    if (text.includes('elena') || text.includes('explorer') || text.includes('traveler')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.ELENA));
+    }
+    if (text.includes('rohan') || text.includes('student') || text.includes('coder')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.ROHAN));
+    }
+    if (text.includes('sam') || text.includes('casual') || text.includes('host')) {
+      return JSON.parse(JSON.stringify(CHARACTER_PROFILES.SAM));
+    }
+
+    // 5. Dynamic Procedural Synthesis
+    const isFemale = text.includes('woman') || text.includes('female') || text.includes('girl') || text.includes('lady');
+    const isAncient = text.includes('ancient') || text.includes('warrior') || text.includes('mythic') || text.includes('king') || text.includes('prince');
+    const isVintage = text.includes('retro') || text.includes('classic') || text.includes('suit');
+
+    let baseSkin = { base: '#d4a373', highlight: '#faedcd', shadow: '#996633', rim: '#ffffff' };
+    if (text.includes('dark') || text.includes('espresso')) {
+      baseSkin = { base: '#5c3d2e', highlight: '#855842', shadow: '#3a241b', rim: '#b5856b' };
+    } else if (text.includes('fair') || text.includes('pale')) {
+      baseSkin = { base: '#f7d7c4', highlight: '#fff0e5', shadow: '#e0b89f', rim: '#ffffff' };
+    } else if (text.includes('blue') || text.includes('avatar') || text.includes('shyam')) {
+      baseSkin = { base: '#253d6e', highlight: '#60a5fa', shadow: '#172554', rim: '#bfdbfe' };
+    } else if (text.includes('bronze') || text.includes('copper')) {
+      baseSkin = { base: '#c27838', highlight: '#f5b064', shadow: '#784318', rim: '#fde047' };
+    }
+
+    let outfitType = isAncient ? 'KAVACHA_GOLD_ARMOR' : isVintage ? 'VINTAGE_1950S_SUIT' : isFemale ? 'SMART_BLAZER' : 'CASUAL_HOODIE';
+    let legType = isAncient ? 'WARRIOR_KACHHA_DHOTI' : isVintage ? 'PLEATED_1950S_TROUSERS' : isFemale ? 'CHINO_TROUSERS' : 'SLIM_JEANS';
+    let headgear = isAncient ? 'SURYA_WARRIOR_CROWN' : isVintage ? 'FEDORA_HAT' : 'NONE';
+    let heldItem = 'NONE';
+
+    if (text.includes('bow') || text.includes('arrow')) heldItem = 'BOW_AND_ARROW';
+    else if (text.includes('sword') || text.includes('blade')) heldItem = 'SWORD';
+    else if (text.includes('cane') || text.includes('stick')) heldItem = 'WALKING_CANE';
+    else if (text.includes('briefcase') || text.includes('bag')) heldItem = 'VINTAGE_BRIEFCASE';
+    else if (text.includes('mic') || text.includes('microphone')) heldItem = 'MICROPHONE';
+    else if (text.includes('book') || text.includes('scroll')) heldItem = 'BOOK_SCROLL';
+
+    return {
+      id: 'SYNTH_' + Date.now(),
+      name: raw.slice(0, 24) || 'Synthesized Character',
+      role: 'Custom Synthesized Figure',
+      emoji: isAncient ? '⚔️' : isVintage ? '🎩' : isFemale ? '👩' : '👤',
+      gender: isFemale ? 'F' : 'M',
+      skin: baseSkin,
+      eyes: {
+        size: isAncient ? 1.15 : 1.05,
+        shape: isAncient ? 'FIERCE_WARRIOR' : 'ROUND_EXPRESSIVE',
+        iris: isAncient ? '#d97706' : '#3e2723',
+        glow: isAncient ? '#facc15' : '#78350f',
+        thirdEye: false
+      },
+      hair: {
+        color: '#18181b',
+        style: isFemale ? 'SLEEK_BOB' : isAncient ? 'WARRIOR_HALF_KNOT' : isVintage ? 'VINTAGE_SIDE_PART' : 'MODERN_FADE',
+        sway: 0.8
+      },
+      facialHair: isAncient ? 'SHORT_STUBBLE' : isVintage ? 'VINTAGE_MOUSTACHE' : 'NONE',
+      headgear: headgear,
+      accessories: text.includes('glasses') ? 'STYLISH_GLASSES' : 'NONE',
+      torso: {
+        type: outfitType,
+        main: isAncient ? '#eab308' : isVintage ? '#334155' : '#1e293b',
+        highlight: isAncient ? '#fef08a' : isVintage ? '#475569' : '#334155',
+        shadow: isAncient ? '#a16207' : isVintage ? '#1e293b' : '#0f172a',
+        trim: isAncient ? '#ea580c' : '#f8fafc'
+      },
+      legs: {
+        type: legType,
+        color: isAncient ? '#c2410c' : '#1e293b',
+        trim: '#f8fafc'
+      },
+      cape: { enabled: isAncient, color: '#9a3412', trim: '#facc15' },
+      ornaments: { necklace: 'NONE', earrings: 'NONE', wrists: 'NONE' },
+      markings: isAncient ? 'SURYA_TILAK' : 'NONE',
+      heldItem: heldItem,
+      pose: heldItem !== 'NONE' ? 'HOLDING_PROP' : 'NEUTRAL',
+      aura: isAncient
+    };
   }
 
   setProfile(profileKey) {
@@ -544,19 +758,55 @@ class CharacterRig {
       this.bones.mouthShape = 'REST';
     }
 
-    // 5. Arm Gestures (Walking counter-swing or Conversational speaking)
+    // 5. Arm Gestures & Pose Articulation (Walking counter-swing, Heroic Stance, Namaste, Pointing, Prop Holding)
     if (this.isWalking) {
-      const armSwing = Math.sin(this.walkPhase) * 0.4;
+      const armSwing = Math.sin(this.walkPhase) * 0.45;
       this.bones.leftArmAngle = -armSwing;
       this.bones.rightArmAngle = armSwing;
       this.bones.leftForearmAngle = 0.2;
       this.bones.rightForearmAngle = -0.2;
     } else {
-      // Conversational idle arm motion
-      this.bones.leftArmAngle = 0.15 + Math.sin(this.time * 2.0) * 0.06 * speechInfluence;
-      this.bones.rightArmAngle = -0.15 - Math.cos(this.time * 2.2) * 0.06 * speechInfluence;
-      this.bones.leftForearmAngle = 0.35 + Math.sin(this.time * 2.5) * 0.1 * speechInfluence;
-      this.bones.rightForearmAngle = -0.35 - Math.cos(this.time * 2.8) * 0.1 * speechInfluence;
+      const p = this.pose || this.profile?.pose || 'NEUTRAL';
+      if (p === 'HEROIC_STANCE') {
+        // Heroic Stance: left arm steady, right arm angled with bow/weapon, confident posture
+        this.bones.leftArmAngle = -0.45 + Math.sin(this.time * 1.5) * 0.03;
+        this.bones.rightArmAngle = 0.35 + Math.sin(this.time * 1.5) * 0.03;
+        this.bones.leftForearmAngle = -0.35;
+        this.bones.rightForearmAngle = 0.45;
+        this.bones.leftLegAngle = -0.08;
+        this.bones.rightLegAngle = 0.08;
+      } else if (p === 'NAMASTE') {
+        // Namaste Greeting: both hands joined at heart center, gentle respectful head nod
+        this.bones.leftArmAngle = -0.32;
+        this.bones.rightArmAngle = 0.32;
+        this.bones.leftForearmAngle = 0.82;
+        this.bones.rightForearmAngle = -0.82;
+        this.bones.headAngle = 0.10 + Math.sin(this.time * 1.5) * 0.02;
+      } else if (p === 'POINTING') {
+        // Pointing gesture: right arm extended forward
+        this.bones.leftArmAngle = 0.15;
+        this.bones.rightArmAngle = -0.72 + Math.sin(this.time * 2.0) * 0.04;
+        this.bones.leftForearmAngle = 0.25;
+        this.bones.rightForearmAngle = 0.12;
+      } else if (p === 'HOLDING_PROP') {
+        // Holding prop: right hand firmly grasping cane, briefcase, mic
+        this.bones.leftArmAngle = 0.12 + Math.sin(this.time * 1.8) * 0.03;
+        this.bones.rightArmAngle = 0.20 + Math.sin(this.time * 1.8) * 0.03;
+        this.bones.leftForearmAngle = 0.25;
+        this.bones.rightForearmAngle = 0.10;
+      } else if (p === 'TALKING_GESTURE') {
+        // Active conversational speech gestures
+        this.bones.leftArmAngle = 0.15 + Math.sin(this.time * 2.0) * 0.08 * speechInfluence;
+        this.bones.rightArmAngle = -0.25 - Math.cos(this.time * 2.4) * 0.12 * speechInfluence;
+        this.bones.leftForearmAngle = 0.35 + Math.sin(this.time * 2.5) * 0.15 * speechInfluence;
+        this.bones.rightForearmAngle = -0.45 - Math.cos(this.time * 2.8) * 0.2 * speechInfluence;
+      } else {
+        // Standard conversational idle arm motion
+        this.bones.leftArmAngle = 0.15 + Math.sin(this.time * 2.0) * 0.06 * speechInfluence;
+        this.bones.rightArmAngle = -0.15 - Math.cos(this.time * 2.2) * 0.06 * speechInfluence;
+        this.bones.leftForearmAngle = 0.35 + Math.sin(this.time * 2.5) * 0.1 * speechInfluence;
+        this.bones.rightForearmAngle = -0.35 - Math.cos(this.time * 2.8) * 0.1 * speechInfluence;
+      }
     }
 
     // 6. Secondary Physics for Hair & Cape
@@ -823,6 +1073,230 @@ class CharacterRig {
       ctx.fillStyle = this.profile.torso?.trim || '#38bdf8';
       ctx.fillRect(-13, 3, 2.5, 6);
 
+    } else if (type === 'PLEATED_1950S_TROUSERS') {
+      // 1950s High-Waisted Pleated Wool Trousers & Two-Tone Oxford Wingtip Brogues
+      const woolGrad = ctx.createLinearGradient(-18, 0, 18, 90);
+      woolGrad.addColorStop(0, '#334155');
+      woolGrad.addColorStop(0.5, '#1e293b');
+      woolGrad.addColorStop(1, '#0f172a');
+
+      ctx.fillStyle = woolGrad;
+      ctx.strokeStyle = '#020617';
+      ctx.lineWidth = 1.6;
+
+      // Thigh with pressed front crease
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.quadraticCurveTo(-20, 45, -16, 86);
+      ctx.lineTo(16, 86);
+      ctx.quadraticCurveTo(20, 45, 18, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Sharp ironed vertical trouser crease
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, 5);
+      ctx.lineTo(0, 85);
+      ctx.stroke();
+
+      // Knee Joint
+      ctx.translate(0, 86);
+      ctx.rotate(kneeAngle);
+
+      // Wide-cut Lower Trouser Leg
+      ctx.fillStyle = woolGrad;
+      ctx.strokeStyle = '#020617';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(-16, 0);
+      ctx.quadraticCurveTo(-18, 45, -15, 80);
+      ctx.lineTo(15, 80);
+      ctx.quadraticCurveTo(18, 45, 16, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Trouser Crease continuing down
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, 78);
+      ctx.stroke();
+
+      // 1950s Wide Turn-Up Cuffs (Cuffed hem)
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(-16, 74, 32, 9);
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-16, 74, 32, 9);
+
+      // Two-Tone Wingtip Brogues (Spectator Dress Shoes)
+      ctx.translate(0, 82);
+
+      // Stacked leather heel & dark sole
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(-14, 15, 42, 6);
+
+      // White leather vamp & quarter panel
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(-13, 2);
+      ctx.lineTo(12, 2);
+      ctx.quadraticCurveTo(22, 6, 25, 15);
+      ctx.lineTo(-13, 15);
+      ctx.closePath();
+      ctx.fill();
+
+      // Dark tan / brown leather toe cap (Wingtip 'W' curvature)
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.moveTo(6, 15);
+      ctx.lineTo(6, 9);
+      ctx.quadraticCurveTo(14, 5, 25, 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#451a03';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // Perforated medallion brogue pin-holes on toe
+      ctx.fillStyle = '#291206';
+      for (let bx = 11; bx <= 20; bx += 4) {
+        ctx.fillRect(bx, 10, 1.5, 1.5);
+      }
+
+      // Dark leather heel counter
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(-13, 2, 7, 13);
+
+    } else if (type === 'WARRIOR_KACHHA_DHOTI') {
+      // Karna: Saffron Warrior Kachha Dhoti & Golden Battle Greaves
+      const dhotiGrad = ctx.createLinearGradient(-18, 0, 18, 90);
+      dhotiGrad.addColorStop(0, '#c2410c');
+      dhotiGrad.addColorStop(0.5, '#ea580c');
+      dhotiGrad.addColorStop(1, '#7c2d12');
+
+      ctx.fillStyle = dhotiGrad;
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.4;
+
+      // Thigh wrapped tight for war
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.quadraticCurveTo(-22, 45, -14, 88);
+      ctx.lineTo(14, 88);
+      ctx.quadraticCurveTo(22, 45, 18, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Dhoti Pleat diagonal lines
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-10, 15); ctx.lineTo(12, 60);
+      ctx.moveTo(-12, 35); ctx.lineTo(10, 75);
+      ctx.stroke();
+
+      // Knee joint
+      ctx.translate(0, 88);
+      ctx.rotate(kneeAngle);
+
+      // Shin covered in Golden Sun Greaves (Ran-Paduka Armor)
+      const greaveGrad = ctx.createLinearGradient(-13, 0, 13, 85);
+      greaveGrad.addColorStop(0, '#fef08a');
+      greaveGrad.addColorStop(0.4, '#facc15');
+      greaveGrad.addColorStop(1, '#a16207');
+
+      ctx.fillStyle = greaveGrad;
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 2.0;
+
+      ctx.beginPath();
+      ctx.moveTo(-13, 0);
+      ctx.quadraticCurveTo(-16, 45, -11, 85);
+      ctx.lineTo(11, 85);
+      ctx.quadraticCurveTo(16, 45, 13, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Sun emblem engraved on center shin
+      ctx.fillStyle = '#ea580c';
+      ctx.beginPath();
+      ctx.arc(0, 42, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Studded Battle Sandals / Boots
+      ctx.translate(0, 85);
+      ctx.fillStyle = '#451a03';
+      ctx.beginPath();
+      ctx.roundRect(-12, 12, 38, 8, 3);
+      ctx.fill();
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+    } else if (type === 'RAMA_SILK_DHOTI') {
+      // Lord Ram: Golden-Yellow Silk Pitambar Dhoti & Royal Paduka Sandals
+      const dhotiGrad = ctx.createLinearGradient(-18, 0, 18, 90);
+      dhotiGrad.addColorStop(0, '#fef08a');
+      dhotiGrad.addColorStop(0.4, '#facc15');
+      dhotiGrad.addColorStop(1, '#ca8a04');
+
+      ctx.fillStyle = dhotiGrad;
+      ctx.strokeStyle = '#b91c1c';
+      ctx.lineWidth = 2.2;
+
+      // Silk Thigh Draping
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.quadraticCurveTo(-22, 45, -14, 88);
+      ctx.lineTo(14, 88);
+      ctx.quadraticCurveTo(22, 45, 18, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Knee joint
+      ctx.translate(0, 88);
+      ctx.rotate(kneeAngle);
+
+      // Lower Pleated Silk Shin
+      ctx.fillStyle = dhotiGrad;
+      ctx.beginPath();
+      ctx.moveTo(-13, 0);
+      ctx.quadraticCurveTo(-16, 45, -11, 85);
+      ctx.lineTo(11, 85);
+      ctx.quadraticCurveTo(16, 45, 13, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#b91c1c';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // Red & Gold Zari Hem Border
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(-11, 78, 22, 6);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(-11, 80, 22, 2);
+
+      // Royal Paduka Sandals
+      ctx.translate(0, 85);
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.roundRect(-12, 14, 38, 5, 2);
+      ctx.fill();
+      // Golden Toe Knob
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(14, 11, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
     } else {
       // Traditional Pleated Dhoti / Greaves
       const thighGrad = ctx.createLinearGradient(-18, 0, 18, 90);
@@ -990,6 +1464,61 @@ class CharacterRig {
       ctx.moveTo(60, -90);
       ctx.quadraticCurveTo(82 + sway * 0.7, -10, 68 + sway * 0.9, 65);
       ctx.stroke();
+
+    } else if (hairStyle === 'WARRIOR_HALF_KNOT') {
+      // Karna: Flowing Dark Warrior Mane & Half-Knot Ponytail with Golden Ring Tie
+      ctx.save();
+      ctx.translate(0, -165);
+      ctx.rotate((sway * 0.05) + (this.bones.headAngle || 0) * 0.5);
+
+      // Trailing Warrior Locks
+      ctx.beginPath();
+      ctx.moveTo(-16, -5);
+      ctx.quadraticCurveTo(-45 + sway * 0.7, 50, -32 + sway * 1.3, 140);
+      ctx.quadraticCurveTo(0 + sway * 0.9, 155, 25 + sway * 0.7, 125);
+      ctx.quadraticCurveTo(38 + sway * 0.4, 50, 16, -5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Gold Filigree Warrior Band Tie
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(-16, -5, 32, 7);
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-16, -5, 32, 7);
+      ctx.restore();
+
+    } else if (hairStyle === 'ROYAL_ASCETIC_LOCKS') {
+      // Lord Ram: Flowing Divine Princely Locks interwoven with Pearl Strings
+      ctx.save();
+      ctx.translate(0, -160);
+
+      // Flowing Left Hair Locks
+      ctx.beginPath();
+      ctx.moveTo(-45, -10);
+      ctx.quadraticCurveTo(-75 + sway * 0.6, 50, -55 + sway * 1.1, 135);
+      ctx.quadraticCurveTo(-35 + sway * 0.5, 145, -25, 95);
+      ctx.quadraticCurveTo(-35, 40, -20, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Flowing Right Hair Locks
+      ctx.beginPath();
+      ctx.moveTo(45, -10);
+      ctx.quadraticCurveTo(75 + sway * 0.6, 50, 55 + sway * 1.1, 135);
+      ctx.quadraticCurveTo(35 + sway * 0.5, 145, 25, 95);
+      ctx.quadraticCurveTo(35, 40, 20, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pearl Strings hanging along the locks
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(-35, 10); ctx.quadraticCurveTo(-50 + sway * 0.4, 70, -38 + sway * 0.8, 120);
+      ctx.moveTo(35, 10); ctx.quadraticCurveTo(50 + sway * 0.4, 70, 38 + sway * 0.8, 120);
+      ctx.stroke();
+      ctx.restore();
 
     } else {
       // Sleek Bob / Medium Back Locks
@@ -1273,6 +1802,278 @@ class CharacterRig {
         ctx.stroke();
       }
 
+    } else if (outfitType === 'KAVACHA_GOLD_ARMOR') {
+      // Celestial Kavacha - Indestructible Fused Sun Armor of Karna (Mahabharata)
+      const goldGrad = ctx.createLinearGradient(-85, -115, 85, 120);
+      goldGrad.addColorStop(0, '#fef08a');
+      goldGrad.addColorStop(0.35, '#facc15');
+      goldGrad.addColorStop(0.75, '#eab308');
+      goldGrad.addColorStop(1, '#a16207');
+
+      ctx.fillStyle = goldGrad;
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 3.2;
+
+      // Sculpted Muscular Cuirass
+      ctx.beginPath();
+      ctx.moveTo(-72, -112);
+      ctx.quadraticCurveTo(0, -118, 72, -112);
+      ctx.quadraticCurveTo(86, -50, 80, 5);
+      ctx.quadraticCurveTo(72, 65, 58, 120);
+      ctx.lineTo(-58, 120);
+      ctx.quadraticCurveTo(-72, 65, -80, 5);
+      ctx.quadraticCurveTo(-86, -50, -72, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Surya Radiant Sun Medallion (Solar Plexus)
+      ctx.save();
+      ctx.translate(0, -32);
+      // Radiating golden sunbeams
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 2.2;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * 16, Math.sin(a) * 16);
+        ctx.lineTo(Math.cos(a) * 34, Math.sin(a) * 34);
+        ctx.stroke();
+      }
+      // Inner glowing core
+      const sunCore = ctx.createRadialGradient(0, 0, 4, 0, 0, 18);
+      sunCore.addColorStop(0, '#ffffff');
+      sunCore.addColorStop(0.35, '#fef08a');
+      sunCore.addColorStop(0.75, '#f59e0b');
+      sunCore.addColorStop(1, '#dc2626');
+      ctx.fillStyle = sunCore;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 2.0;
+      ctx.stroke();
+      ctx.restore();
+
+      // Pectoral plate anatomical contouring
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(-45, -60); ctx.quadraticCurveTo(-22, -15, 0, -22);
+      ctx.moveTo(45, -60); ctx.quadraticCurveTo(22, -15, 0, -22);
+      // Abdominal plate divisions
+      ctx.moveTo(0, -12); ctx.lineTo(0, 95);
+      ctx.moveTo(-28, 20); ctx.lineTo(28, 20);
+      ctx.moveTo(-24, 55); ctx.lineTo(24, 55);
+      ctx.stroke();
+
+      // Golden Pauldrons (Shoulder Guards)
+      ctx.fillStyle = '#facc15';
+      ctx.strokeStyle = '#a16207';
+      ctx.lineWidth = 2.2;
+      [-72, 72].forEach(px => {
+        ctx.beginPath();
+        ctx.arc(px, -95, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+    } else if (outfitType === 'RAMA_PITAMBAR_SILK') {
+      // Lord Ram (Ramayana) - Cloud-Blue Complexion (Megha Shyam) & Yellow Pitambar Silk Sash
+      const skinGrad = ctx.createLinearGradient(-70, -112, 70, 120);
+      skinGrad.addColorStop(0, '#3b82f6');
+      skinGrad.addColorStop(0.5, '#2563eb');
+      skinGrad.addColorStop(1, '#1d4ed8');
+
+      ctx.fillStyle = skinGrad;
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 2.0;
+
+      // Divine Torso
+      ctx.beginPath();
+      ctx.moveTo(-68, -112);
+      ctx.quadraticCurveTo(0, -116, 68, -112);
+      ctx.quadraticCurveTo(80, -45, 74, 15);
+      ctx.lineTo(56, 120);
+      ctx.lineTo(-56, 120);
+      ctx.lineTo(-74, 15);
+      ctx.quadraticCurveTo(-80, -45, -68, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Sacred Yellow Pitambar Silk Sash draped diagonally across chest
+      const silkGrad = ctx.createLinearGradient(-60, -112, 60, 110);
+      silkGrad.addColorStop(0, '#fef08a');
+      silkGrad.addColorStop(0.4, '#facc15');
+      silkGrad.addColorStop(1, '#ca8a04');
+
+      ctx.fillStyle = silkGrad;
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      ctx.moveTo(-65, -112);
+      ctx.lineTo(-30, -112);
+      ctx.quadraticCurveTo(15, 0, 68, 85);
+      ctx.lineTo(45, 120);
+      ctx.quadraticCurveTo(-15, 15, -65, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Red & gold embroidered sash borders
+      ctx.strokeStyle = '#b91c1c';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(-30, -112);
+      ctx.quadraticCurveTo(15, 0, 68, 85);
+      ctx.stroke();
+
+      // Muktahara (Pure White Pearl Strands)
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 4.0;
+      ctx.beginPath();
+      ctx.arc(0, -100, 32, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -90, 44, 0.3, Math.PI - 0.3);
+      ctx.stroke();
+
+      // Kaustubha Radiant Center Gem
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(0, -45, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.0;
+      ctx.stroke();
+
+    } else if (outfitType === 'VINTAGE_1950S_SUIT') {
+      // 1950s Mid-Century Tailored Tweed Blazer, Waistcoat & Silk Tie
+      const suitGrad = ctx.createLinearGradient(-75, -115, 75, 120);
+      suitGrad.addColorStop(0, '#475569');
+      suitGrad.addColorStop(0.5, '#334155');
+      suitGrad.addColorStop(1, '#1e293b');
+
+      ctx.fillStyle = suitGrad;
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.2;
+
+      // Heavy Wool Blazer Silhouette
+      ctx.beginPath();
+      ctx.moveTo(-72, -112);
+      ctx.quadraticCurveTo(0, -116, 72, -112);
+      ctx.quadraticCurveTo(86, -40, 80, 20);
+      ctx.lineTo(62, 120);
+      ctx.lineTo(-62, 120);
+      ctx.lineTo(-80, 20);
+      ctx.quadraticCurveTo(-86, -40, -72, -112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Starched Crisp White Shirt (Center triangle)
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(-22, -112);
+      ctx.lineTo(22, -112);
+      ctx.lineTo(0, -25);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pointed 1950s Shirt Collar Tabs
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-26, -112); ctx.lineTo(-8, -82); ctx.lineTo(-3, -112); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(26, -112); ctx.lineTo(8, -82); ctx.lineTo(3, -112); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      // Diagonal Crimson & Gold Striped 1950s Silk Tie
+      const tieGrad = ctx.createLinearGradient(-8, -100, 8, 45);
+      tieGrad.addColorStop(0, '#b91c1c');
+      tieGrad.addColorStop(0.5, '#991b1b');
+      tieGrad.addColorStop(1, '#7f1d1d');
+      ctx.fillStyle = tieGrad;
+      ctx.beginPath();
+      ctx.moveTo(-6, -92);
+      ctx.lineTo(6, -92);
+      ctx.lineTo(10, 42);
+      ctx.lineTo(0, 56);
+      ctx.lineTo(-10, 42);
+      ctx.closePath();
+      ctx.fill();
+      // Vintage Tie Gold Stripes
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.2;
+      for (let ty = -80; ty <= 30; ty += 18) {
+        ctx.beginPath();
+        ctx.moveTo(-7, ty);
+        ctx.lineTo(7, ty + 10);
+        ctx.stroke();
+      }
+
+      // Charcoal 4-Button Waistcoat (Vest) over shirt
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(-34, -40);
+      ctx.lineTo(-14, 0);
+      ctx.lineTo(-16, 115);
+      ctx.lineTo(16, 115);
+      ctx.lineTo(14, 0);
+      ctx.lineTo(34, -40);
+      ctx.lineTo(44, 115);
+      ctx.lineTo(-44, 115);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Vest Horn Buttons
+      ctx.fillStyle = '#cbd5e1';
+      for (let vy = 15; vy <= 95; vy += 24) {
+        ctx.beginPath();
+        ctx.arc(0, vy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Wide Notched Lapels of Blazer
+      ctx.fillStyle = suitGrad;
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.0;
+      // Left Lapel
+      ctx.beginPath();
+      ctx.moveTo(-70, -112);
+      ctx.lineTo(-24, -45);
+      ctx.lineTo(-45, -35);
+      ctx.lineTo(-20, 25);
+      ctx.lineTo(-40, 30);
+      ctx.lineTo(-58, -35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Right Lapel
+      ctx.beginPath();
+      ctx.moveTo(70, -112);
+      ctx.lineTo(24, -45);
+      ctx.lineTo(45, -35);
+      ctx.lineTo(20, 25);
+      ctx.lineTo(40, 30);
+      ctx.lineTo(58, -35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Folded Pocket Square (White Handkerchief) in Breast Pocket
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-56, 10, 22, 4);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(-54, 10); ctx.lineTo(-46, -2); ctx.lineTo(-42, 6); ctx.lineTo(-38, -5); ctx.lineTo(-34, 10); ctx.closePath();
+      ctx.fill();
+
     } else {
       // 4. Traditional / Armored Cuirass (for historical presets)
       const grad = ctx.createLinearGradient(-90, -120, 90, 120);
@@ -1517,10 +2318,21 @@ class CharacterRig {
 
     // Facial Hair
     const fh = this.profile.facialHair;
-    if (fh === 'SHORT_STUBBLE') {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+    if (fh === 'SHORT_STUBBLE' || fh === 'WARRIOR_STUBBLE') {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.25)';
       ctx.beginPath();
-      ctx.arc(0, 50, 26, 0.1, Math.PI - 0.1);
+      ctx.arc(0, 50, 28, 0.1, Math.PI - 0.1);
+      ctx.fill();
+    } else if (fh === 'VINTAGE_MOUSTACHE') {
+      // 1950s Trimmed Pencil Moustache
+      ctx.fillStyle = '#1c1917';
+      ctx.beginPath();
+      ctx.moveTo(-18, 30);
+      ctx.quadraticCurveTo(-8, 25, 0, 27);
+      ctx.quadraticCurveTo(8, 25, 18, 30);
+      ctx.quadraticCurveTo(10, 34, 0, 31);
+      ctx.quadraticCurveTo(-10, 34, -18, 30);
+      ctx.closePath();
       ctx.fill();
     } else if (fh === 'FULL_WHITE_BEARD') {
       ctx.fillStyle = '#e2e8f0';
@@ -1557,6 +2369,34 @@ class CharacterRig {
       ctx.beginPath();
       ctx.arc(0, -55, 3.8, 0, Math.PI * 2);
       ctx.fill();
+    } else if (m === 'SURYA_TILAK') {
+      // Karna: Golden Sun Chandan Tilak with radiating solar crest
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(0, -56, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(0, -66); ctx.lineTo(0, -46);
+      ctx.moveTo(-9, -56); ctx.lineTo(9, -56);
+      ctx.stroke();
+    } else if (m === 'RAMA_URDHVA_PUNDRA') {
+      // Lord Ram: Sacred White Chandan U-Tilak with Vermilion Kumkuma line
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(-7, -72);
+      ctx.quadraticCurveTo(-8, -48, 0, -44);
+      ctx.quadraticCurveTo(8, -48, 7, -72);
+      ctx.stroke();
+      // Center vermilion red line
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(0, -70);
+      ctx.lineTo(0, -44);
+      ctx.stroke();
     } else if (m === 'DEVI_RED_BINDI') {
       ctx.fillStyle = '#dc2626';
       ctx.beginPath();
@@ -2107,6 +2947,143 @@ class CharacterRig {
       ctx.arc(24, -102, 14, 0, Math.PI * 2);
       ctx.fill();
 
+    } else if (hg === 'SURYA_WARRIOR_CROWN') {
+      // Karna: Golden Sun Warrior Crown (Kiritam) with Radiating Solar Spikes & Sun Medallion
+      const crownGrad = ctx.createLinearGradient(-50, -170, 50, -75);
+      crownGrad.addColorStop(0, '#fef08a');
+      crownGrad.addColorStop(0.35, '#facc15');
+      crownGrad.addColorStop(0.8, '#eab308');
+      crownGrad.addColorStop(1, '#a16207');
+
+      ctx.fillStyle = crownGrad;
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 2.5;
+
+      // Crown Silhouette with 5 Radiant Solar Peaks
+      ctx.beginPath();
+      ctx.moveTo(-52, -75);
+      ctx.lineTo(-44, -125);
+      ctx.lineTo(-24, -145);
+      ctx.lineTo(-18, -120);
+      ctx.lineTo(0, -175); // Tall Center Sun Peak
+      ctx.lineTo(18, -120);
+      ctx.lineTo(24, -145);
+      ctx.lineTo(44, -125);
+      ctx.lineTo(52, -75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Front Solar Disk Medallion at Brow
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(0, -96, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // Etched Sunbeam Filigree
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1.2;
+      for (let sx = -35; sx <= 35; sx += 14) {
+        ctx.beginPath();
+        ctx.moveTo(sx, -76);
+        ctx.lineTo(sx * 0.4, -135);
+        ctx.stroke();
+      }
+
+    } else if (hg === 'AYODHYA_PRINCE_DIADEM') {
+      // Lord Ram: Ayodhya Prince Diadem Crest with Pearl Strands & Sacred Jewel
+      const diademGrad = ctx.createLinearGradient(-45, -140, 45, -75);
+      diademGrad.addColorStop(0, '#fef08a');
+      diademGrad.addColorStop(0.4, '#facc15');
+      diademGrad.addColorStop(1, '#ca8a04');
+
+      ctx.fillStyle = diademGrad;
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 2.0;
+
+      // Princely Diadem Peak
+      ctx.beginPath();
+      ctx.moveTo(-48, -75);
+      ctx.quadraticCurveTo(-25, -115, 0, -145);
+      ctx.quadraticCurveTo(25, -115, 48, -75);
+      ctx.quadraticCurveTo(0, -82, -48, -75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Delicate Pearl Strings draping across brow
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      ctx.arc(0, -84, 38, 0.4, Math.PI - 0.4);
+      ctx.stroke();
+
+      // Sapphire / Celestial Blue Center Gem
+      ctx.fillStyle = '#2563eb';
+      ctx.beginPath();
+      ctx.arc(0, -105, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+    } else if (hg === 'FEDORA_HAT') {
+      // 1950s Mid-Century Wool Felt Fedora Hat with Grosgrain Band & Feather Accent
+      const hatFeltGrad = ctx.createLinearGradient(-65, -140, 65, -60);
+      hatFeltGrad.addColorStop(0, '#334155');
+      hatFeltGrad.addColorStop(0.5, '#1e293b');
+      hatFeltGrad.addColorStop(1, '#0f172a');
+
+      // 1. Wide Curved Fedora Brim
+      ctx.fillStyle = hatFeltGrad;
+      ctx.strokeStyle = '#020617';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.ellipse(0, -72, 64, 16, -0.05, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 2. Crown with Center Teardrop Indentation (Pinch Crown)
+      ctx.fillStyle = hatFeltGrad;
+      ctx.beginPath();
+      ctx.moveTo(-44, -76);
+      ctx.quadraticCurveTo(-46, -125, -28, -132);
+      ctx.quadraticCurveTo(0, -118, 28, -132);
+      ctx.quadraticCurveTo(46, -125, 44, -76);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Teardrop crown top crease shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, -125, 22, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Satin Grosgrain Hatband
+      ctx.fillStyle = '#090d16';
+      ctx.beginPath();
+      ctx.moveTo(-45, -82);
+      ctx.quadraticCurveTo(0, -88, 45, -82);
+      ctx.lineTo(44, -73);
+      ctx.quadraticCurveTo(0, -79, -44, -73);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // 4. Subtle Crimson Feather Accent in hatband
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(-32, -80);
+      ctx.quadraticCurveTo(-40, -100, -36, -112);
+      ctx.stroke();
+
     } else if (hg === 'GOLDEN_LOTUS_TIARA' || hg === 'SILVER_GOLD_WAR_MUKUT') {
       // Traditional crown
       ctx.fillStyle = '#facc15';
@@ -2366,6 +3343,257 @@ class CharacterRig {
       ctx.restore();
     });
 
+    // 5. Render Held Tool / Prop dynamically attached to hand
+    const itemToHold = this.heldItem || this.profile?.heldItem;
+    if (itemToHold && itemToHold !== 'NONE' && side === (this.propSide || 1)) {
+      this.renderHeldProp(ctx, itemToHold, side);
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Render Props and Held Tools (Divine Recurve Bow, 1950s Leather Briefcase,
+   * Polished Walking Cane, Broadsword, Studio Microphone, Ancient Scroll)
+   */
+  renderHeldProp(ctx, propType, side = 1) {
+    ctx.save();
+
+    if (propType === 'BOW_AND_ARROW' || propType === 'VIJAYA_BOW' || propType === 'KODANDA_BOW') {
+      // Recurve Divine Bow (Karna's Vijaya / Rama's Kodanda)
+      ctx.translate(side === 1 ? -2 : 2, 8);
+      ctx.rotate(side * 0.15);
+
+      // Central Riser Grip
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(-3.5, -12, 7, 24);
+      // Gold Filigree Accent Bands
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(-4.5, -14, 9, 3);
+      ctx.fillRect(-4.5, 11, 9, 3);
+
+      // Recurved Upper Bow Limb
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 4.2;
+      ctx.beginPath();
+      ctx.moveTo(0, -12);
+      ctx.quadraticCurveTo(-26, -75, 12, -145);
+      ctx.stroke();
+      // Upper Gold Nock Tip
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(12, -145, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Recurved Lower Bow Limb
+      ctx.beginPath();
+      ctx.moveTo(0, 12);
+      ctx.quadraticCurveTo(-26, 75, 12, 145);
+      ctx.stroke();
+      // Lower Gold Nock Tip
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(12, 145, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Taut Celestial Bowstring
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(12, -145);
+      ctx.lineTo(-10, 0);
+      ctx.lineTo(12, 145);
+      ctx.stroke();
+
+      // Golden Sun Arrow Nocked on Rest
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(-45, 0);
+      ctx.lineTo(105, 0);
+      ctx.stroke();
+
+      // Sharp Radiant Arrowhead
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(105, 0);
+      ctx.lineTo(90, -7);
+      ctx.lineTo(93, 0);
+      ctx.lineTo(90, 7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      // Quiver Fletching Feathers
+      ctx.fillStyle = '#ea580c';
+      ctx.beginPath();
+      ctx.moveTo(-45, 0);
+      ctx.lineTo(-32, -5);
+      ctx.lineTo(-24, 0);
+      ctx.lineTo(-32, 5);
+      ctx.closePath();
+      ctx.fill();
+
+    } else if (propType === 'VINTAGE_BRIEFCASE') {
+      // 1950s Mid-Century Leather Executive Attache Case
+      ctx.translate(side === 1 ? -4 : 4, 12);
+
+      // Brass Handle Hardware
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, 4, 7, Math.PI, 0);
+      ctx.stroke();
+
+      // Leather Case Body hanging below hand
+      ctx.translate(0, 10);
+      const caseGrad = ctx.createLinearGradient(-28, 0, 28, 42);
+      caseGrad.addColorStop(0, '#9a3412');
+      caseGrad.addColorStop(0.5, '#78350f');
+      caseGrad.addColorStop(1, '#451a03');
+
+      ctx.fillStyle = caseGrad;
+      ctx.beginPath();
+      ctx.roundRect(-28, 0, 56, 42, 4);
+      ctx.fill();
+      ctx.strokeStyle = '#291206';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // Edge Stitching
+      ctx.strokeStyle = 'rgba(254, 215, 170, 0.4)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(-26, 2, 52, 38);
+
+      // Corner Brass Protectors
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(-28, 36, 7, 6);
+      ctx.fillRect(21, 36, 7, 6);
+
+      // Twin Brass Lock Buckles
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(-16, 8, 6, 9);
+      ctx.fillRect(10, 8, 6, 9);
+      // Center Lock Plate
+      ctx.beginPath();
+      ctx.arc(0, 12, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else if (propType === 'WALKING_CANE') {
+      // 1950s Polished Mahogany Walking Stick with Curved Brass Derby Handle
+      ctx.translate(side === 1 ? -2 : 2, 5);
+
+      // Curved Brass Handle resting in fingers
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 6.2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(-15, -18, -28, -8);
+      ctx.stroke();
+
+      // Polished Brass Knob Accent
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(-28, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Mahogany Wooden Shaft extending straight to floor
+      const caneGrad = ctx.createLinearGradient(-3, 0, 3, 145);
+      caneGrad.addColorStop(0, '#451a03');
+      caneGrad.addColorStop(1, '#1c1917');
+
+      ctx.fillStyle = caneGrad;
+      ctx.fillRect(-2.5, 0, 5, 150);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 0.6;
+      ctx.strokeRect(-2.5, 0, 5, 150);
+
+      // Rubber Tip Ferrule
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-3.5, 146, 7, 6);
+
+    } else if (propType === 'SWORD') {
+      // Steel Broadsword with Ornate Crossguard & Pommel
+      ctx.translate(side === 1 ? -2 : 2, 8);
+      ctx.rotate(-0.2);
+
+      // Grip in Hand
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(-3.5, -12, 7, 24);
+
+      // Golden Crossguard
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.roundRect(-20, -15, 40, 5, 2);
+      ctx.fill();
+      ctx.strokeStyle = '#a16207';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Steel Blade extending upwards
+      const bladeGrad = ctx.createLinearGradient(0, -15, 0, -125);
+      bladeGrad.addColorStop(0, '#e2e8f0');
+      bladeGrad.addColorStop(0.5, '#f8fafc');
+      bladeGrad.addColorStop(1, '#94a3b8');
+
+      ctx.fillStyle = bladeGrad;
+      ctx.beginPath();
+      ctx.moveTo(-6, -15);
+      ctx.lineTo(-5, -115);
+      ctx.lineTo(0, -128);
+      ctx.lineTo(5, -115);
+      ctx.lineTo(6, -15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      // Central Fuller Ridge
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(0, -100);
+      ctx.stroke();
+
+      // Golden Pommel
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(0, 16, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else if (propType === 'MICROPHONE') {
+      // Vocal Studio Microphone
+      ctx.translate(side === 1 ? -2 : 2, 6);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-3, -2, 6, 26);
+      // Metallic Mesh Head
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.ellipse(0, -9, 7, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+    } else if (propType === 'BOOK_SCROLL') {
+      // Classical Rolled Manuscript / Scroll
+      ctx.translate(side === 1 ? -2 : 2, 8);
+      ctx.fillStyle = '#fef3c7';
+      ctx.beginPath();
+      ctx.roundRect(-8, -16, 16, 32, 4);
+      ctx.fill();
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      // Red Silk Ribbon Tie
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(-8, -2, 16, 4);
+    }
+
     ctx.restore();
   }
 }
@@ -2378,4 +3606,7 @@ if (typeof window !== 'undefined') {
 if (typeof global !== 'undefined') {
   global.CharacterRig = CharacterRig;
   global.CHARACTER_PROFILES = CHARACTER_PROFILES;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { CharacterRig, CHARACTER_PROFILES };
 }

@@ -1,6 +1,7 @@
 /**
- * MANO-LAB Unified Authentication & Access Control System
- * Subtle, non-obvious Google Sign-In with fine-grained access management.
+ * MANO-LAB Unified Authentication & Multi-Tenant Access Control System
+ * Subtle Google Sign-In with strict view isolation and fine-grained section permissions.
+ * Unapproved users see only the public website with zero secret room links.
  */
 
 (function () {
@@ -12,7 +13,39 @@
   const STORAGE_KEY_REGISTRY = 'mano_access_registry';
   const STORAGE_KEY_CLIENT_ID = 'mano_google_client_id';
 
-  // Ensure Admin is always initialized in access registry
+  // Available Protected Sections in Mano Lab
+  const SECTIONS = {
+    private_lounge: {
+      key: 'private_lounge',
+      label: 'Private Secret Lounge',
+      description: 'Peer-to-peer encrypted chat and live multiplayer typing racer',
+      url: '/apps/lounge/',
+      icon: '🔒'
+    },
+    story_studio_pro: {
+      key: 'story_studio_pro',
+      label: 'Visual Story Studio Pro',
+      description: 'AI-directed 2.5D character rigging, lore synthesis & video export',
+      url: '/apps/visual-story-generator/',
+      icon: '🎬'
+    },
+    audio_intelligence: {
+      key: 'audio_intelligence',
+      label: 'Audio Intelligence Studio',
+      description: 'Enterprise speech diarization, translation & dossier export',
+      url: '/apps/audio-transcription/',
+      icon: '🎙️'
+    },
+    aether_weave: {
+      key: 'aether_weave',
+      label: 'Aether-Weave Canvas',
+      description: 'Living refractive light art and quantum mandala synthesis',
+      url: '/apps/aether-weave/',
+      icon: '✨'
+    }
+  };
+
+  // Ensure Admin is always initialized with full access
   function getRegistry() {
     let reg = {};
     try {
@@ -24,10 +57,14 @@
     if (!reg[ADMIN_EMAIL]) {
       reg[ADMIN_EMAIL] = {
         role: 'admin',
-        name: 'Manojit (Owner)',
+        name: 'Manojit (Owner & Architect)',
         permissions: {
-          secret_room: true,
-          extra_features: true
+          private_lounge: true,
+          story_studio_pro: true,
+          audio_intelligence: true,
+          aether_weave: true,
+          secret_room: true,      // legacy backward-compat
+          extra_features: true    // legacy backward-compat
         },
         addedAt: Date.now()
       };
@@ -68,10 +105,32 @@
     if (!u || !u.email) return false;
     if (isAdmin(u)) return true;
 
+    // Normalizing legacy permission keys
+    let permKey = permission;
+    if (permission === 'secret_room') permKey = 'private_lounge';
+    if (permission === 'extra_features') permKey = 'story_studio_pro';
+
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
     if (!entry || !entry.permissions) return false;
-    return !!entry.permissions[permission];
+
+    return !!(entry.permissions[permKey] || entry.permissions[permission]);
+  }
+
+  function getUserPermissions(user) {
+    const u = user || getUser();
+    if (!u || !u.email) return {};
+    if (isAdmin(u)) {
+      return {
+        private_lounge: true,
+        story_studio_pro: true,
+        audio_intelligence: true,
+        aether_weave: true
+      };
+    }
+    const reg = getRegistry();
+    const entry = reg[u.email.toLowerCase()];
+    return entry && entry.permissions ? entry.permissions : {};
   }
 
   // --- STYLES INJECTION ---
@@ -84,7 +143,7 @@
         position: relative;
         display: inline-flex;
         align-items: center;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
       }
       .mano-btn-signin {
         display: inline-flex;
@@ -139,11 +198,11 @@
         position: absolute;
         top: calc(100% + 0.6rem);
         right: 0;
-        width: 250px;
-        background: #0f172a;
+        width: 270px;
+        background: #0b0f19;
         border: 1px solid #1e293b;
         border-radius: 0.85rem;
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
         padding: 0.5rem;
         display: none;
         flex-direction: column;
@@ -177,6 +236,39 @@
         margin-top: 0.15rem;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      .mano-dropdown-role-badge {
+        display: inline-block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.15rem 0.45rem;
+        border-radius: 9999px;
+        margin-top: 0.35rem;
+      }
+      .mano-dropdown-role-badge.admin {
+        background: rgba(250, 204, 21, 0.15);
+        color: #facc15;
+        border: 1px solid rgba(250, 204, 21, 0.3);
+      }
+      .mano-dropdown-role-badge.member {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+      .mano-dropdown-role-badge.visitor {
+        background: rgba(148, 163, 184, 0.15);
+        color: #94a3b8;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+      }
+      .mano-dropdown-section-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        padding: 0.35rem 0.75rem 0.15rem;
       }
       .mano-menu-item {
         display: flex;
@@ -214,7 +306,7 @@
       .mano-modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.75);
+        background: rgba(0, 0, 0, 0.78);
         backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
@@ -226,12 +318,12 @@
         display: none;
       }
       .mano-modal-card {
-        background: #0c101a;
+        background: #090d16;
         border: 1px solid #1e293b;
         border-radius: 1.25rem;
         width: 100%;
-        max-width: 520px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        max-width: 540px;
+        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
         overflow: hidden;
         animation: manoScaleIn 0.2s ease-out;
       }
@@ -255,7 +347,7 @@
         background: transparent;
         border: none;
         color: #94a3b8;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         cursor: pointer;
         padding: 0.25rem 0.5rem;
         border-radius: 0.35rem;
@@ -270,7 +362,7 @@
         overflow-y: auto;
       }
       .mano-form-group {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.15rem;
       }
       .mano-label {
         display: block;
@@ -296,57 +388,76 @@
         border-color: #3b82f6;
       }
       .mano-checkbox-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
         margin-top: 0.5rem;
       }
-      .mano-checkbox-label {
+      .mano-checkbox-card {
         display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.82rem;
-        color: #cbd5e1;
+        align-items: flex-start;
+        gap: 0.65rem;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid #1e293b;
+        padding: 0.65rem 0.85rem;
+        border-radius: 0.65rem;
         cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .mano-checkbox-card:hover {
+        background: rgba(30, 41, 59, 0.6);
+        border-color: rgba(59, 130, 246, 0.4);
+      }
+      .mano-checkbox-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #f1f5f9;
+      }
+      .mano-checkbox-desc {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        line-height: 1.3;
+        margin-top: 0.15rem;
       }
       .mano-btn-primary {
-        background: #3b82f6;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: #fff;
         border: none;
-        padding: 0.65rem 1.25rem;
+        padding: 0.7rem 1.25rem;
         border-radius: 0.6rem;
         font-size: 0.85rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        transition: background 0.15s;
+        transition: filter 0.15s;
       }
       .mano-btn-primary:hover {
-        background: #2563eb;
+        filter: brightness(1.1);
       }
       .mano-user-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.65rem 0.85rem;
-        background: rgba(18, 24, 38, 0.6);
+        padding: 0.75rem 0.85rem;
+        background: rgba(15, 23, 42, 0.6);
         border: 1px solid #1e293b;
-        border-radius: 0.6rem;
+        border-radius: 0.65rem;
         margin-bottom: 0.5rem;
       }
       .mano-user-info-text {
         font-size: 0.82rem;
         color: #f1f5f9;
-        font-weight: 600;
+        font-weight: 700;
       }
       .mano-user-badges {
         display: flex;
+        flex-wrap: wrap;
         gap: 0.35rem;
-        margin-top: 0.2rem;
+        margin-top: 0.3rem;
       }
       .mano-badge {
         font-size: 0.65rem;
         font-family: 'JetBrains Mono', monospace;
-        padding: 0.15rem 0.4rem;
+        padding: 0.15rem 0.45rem;
         border-radius: 9999px;
         background: rgba(59, 130, 246, 0.15);
         color: #60a5fa;
@@ -359,10 +470,10 @@
       }
       .mano-btn-revoke {
         background: transparent;
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        border: 1px solid rgba(239, 68, 68, 0.35);
         color: #f87171;
         font-size: 0.72rem;
-        padding: 0.25rem 0.55rem;
+        padding: 0.3rem 0.6rem;
         border-radius: 0.4rem;
         cursor: pointer;
       }
@@ -421,7 +532,6 @@
       renderAuthSlot();
       closeSignInModal();
 
-      // If on private room page, re-check access
       if (window.onManoAuthChanged) {
         window.onManoAuthChanged(userObj);
       }
@@ -461,7 +571,6 @@
     if (!slot) return;
 
     const user = getUser();
-    const roomPath = '/apps/lounge/';
 
     if (!user) {
       slot.innerHTML = `
@@ -478,8 +587,29 @@
         </div>
       `;
     } else {
-      const showSecretRoom = hasAccess('secret_room', user);
       const userIsAdmin = isAdmin(user);
+      const perms = getUserPermissions(user);
+      
+      // Determine what sections to display in the menu
+      const allowedSections = [];
+      if (userIsAdmin || perms.private_lounge || perms.secret_room) {
+        allowedSections.push(SECTIONS.private_lounge);
+      }
+      if (userIsAdmin || perms.story_studio_pro || perms.extra_features) {
+        allowedSections.push(SECTIONS.story_studio_pro);
+      }
+      if (userIsAdmin || perms.audio_intelligence) {
+        allowedSections.push(SECTIONS.audio_intelligence);
+      }
+      if (userIsAdmin || perms.aether_weave) {
+        allowedSections.push(SECTIONS.aether_weave);
+      }
+
+      const roleBadge = userIsAdmin
+        ? '<span class="mano-dropdown-role-badge admin">OWNER &bull; ADMIN</span>'
+        : allowedSections.length > 0
+        ? '<span class="mano-dropdown-role-badge member">AUTHORIZED MEMBER</span>'
+        : '<span class="mano-dropdown-role-badge visitor">PUBLIC VISITOR</span>';
 
       slot.innerHTML = `
         <div class="mano-auth-wrap">
@@ -493,19 +623,24 @@
             <div class="mano-dropdown-header">
               <div class="mano-dropdown-user-name">${user.name || 'User'}</div>
               <div class="mano-dropdown-user-email">${user.email}</div>
+              ${roleBadge}
             </div>
 
-            ${showSecretRoom ? `
-              <a href="${roomPath}" class="mano-menu-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <span>Private Room (Chat & Games)</span>
-              </a>
+            ${allowedSections.length > 0 ? `
+              <div class="mano-dropdown-section-title">Your Authorized Workspaces</div>
+              ${allowedSections.map(s => `
+                <a href="${s.url}" class="mano-menu-item">
+                  <span>${s.icon}</span>
+                  <span>${s.label}</span>
+                </a>
+              `).join('')}
             ` : ''}
 
             ${userIsAdmin ? `
+              <div class="mano-dropdown-section-title">Administration</div>
               <button onclick="ManoAuth.openAccessManager()" class="mano-menu-item">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Manage User Access</span>
+                <span>Manage User Access (RBAC)</span>
               </button>
             ` : ''}
 
@@ -554,7 +689,7 @@
           </div>
           <div class="mano-modal-body">
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem; line-height: 1.5;">
-              Sign in with your Google account. Authorized users receive tailored workbench capabilities and room access.
+              Sign in with your Google account. Whitelisted accounts receive tailored workspace features and private rooms.
             </p>
 
             <div id="mano-gis-button-mount" style="display: flex; justify-content: center; margin-bottom: 1.5rem;"></div>
@@ -577,7 +712,6 @@
 
     modal.classList.remove('hidden');
 
-    // Mount official Google button once GIS is ready
     const mountGISButton = () => {
       if (window.google && google.accounts && google.accounts.id) {
         initGoogleGIS();
@@ -643,7 +777,7 @@
   function openAccessManager() {
     const user = getUser();
     if (!isAdmin(user)) {
-      alert('Access restricted to Owner.');
+      alert('Access restricted to Owner (gmanojitr@gmail.com).');
       return;
     }
 
@@ -653,44 +787,78 @@
       modal.id = 'mano-access-modal';
       modal.className = 'mano-modal-backdrop';
       modal.innerHTML = `
-        <div class="mano-modal-card" style="max-width: 560px;">
+        <div class="mano-modal-card" style="max-width: 580px;">
           <div class="mano-modal-header">
-            <div class="mano-modal-title">User Access Management</div>
+            <div class="mano-modal-title">Role-Based Access Management (RBAC)</div>
             <button onclick="ManoAuth.closeAccessManager()" class="mano-modal-close">&times;</button>
           </div>
           <div class="mano-modal-body">
             <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1.25rem;">
-              Grant specific permissions to any Google account. When they sign in, they will automatically receive the assigned access.
+              Grant specific section permissions to any Google email. When they sign in, only their permitted sections will become visible to them. Unapproved accounts see only the standard public website.
             </p>
 
-            <form onsubmit="ManoAuth.handleGrantAccessSubmit(event)" style="background: rgba(18, 24, 38, 0.5); border: 1px solid #1e293b; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+            <form onsubmit="ManoAuth.handleGrantAccessSubmit(event)" style="background: rgba(18, 24, 38, 0.6); border: 1px solid #1e293b; padding: 1.15rem; border-radius: 0.85rem; margin-bottom: 1.5rem;">
               <div class="mano-form-group">
-                <label class="mano-label">User Google Email</label>
+                <label class="mano-label">Google Account Email</label>
                 <input type="email" id="mano-grant-email" class="mano-input" placeholder="friend@gmail.com" required>
               </div>
 
               <div class="mano-form-group">
-                <label class="mano-label">Permissions to Grant</label>
+                <label class="mano-label">Select Permitted Sections for this Account</label>
                 <div class="mano-checkbox-group">
-                  <label class="mano-checkbox-label">
-                    <input type="checkbox" id="mano-perm-room" checked>
-                    <span>Private Room (Live Chat & Multiplayer Games)</span>
+                  <label class="mano-checkbox-card">
+                    <input type="checkbox" id="mano-perm-lounge" checked style="margin-top: 0.2rem;">
+                    <div>
+                      <div class="mano-checkbox-title">🔒 Private Secret Lounge</div>
+                      <div class="mano-checkbox-desc">Real-time P2P encrypted chat room & multiplayer typing racer. Invisible to all others.</div>
+                    </div>
                   </label>
-                  <label class="mano-checkbox-label">
-                    <input type="checkbox" id="mano-perm-extra" checked>
-                    <span>Unlocked Workbench Capabilities</span>
+
+                  <label class="mano-checkbox-card">
+                    <input type="checkbox" id="mano-perm-story" checked style="margin-top: 0.2rem;">
+                    <div>
+                      <div class="mano-checkbox-title">🎬 Visual Story Studio (Pro Character & Rigging Engine)</div>
+                      <div class="mano-checkbox-desc">Synthesize Karna, Ram, 1950s gentleman, custom props & limb locomotion from prompts.</div>
+                    </div>
+                  </label>
+
+                  <label class="mano-checkbox-card">
+                    <input type="checkbox" id="mano-perm-audio" checked style="margin-top: 0.2rem;">
+                    <div>
+                      <div class="mano-checkbox-title">🎙️ Audio Intelligence & Transcription Lab</div>
+                      <div class="mano-checkbox-desc">Enterprise speaker diarization, bilingual transcripts & report dossier exporter.</div>
+                    </div>
+                  </label>
+
+                  <label class="mano-checkbox-card">
+                    <input type="checkbox" id="mano-perm-cosmos" checked style="margin-top: 0.2rem;">
+                    <div>
+                      <div class="mano-checkbox-title">✨ Aether-Weave Living Canvas</div>
+                      <div class="mano-checkbox-desc">Zero-gravity vibrating light ribbons, quantum entanglement & crystal audio.</div>
+                    </div>
                   </label>
                 </div>
               </div>
 
               <button type="submit" class="mano-btn-primary" style="width: 100%;">
-                Save & Grant Access
+                Save & Grant User Permissions
               </button>
             </form>
 
-            <div style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.65rem;">
-              Authorized Users
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">
+                Active Access Whitelist
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" onclick="ManoAuth.exportRegistryJSON()" class="mano-btn-revoke" style="color: #60a5fa; border-color: rgba(59,130,246,0.3);">
+                  Export JSON
+                </button>
+                <button type="button" onclick="ManoAuth.importRegistryJSON()" class="mano-btn-revoke" style="color: #34d399; border-color: rgba(52,211,153,0.3);">
+                  Import JSON
+                </button>
+              </div>
             </div>
+
             <div id="mano-access-users-list"></div>
           </div>
         </div>
@@ -724,20 +892,35 @@
       const isOwner = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
       const perms = entry.permissions || {};
 
+      const badges = [];
+      if (isOwner) {
+        badges.push('<span class="mano-badge admin">OWNER & SUPER-ADMIN</span>');
+      }
+      if (perms.private_lounge || perms.secret_room) {
+        badges.push('<span class="mano-badge">🔒 Lounge & Games</span>');
+      }
+      if (perms.story_studio_pro || perms.extra_features) {
+        badges.push('<span class="mano-badge">🎬 Story Pro</span>');
+      }
+      if (perms.audio_intelligence) {
+        badges.push('<span class="mano-badge">🎙️ Audio Lab</span>');
+      }
+      if (perms.aether_weave) {
+        badges.push('<span class="mano-badge">✨ Aether-Weave</span>');
+      }
+
       return `
         <div class="mano-user-item">
           <div>
             <div class="mano-user-info-text">${email}</div>
             <div class="mano-user-badges">
-              ${isOwner ? '<span class="mano-badge admin">OWNER & ADMIN</span>' : ''}
-              ${perms.secret_room ? '<span class="mano-badge">Private Room</span>' : ''}
-              ${perms.extra_features ? '<span class="mano-badge">Pro Features</span>' : ''}
+              ${badges.join('')}
             </div>
           </div>
           <div>
             ${!isOwner ? `
               <button onclick="ManoAuth.revokeAccess('${email}')" class="mano-btn-revoke">Revoke</button>
-            ` : '<span style="font-size: 0.7rem; color: #64748b;">Protected</span>'}
+            ` : '<span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Immutable</span>'}
           </div>
         </div>
       `;
@@ -747,8 +930,10 @@
   function handleGrantAccessSubmit(e) {
     e.preventDefault();
     const emailInput = document.getElementById('mano-grant-email');
-    const permRoom = document.getElementById('mano-perm-room').checked;
-    const permExtra = document.getElementById('mano-perm-extra').checked;
+    const permLounge = document.getElementById('mano-perm-lounge').checked;
+    const permStory = document.getElementById('mano-perm-story').checked;
+    const permAudio = document.getElementById('mano-perm-audio').checked;
+    const permCosmos = document.getElementById('mano-perm-cosmos').checked;
 
     const email = emailInput.value.trim().toLowerCase();
     if (!email) return;
@@ -757,8 +942,12 @@
     reg[email] = {
       role: email === ADMIN_EMAIL.toLowerCase() ? 'admin' : 'member',
       permissions: {
-        secret_room: permRoom,
-        extra_features: permExtra
+        private_lounge: permLounge,
+        story_studio_pro: permStory,
+        audio_intelligence: permAudio,
+        aether_weave: permCosmos,
+        secret_room: permLounge,      // backward-compat
+        extra_features: permStory     // backward-compat
       },
       updatedAt: Date.now()
     };
@@ -775,12 +964,56 @@
       alert('Cannot revoke Owner access.');
       return;
     }
-    if (confirm(`Revoke access for ${email}?`)) {
+    if (confirm(`Revoke all access for ${email}?`)) {
       const reg = getRegistry();
       delete reg[email.toLowerCase()];
       saveRegistry(reg);
       renderAccessUsersList();
       renderAuthSlot();
+    }
+  }
+
+  function exportRegistryJSON() {
+    const reg = getRegistry();
+    const jsonStr = JSON.stringify(reg, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mano-lab-access-registry-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importRegistryJSON() {
+    const jsonStr = prompt("Paste your Access Registry JSON configuration below:");
+    if (!jsonStr) return;
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (typeof parsed !== 'object') throw new Error("Invalid format");
+      // Merge with existing registry
+      const reg = getRegistry();
+      Object.assign(reg, parsed);
+      // Guarantee Owner stays admin
+      reg[ADMIN_EMAIL] = {
+        role: 'admin',
+        name: 'Manojit (Owner & Architect)',
+        permissions: {
+          private_lounge: true,
+          story_studio_pro: true,
+          audio_intelligence: true,
+          aether_weave: true,
+          secret_room: true,
+          extra_features: true
+        },
+        updatedAt: Date.now()
+      };
+      saveRegistry(reg);
+      renderAccessUsersList();
+      renderAuthSlot();
+      alert("Access registry successfully imported & updated!");
+    } catch (e) {
+      alert("Error importing JSON: " + e.message);
     }
   }
 
@@ -794,9 +1027,11 @@
   // Export to window
   window.ManoAuth = {
     ADMIN_EMAIL,
+    SECTIONS,
     getUser,
     isAdmin,
     hasAccess,
+    getUserPermissions,
     getRegistry,
     saveRegistry,
     openSignInModal,
@@ -808,6 +1043,8 @@
     closeAccessManager,
     handleGrantAccessSubmit,
     revokeAccess,
+    exportRegistryJSON,
+    importRegistryJSON,
     renderAuthSlot,
     renderGoogleButton
   };

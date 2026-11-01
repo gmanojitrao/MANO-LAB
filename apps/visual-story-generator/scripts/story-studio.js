@@ -27,6 +27,147 @@ class StoryStudioApp {
 
     // Curated Neutral Modern Story Presets
     this.storyPresets = {
+      'EPIC_MAHABHARATA': {
+        title: 'Karna: Sun Warrior of Kurukshetra',
+        char1Archetype: 'KARNA',
+        char2Archetype: 'RAM',
+        castName: 'Karna & Lord Ram',
+        worldName: 'Kurukshetra Battlefield',
+        avatar: '☀️',
+        scenes: [
+          {
+            env: 'KURUKSHETRA',
+            speaker: 0,
+            speakerName: 'Karna',
+            text: 'I am Karna, son of Surya. Even against insurmountable fate, a warrior never yields.',
+            char1TargetX: -75,
+            char2TargetX: 75,
+            char1Pose: 'HEROIC_STANCE',
+            char2Pose: 'HOLDING_PROP',
+            shot: 'WIDE_ESTABLISHING',
+            duration: 5.6
+          },
+          {
+            env: 'KURUKSHETRA',
+            speaker: 1,
+            speakerName: 'Lord Ram',
+            text: 'Dharma is not given by circumstance, noble Karna. It is proven by righteous action.',
+            char1TargetX: -55,
+            char2TargetX: 55,
+            char1Pose: 'HOLDING_PROP',
+            char2Pose: 'TALKING_GESTURE',
+            shot: 'HERO_CLOSEUP',
+            duration: 5.8
+          },
+          {
+            env: 'KURUKSHETRA',
+            speaker: 0,
+            speakerName: 'Karna',
+            text: 'Then let our courage speak across time—righteousness and honor above all else.',
+            char1TargetX: -35,
+            char2TargetX: 35,
+            char1Pose: 'HEROIC_STANCE',
+            char2Pose: 'NAMASTE',
+            shot: 'MEDIUM_ACTION',
+            duration: 5.4
+          }
+        ]
+      },
+
+      'RAMAYANA_AYODHYA': {
+        title: 'Lord Ram at Ayodhya',
+        char1Archetype: 'RAM',
+        char2Archetype: 'KARNA',
+        castName: 'Lord Ram & Karna',
+        worldName: 'Ayodhya Sacred Palace',
+        avatar: '🏹',
+        scenes: [
+          {
+            env: 'AYODHYA_PALACE',
+            speaker: 0,
+            speakerName: 'Lord Ram',
+            text: 'Welcome to Ayodhya. Where truth, compassion, and justice guide all righteous souls.',
+            char1TargetX: -75,
+            char2TargetX: 75,
+            char1Pose: 'SERENE_STANCE',
+            char2Pose: 'HOLDING_PROP',
+            shot: 'WIDE_ESTABLISHING',
+            duration: 5.8
+          },
+          {
+            env: 'AYODHYA_PALACE',
+            speaker: 1,
+            speakerName: 'Karna',
+            text: 'Your virtue illuminates the three realms, Lord of Raghu. True valor bows to righteousness.',
+            char1TargetX: -55,
+            char2TargetX: 55,
+            char1Pose: 'HOLDING_PROP',
+            char2Pose: 'TALKING_GESTURE',
+            shot: 'HERO_CLOSEUP',
+            duration: 6.0
+          },
+          {
+            env: 'AYODHYA_PALACE',
+            speaker: 0,
+            speakerName: 'Lord Ram',
+            text: 'May goodwill and selfless courage bless every generation to come.',
+            char1TargetX: -35,
+            char2TargetX: 35,
+            char1Pose: 'SERENE_STANCE',
+            char2Pose: 'NAMASTE',
+            shot: 'MEDIUM_ACTION',
+            duration: 5.2
+          }
+        ]
+      },
+
+      'VINTAGE_1950S': {
+        title: '1950s London Fog',
+        char1Archetype: 'MAN_1950S',
+        char2Archetype: 'ALEX',
+        castName: 'Arthur & Alex',
+        worldName: '1950s Urban Street',
+        avatar: '🎩',
+        scenes: [
+          {
+            env: 'VINTAGE_1950S_STREET',
+            speaker: 0,
+            speakerName: 'Arthur',
+            text: 'Good evening, sir. Autumn in 1952 has a rather timeless elegance about it.',
+            char1TargetX: -70,
+            char2TargetX: 70,
+            char1Pose: 'HOLDING_PROP',
+            char2Pose: 'TALKING_GESTURE',
+            shot: 'WIDE_ESTABLISHING',
+            duration: 5.5
+          },
+          {
+            env: 'VINTAGE_1950S_STREET',
+            speaker: 1,
+            speakerName: 'Alex',
+            text: 'There is nothing quite like a quiet stroll under glowing amber gas streetlamps after rain.',
+            char1TargetX: -50,
+            char2TargetX: 50,
+            char1Pose: 'HOLDING_PROP',
+            char2Pose: 'TALKING_GESTURE',
+            shot: 'HERO_CLOSEUP',
+            duration: 5.8
+          },
+          {
+            env: 'VINTAGE_1950S_STREET',
+            speaker: 0,
+            speakerName: 'Arthur',
+            text: 'Indeed. Times change, but a tailored wool suit and classic courtesy never go out of style.',
+            char1TargetX: -30,
+            char2TargetX: 30,
+            char1Pose: 'HOLDING_PROP',
+            char2Pose: 'TALKING_GESTURE',
+            shot: 'MEDIUM_ACTION',
+            duration: 5.6
+          }
+        ]
+      },
+
       'TECH_PODCAST': {
         title: 'AI & Human Creativity',
         char1Archetype: 'ALEX',
@@ -400,6 +541,23 @@ class StoryStudioApp {
       });
     }
 
+
+    const charPropSelect = document.getElementById('char-prop-select');
+    if (charPropSelect) {
+      charPropSelect.addEventListener('change', (e) => {
+        getActiveRig().setHeldItem(e.target.value);
+        this.showToast(`Held tool updated: ${e.target.value}`);
+      });
+    }
+
+    const charPoseSelect = document.getElementById('char-pose-select');
+    if (charPoseSelect) {
+      charPoseSelect.addEventListener('change', (e) => {
+        getActiveRig().setPose(e.target.value);
+        this.showToast(`Gesture pose: ${e.target.value}`);
+      });
+    }
+
     // 10. Microphone Recording
     const micBtn = document.getElementById('btn-record-mic');
     if (micBtn) {
@@ -470,6 +628,13 @@ class StoryStudioApp {
 
     const accessorySelect = document.getElementById('char-accessory-select');
     if (accessorySelect) accessorySelect.value = p.accessories || 'NONE';
+
+    const propSelect = document.getElementById('char-prop-select');
+    if (propSelect) propSelect.value = rig.heldItem || p.heldItem || 'NONE';
+
+    const poseSelect = document.getElementById('char-pose-select');
+    if (poseSelect) poseSelect.value = rig.pose || p.pose || 'NEUTRAL';
+
   }
 
   selectStoryPreset(key) {
@@ -614,84 +779,114 @@ class StoryStudioApp {
     const btn = document.getElementById('btn-generate-topic-story');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span>⏳</span> <span>Writing Story...</span>';
+      btn.innerHTML = '<span>⏳</span> <span>Synthesizing Scene & Cast...</span>';
     }
 
-    this.showToast(`✨ Generating dialogue for "${topic}"...`);
-    await new Promise(r => setTimeout(r, 600));
+    this.showToast(`✨ Generating story & characters for "${topic}"...`);
+    await new Promise(r => setTimeout(r, 400));
 
     const tLower = topic.toLowerCase();
+    const CharRigClass = (typeof CharacterRig !== 'undefined' ? CharacterRig : window.CharacterRig);
+    const ScnDirClass = (typeof SceneDirector !== 'undefined' ? SceneDirector : window.SceneDirector);
 
-    // Smart contextual environment and theme detection
-    let env = 'PODCAST_STUDIO';
-    let c1 = 'ALEX';
-    let c2 = 'MAYA';
-    let n1 = 'Alex';
-    let n2 = 'Maya';
+    // 1. Synthesize Character 1 & Character 2 from prompt
+    let p1 = null;
+    let p2 = null;
 
-    if (tLower.includes('coffee') || tLower.includes('cafe') || tLower.includes('food') || tLower.includes('tea') || tLower.includes('morning')) {
-      env = 'COFFEE_SHOP';
-      c1 = 'SAM';
-      c2 = 'PRIYA';
-      n1 = 'Sam';
-      n2 = 'Priya';
-    } else if (tLower.includes('nature') || tLower.includes('park') || tLower.includes('walk') || tLower.includes('sun') || tLower.includes('outdoor')) {
-      env = 'SUNNY_PARK';
-      c1 = 'ELENA';
-      c2 = 'SAM';
-      n1 = 'Elena';
-      n2 = 'Sam';
-    } else if (tLower.includes('career') || tLower.includes('work') || tLower.includes('job') || tLower.includes('office') || tLower.includes('meeting')) {
-      env = 'MODERN_OFFICE';
-      c1 = 'DAVID';
-      c2 = 'MAYA';
-      n1 = 'David';
-      n2 = 'Maya';
-    } else if (tLower.includes('tech') || tLower.includes('code') || tLower.includes('ai') || tLower.includes('future') || tLower.includes('cyber')) {
-      env = 'PODCAST_STUDIO';
-      c1 = 'ALEX';
-      c2 = 'MAYA';
-      n1 = 'Alex';
-      n2 = 'Maya';
-    } else if (tLower.includes('city') || tLower.includes('dream') || tLower.includes('sunset') || tLower.includes('travel')) {
-      env = 'CITY_SUNSET';
-      c1 = 'DAVID';
-      c2 = 'ELENA';
-      n1 = 'David';
-      n2 = 'Elena';
+    if ((tLower.includes('karna') || tLower.includes('mahabharata')) && (tLower.includes('ram') || tLower.includes('rama') || tLower.includes('ayodhya'))) {
+      p1 = CharRigClass.synthesizeFromPrompt('Karna from Mahabharata with divine bow');
+      p2 = CharRigClass.synthesizeFromPrompt('Ram from Ramayana with Kodanda bow');
+    } else if ((tLower.includes('karna') || tLower.includes('mahabharata')) && (tLower.includes('1950') || tLower.includes('vintage') || tLower.includes('gentleman'))) {
+      p1 = CharRigClass.synthesizeFromPrompt('Karna from Mahabharata with golden armor');
+      p2 = CharRigClass.synthesizeFromPrompt('Simple man from 1950s with briefcase and fedora');
+    } else if ((tLower.includes('ram') || tLower.includes('rama')) && (tLower.includes('1950') || tLower.includes('vintage') || tLower.includes('gentleman'))) {
+      p1 = CharRigClass.synthesizeFromPrompt('Lord Ram from Ramayana in yellow pitambar');
+      p2 = CharRigClass.synthesizeFromPrompt('Simple man from 1950s with walking cane and fedora');
+    } else if (tLower.includes('karna') || tLower.includes('mahabharata')) {
+      p1 = CharRigClass.synthesizeFromPrompt(topic);
+      p2 = CharRigClass.synthesizeFromPrompt('Lord Ram from Ramayana');
+    } else if (tLower.includes('ram') || tLower.includes('rama') || tLower.includes('ayodhya')) {
+      p1 = CharRigClass.synthesizeFromPrompt(topic);
+      p2 = CharRigClass.synthesizeFromPrompt('Karna from Mahabharata');
+    } else if (tLower.includes('1950') || tLower.includes('vintage') || tLower.includes('gentleman')) {
+      p1 = CharRigClass.synthesizeFromPrompt(topic);
+      p2 = CharRigClass.synthesizeFromPrompt('Alex modern creator');
     } else {
-      env = 'COZY_LOUNGE';
-      c1 = 'ALEX';
-      c2 = 'SAM';
-      n1 = 'Alex';
-      n2 = 'Sam';
+      p1 = CharRigClass.synthesizeFromPrompt(topic);
+      p2 = CharRigClass.synthesizeFromPrompt('Partner discussing ' + topic);
+    }
+
+    // Apply synthesized character profiles & props
+    this.char1.profile = p1;
+    this.char1.heldItem = p1.heldItem || 'NONE';
+    this.char1.pose = p1.pose || 'HOLDING_PROP';
+
+    this.char2.profile = p2;
+    this.char2.heldItem = p2.heldItem || 'NONE';
+    this.char2.pose = p2.pose || 'HOLDING_PROP';
+
+    this.syncCharacterInspector();
+
+    // 2. Contextual Background World
+    const env = ScnDirClass.detectEnvironmentFromPrompt(topic);
+    this.director.setEnvironment(env);
+
+    // 3. Craft matching dialogue and camera shots
+    const n1 = p1.name.split(':')[0].split('(')[0].trim();
+    const n2 = p2.name.split(':')[0].split('(')[0].trim();
+
+    let scene1Text = `Greetings. Behold the destiny that brings us here together.`;
+    let scene2Text = `Indeed. Every choice and every action defines who we become.`;
+    let scene3Text = `Let our purpose be clear: courage, truth, and honor above all else.`;
+
+    if (tLower.includes('karna') && tLower.includes('ram')) {
+      scene1Text = `I am Karna, son of Surya. Even against insurmountable fate, a warrior never yields.`;
+      scene2Text = `Dharma is not given by circumstance, noble Karna. It is proven by righteous action.`;
+      scene3Text = `Then let our courage speak across time—righteousness and honor above all else.`;
+    } else if (tLower.includes('karna')) {
+      scene1Text = `Born with solar golden armor and the Vijaya bow. I will never bow to unjust boundaries.`;
+      scene2Text = `Your strength and generosity are legendary across the three worlds, son of Surya.`;
+      scene3Text = `A warrior gives everything for honor, loyalty, and his sacred promise.`;
+    } else if (tLower.includes('ram') || tLower.includes('rama')) {
+      scene1Text = `Welcome. In Ayodhya, virtue and compassion are the eternal foundation of peace.`;
+      scene2Text = `Your divine wisdom inspires all who seek the true path of righteousness.`;
+      scene3Text = `May truth and goodwill triumph over every darkness throughout the realms.`;
+    } else if (tLower.includes('1950')) {
+      scene1Text = `Good day, sir. A brisk walk through the evening mist does wonders for the spirit.`;
+      scene2Text = `Indeed. A classic tailored suit, a fedora, and true courtesy never go out of style.`;
+      scene3Text = `Quite right. No matter how the world rushes forward, timeless character remains.`;
+    } else {
+      scene1Text = `Have you considered the deeper truth behind: ${topic}?`;
+      scene2Text = `That is fascinating. When you examine it closely, it changes how we see the world.`;
+      scene3Text = `Exactly! When wisdom and action come together, everything falls into place.`;
     }
 
     const autoStory = {
       title: topic,
-      char1Archetype: c1,
-      char2Archetype: c2,
       castName: `${n1} & ${n2}`,
       worldName: env.replace(/_/g, ' '),
-      avatar: '🎬',
       scenes: [
         {
           env: env,
           speaker: 0,
           speakerName: n1,
-          text: `Have you ever thought deeply about this: ${topic}?`,
+          text: scene1Text,
           char1TargetX: -75,
           char2TargetX: 75,
+          char1Pose: 'HEROIC_STANCE',
+          char2Pose: 'HOLDING_PROP',
           shot: 'WIDE_ESTABLISHING',
-          duration: 5.2
+          duration: 5.6
         },
         {
           env: env,
           speaker: 1,
           speakerName: n2,
-          text: `That is such an interesting perspective. Most people overlook how much it shapes our daily decisions.`,
+          text: scene2Text,
           char1TargetX: -55,
           char2TargetX: 55,
+          char1Pose: 'HOLDING_PROP',
+          char2Pose: 'TALKING_GESTURE',
           shot: 'HERO_CLOSEUP',
           duration: 6.0
         },
@@ -699,16 +894,18 @@ class StoryStudioApp {
           env: env,
           speaker: 0,
           speakerName: n1,
-          text: `Exactly! When you look at it clearly, everything connects and makes complete sense.`,
+          text: scene3Text,
           char1TargetX: -35,
           char2TargetX: 35,
+          char1Pose: 'HEROIC_STANCE',
+          char2Pose: 'NAMASTE',
           shot: 'MEDIUM_ACTION',
-          duration: 5.2
+          duration: 5.4
         }
       ]
     };
 
-    // Update banner
+    // Update banner UI
     const castElem = document.getElementById('cast-display-name');
     if (castElem) castElem.textContent = `Cast: ${autoStory.castName}`;
     const worldElem = document.getElementById('world-display-name');
@@ -722,10 +919,7 @@ class StoryStudioApp {
     await this.playMultiSceneStory(autoStory);
   }
 
-  /**
-   * 9:16 Video Recording & Export
-   */
-  startVideoRecording() {
+    startVideoRecording() {
     try {
       const stream = this.canvas.captureStream(30);
       const mimeTypes = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'];
