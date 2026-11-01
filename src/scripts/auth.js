@@ -7,6 +7,7 @@
   'use strict';
 
   const ADMIN_EMAIL = 'gmanojitr@gmail.com';
+  const GOOGLE_CLIENT_ID = '641612906961-0udfabvsrp1g8vto9uq9qvntd6jaa3er.apps.googleusercontent.com';
   const STORAGE_KEY_USER = 'mano_auth_user';
   const STORAGE_KEY_REGISTRY = 'mano_access_registry';
   const STORAGE_KEY_CLIENT_ID = 'mano_google_client_id';
@@ -388,7 +389,7 @@
 
   function initGoogleGIS() {
     if (!window.google || !google.accounts || !google.accounts.id) return;
-    const clientId = localStorage.getItem(STORAGE_KEY_CLIENT_ID) || '104829482910-mano.apps.googleusercontent.com';
+    const clientId = localStorage.getItem(STORAGE_KEY_CLIENT_ID) || GOOGLE_CLIENT_ID;
     try {
       google.accounts.id.initialize({
         client_id: clientId,
@@ -552,22 +553,27 @@
 
     modal.classList.remove('hidden');
 
-    // Mount official Google button if GIS is ready
-    if (window.google && google.accounts && google.accounts.id) {
-      const btnMount = document.getElementById('mano-gis-button-mount');
-      if (btnMount) {
-        btnMount.innerHTML = '';
-        try {
-          google.accounts.id.renderButton(btnMount, {
-            theme: 'filled_black',
-            size: 'large',
-            shape: 'pill',
-            text: 'signin_with',
-            width: 260
-          });
-        } catch (e) {}
+    // Mount official Google button once GIS is ready
+    const mountGISButton = () => {
+      if (window.google && google.accounts && google.accounts.id) {
+        initGoogleGIS();
+        const btnMount = document.getElementById('mano-gis-button-mount');
+        if (btnMount && btnMount.children.length === 0) {
+          try {
+            google.accounts.id.renderButton(btnMount, {
+              theme: 'filled_black',
+              size: 'large',
+              shape: 'pill',
+              text: 'signin_with',
+              width: 260
+            });
+          } catch (e) {}
+        }
+      } else {
+        setTimeout(mountGISButton, 200);
       }
-    }
+    };
+    mountGISButton();
   }
 
   function closeSignInModal() {

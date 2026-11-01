@@ -1046,6 +1046,7 @@
 
     // 1. MASTER PERMISSIONS & USER STATE
     const ADMIN_EMAIL = 'gmanojitr@gmail.com';
+    const GOOGLE_CLIENT_ID = '641612906961-0udfabvsrp1g8vto9uq9qvntd6jaa3er.apps.googleusercontent.com';
     let currentUser = window.ManoAuth ? ManoAuth.getUser() : JSON.parse(localStorage.getItem('mano_auth_user') || 'null');
     let p2pRoom = null;
     let sendChatMessage = null;
@@ -1095,7 +1096,7 @@
         return;
       }
 
-      const clientId = GOOGLE_CLIENT_ID || '104829482910-mano.apps.googleusercontent.com';
+      const clientId = localStorage.getItem('mano_google_client_id') || GOOGLE_CLIENT_ID;
       try {
         google.accounts.id.initialize({
           client_id: clientId,
