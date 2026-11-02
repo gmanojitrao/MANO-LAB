@@ -810,7 +810,11 @@
               <div class="mano-dropdown-section-title">Owner Suite</div>
               <button onclick="ManoAuth.openPrivateCorner(); ManoAuth.toggleUserDropdown();" class="mano-menu-item" style="color: #c25e38; font-weight: 700;">
                 <span>🔒</span>
-                <span>Open Private Corner (11 Apps)</span>
+                <span>Open Private Corner (12 Apps)</span>
+              </button>
+              <button onclick="if (window.openSettingsModal) { window.openSettingsModal(); } else { const k = prompt('Update OmniScribe Google Gemini API Key:', localStorage.getItem('omniscribe_gemini_key') || ''); if (k !== null) { localStorage.setItem('omniscribe_gemini_key', k.trim()); alert('Gemini Key updated successfully!'); } } ManoAuth.toggleUserDropdown();" class="mano-menu-item">
+                <span>🔑</span>
+                <span>Configure Gemini API Key</span>
               </button>
             ` : ''}
 

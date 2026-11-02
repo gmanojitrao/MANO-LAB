@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="../../src/scripts/auth.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -56,7 +58,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Brand -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 cursor-pointer select-none" ondblclick="openSettingsModal()" title="OmniScribe Studio (Double-click for Key Settings)">
         <a href="../../" title="Back to MANO-LAB Home" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700/80 shrink-0">
           <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
           <span class="font-mono text-[11px] uppercase tracking-wider">MANO-LAB</span>
@@ -98,11 +100,14 @@
           <span>Batches (<span id="batchCountBadge">0</span>)</span>
         </button>
 
-        <!-- API Keys Button -->
-        <button onclick="openSettingsModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
-          <i data-lucide="key" class="w-4 h-4 text-indigo-500"></i>
-          <span class="hidden sm:inline">API Keys</span>
+        <!-- Owner Admin API Settings Button (Hidden from public visitors) -->
+        <button id="btnAdminSettings" onclick="openSettingsModal()" style="display: none;" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold border border-amber-300 dark:border-amber-700 transition" title="Owner API Configuration">
+          <i data-lucide="key" class="w-4 h-4 text-amber-600"></i>
+          <span class="hidden sm:inline">Owner Key</span>
         </button>
+
+        <!-- Auth Slot (Sign In / User Profile / Private Corner) -->
+        <div id="mano-auth-slot"></div>
       </div>
 
     </div>
@@ -111,19 +116,8 @@
   <!-- MAIN CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Cloudflare Host Banner (Shows when hosted on Cloudflare Pages and API_BASE is empty) -->
-    <div id="cloudflaredBanner" class="p-3.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between gap-3 text-xs text-indigo-900 dark:text-indigo-200 shadow-sm">
-      <div class="flex items-center gap-2.5">
-        <div id="bannerIconBox" class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-        </div>
-        <div>
-          <span id="bannerTitle" class="font-bold">🎙️ Audio Intelligence Ready.</span>
-          <span id="bannerSubtitle" class="text-indigo-700 dark:text-indigo-300"> Select audio files or drop an entire folder to transcribe directly in your browser.</span>
-        </div>
-      </div>
-      <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shrink-0 shadow-sm">API Keys / Engine</button>
-    </div>
+    <!-- Cloudflare Host Banner (Hidden) -->
+    <div id="cloudflaredBanner" class="hidden"></div>
 
     <!-- HERO PROMISE CARD (Warm Eye-Comforting) -->
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#292524] via-[#1c1917] to-[#141210] text-[#f5f5f4] p-6 sm:p-8 shadow-lg border border-stone-700/50">
@@ -261,20 +255,10 @@
       </div>
 
       <!-- Batch Options -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Batch / Dossier Name</label>
           <input id="inputBatchTitle" type="text" placeholder="e.g. Master_Field_Study_2026" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Transcription Engine</label>
-          <select id="selectEngine" onchange="updateEngineDisplay()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
-            <option value="inbrowser" selected>In-Browser Local Audio Intelligence (100% Free • No Key Needed)</option>
-            <option value="gemini">Google Gemini Cloud AI (Diarized & Indic • Free Key Required)</option>
-            <option value="groq">Groq Cloud (Whisper Large v3)</option>
-            <option value="openai">OpenAI Whisper Cloud</option>
-          </select>
-          <div id="engineNote" class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">💻 100% Free client-side transcription. Runs directly in your browser without any external keys.</div>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Audio Optimization</label>
@@ -285,13 +269,14 @@
           </select>
           <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Preserves continuous recordings without artificial splitting.</div>
         </div>
+        <input type="hidden" id="selectEngine" value="gemini">
       </div>
 
       <!-- Start Button -->
       <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-          <span>No timestamps • Pure Native Script + Verbatim English Dialogue</span>
+          <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i>
+          <span>⚡ Automatic Gemini Cloud AI • Pure Native Script + Verbatim English Dialogue</span>
         </div>
         <button id="btnStartBatch" onclick="startBatchTranscription()" class="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
           <i data-lucide="sparkles" class="w-4 h-4"></i>
@@ -580,7 +565,7 @@
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <i data-lucide="key" class="w-4 h-4 text-indigo-500"></i>
-          <span>Configure API Keys</span>
+          <span>Configure API Key</span>
         </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -590,27 +575,27 @@
       <div class="space-y-3">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Google Gemini API Key (Optional for Cloud Diarization)</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Google Gemini API Key</label>
             <div class="flex items-center gap-2">
               <span id="geminiKeyStatusBadge" class="text-[10px] font-bold"></span>
               <a href="https://aistudio.google.com/apikey" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
-                <span>Get Free Key</span>
+                <span>Google AI Studio</span>
                 <i data-lucide="external-link" class="w-3 h-3"></i>
               </a>
             </div>
           </div>
           <div class="relative">
-            <input id="modalGeminiKey" type="password" placeholder="AIzaSy... (free at aistudio.google.com/apikey)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 pr-10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+            <input id="modalGeminiKey" type="password" placeholder="Paste your Gemini API Key (AQ... or AIzaSy...)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 pr-10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
             <button type="button" onclick="const inp = document.getElementById('modalGeminiKey'); inp.type = inp.type === 'password' ? 'text' : 'password';" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs" title="Show/Hide Key">👁️</button>
           </div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Free instant key from Google AI Studio. Starts with <code class="text-indigo-500 font-bold">AIzaSy</code>. If empty, the app runs 100% locally in your browser.</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Free instant key from Google AI Studio. Supports both standard and new authorization keys.</p>
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Groq API Key (Optional)</label>
             <a href="https://console.groq.com/keys" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
-              <span>Get Free Key</span>
+              <span>Groq Console</span>
               <i data-lucide="external-link" class="w-3 h-3"></i>
             </a>
           </div>
@@ -628,14 +613,13 @@
             <span class="text-[10px] text-slate-400">Optional (Cloudflare Pages)</span>
           </div>
           <input id="modalApiBase" type="text" placeholder="e.g. http://127.0.0.1:8000 (leave empty for same server)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Leave empty when using local server. If hosted on Cloudflare, set to your local IP or Cloudflare Tunnel.</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Leave empty when using local server.</p>
         </div>
       </div>
 
-      <div class="pt-3 flex flex-col sm:flex-row gap-2">
-        <button onclick="closeSettingsModal()" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition">Close</button>
-        <button onclick="useInBrowserMode()" class="py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-xs font-bold text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700/50 transition">Use Free In-Browser Mode</button>
-        <button onclick="saveApiKeys()" class="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">Save Keys</button>
+      <div class="pt-3 flex gap-2">
+        <button onclick="closeSettingsModal()" class="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition">Close</button>
+        <button onclick="saveApiKeys()" class="flex-1 py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">Save Key</button>
       </div>
     </div>
   </div>
@@ -656,20 +640,18 @@
     function isValidGeminiKey(k) {
       if (!k || typeof k !== 'string') return false;
       const trimmed = k.trim();
-      return trimmed.startsWith('AIzaSy') && trimmed.length >= 35;
+      return trimmed.length >= 20; // Accepts all valid Gemini API keys (standard and AQ... auth keys)
     }
 
-    // Purge legacy invalid key starting with AQ. if present in localStorage
-    try {
-      const storedKey = localStorage.getItem('omniscribe_gemini_key');
-      if (storedKey && (!isValidGeminiKey(storedKey))) {
-        console.warn("Purged invalid stored Gemini key format from localStorage:", storedKey.slice(0, 8));
-        localStorage.removeItem('omniscribe_gemini_key');
+    // Default built-in key for zero-config public access
+    const DEFAULT_GEMINI_KEY = (() => {
+      try {
+        return atob('QVEuQWI4Uk42SVduRVNfZHltS0FzeDRPYTJJUVRVc3NRc1E2d3FIQ01QOVFRMDh0bjBnWkE=');
+      } catch (e) {
+        return '';
       }
-    } catch (e) {}
-
-    const DEFAULT_GEMINI_KEY = '';
-    let GEMINI_KEY = localStorage.getItem('omniscribe_gemini_key') || '';
+    })();
+    let GEMINI_KEY = localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
     let isBackendAvailable = false;
 
     // Cloudflare & Remote Backend API Base URL
@@ -765,16 +747,14 @@
       lucide.createIcons();
       initDragAndDrop();
 
-      // If loaded on Cloudflare Pages or remote host and no API_BASE set, reveal backend setup banner
-      const isRemoteHost = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost' && window.location.protocol.startsWith('http');
-      if (isRemoteHost && !API_BASE) {
-        const cfBanner = document.getElementById('cloudflaredBanner');
-        if (cfBanner) cfBanner.classList.remove('hidden');
-      }
-
+      checkAdminUI();
       fetchSystemStatus();
       fetchCompletedBatches();
     });
+
+    window.onManoAuthChanged = function() {
+      checkAdminUI();
+    };
 
     // Drag and Drop Handling (Folders + Files)
     function initDragAndDrop() {
@@ -1525,59 +1505,35 @@ Output ONLY the exact translated English text:`;
     }
 
     async function transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, onProgress) {
-      const gemKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || '';
+      const gemKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+
+      // Google Gemini Cloud AI (Primary & Dedicated)
+      if (isValidGeminiKey(gemKey)) {
+        if (onProgress) onProgress("Analyzing speech turns via Google Gemini Cloud AI...");
+        const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint);
+        parsed.engine_used = "Google Gemini Cloud AI";
+        return parsed;
+      }
+
       const groqKey = localStorage.getItem('omniscribe_groq_key') || '';
-
-      // Priority 1: Google Gemini Cloud AI (when selected and key is valid)
-      if (selectedEngine === 'gemini' && isValidGeminiKey(gemKey)) {
-        try {
-          if (onProgress) onProgress("Analyzing speech turns via Google Gemini Cloud AI...");
-          const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint);
-          parsed.engine_used = "Google Gemini Cloud AI";
-          return parsed;
-        } catch (gemErr) {
-          console.warn(`Gemini attempt failed for ${filename} (${gemErr.message}). Gracefully falling back to in-browser engine...`);
-          if (onProgress) onProgress("Gemini unavailable. Automatically falling back to in-browser engine...");
-        }
+      if (groqKey) {
+        if (onProgress) onProgress("Transcribing via Groq Whisper Cloud...");
+        const parsed = await transcribeWithGroq(f, groqKey);
+        parsed.engine_used = "Groq Whisper Cloud";
+        return parsed;
       }
 
-      // Priority 2: Groq Cloud (when selected and key is provided)
-      if ((selectedEngine === 'groq' || (!isValidGeminiKey(gemKey) && groqKey)) && groqKey) {
-        try {
-          if (onProgress) onProgress("Transcribing via Groq Whisper Large v3...");
-          const parsed = await transcribeWithGroq(f, groqKey);
-          parsed.engine_used = "Groq Whisper Cloud";
-          return parsed;
-        } catch (groqErr) {
-          console.warn(`Groq attempt failed for ${filename}:`, groqErr);
-        }
-      }
-
-      // Priority 3: In-Browser Local Audio Intelligence (100% Free • Always Works)
-      if (onProgress) onProgress("Transcribing with In-Browser Audio Intelligence (100% Free)...");
-      const localParsed = await transcribeAudioFileInBrowser(f, artisanHint, sectionHint, onProgress);
-      return localParsed;
+      throw new Error("No Gemini API key available. Double-click the OmniScribe logo at top to set key.");
     }
 
     async function startClientSideBatchTranscription() {
-      let selectedEngine = document.getElementById('selectEngine').value;
-      const activeGeminiKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || '';
-
-      // Pre-flight check: If user selected Gemini Cloud but has no valid key
-      if (selectedEngine === 'gemini' && !isValidGeminiKey(activeGeminiKey)) {
-        const choice = confirm(
-          "Notice: Google Gemini Cloud AI requires a free Google AI Studio key (starts with 'AIzaSy').\n\n" +
-          "• Click 'OK' to transcribe 100% FREE in your browser right now (No key required).\n" +
-          "• Click 'Cancel' to enter your free Google AI Studio key."
-        );
-        if (!choice) {
-          openSettingsModal();
-          return;
-        }
-        document.getElementById('selectEngine').value = 'inbrowser';
-        selectedEngine = 'inbrowser';
-        updateEngineDisplay();
+      const activeGeminiKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+      if (!isValidGeminiKey(activeGeminiKey)) {
+        openSettingsModal();
+        alert("Please paste your Google Gemini API Key to start transcription.");
+        return;
       }
+      const selectedEngine = 'gemini';
 
       const btn = document.getElementById('btnStartBatch');
       btn.disabled = true;
@@ -1641,7 +1597,7 @@ Output ONLY the exact translated English text:`;
               section_name: parsed.confirmed_section || sectionHint,
               segments: parsed.segments || [],
               chunks_info: [],
-              engine_used: parsed.engine_used || "In-Browser Local Audio Intelligence",
+              engine_used: parsed.engine_used || "Google Gemini Cloud AI",
               denoised: false
             });
           } catch (err) {
@@ -1660,7 +1616,7 @@ Output ONLY the exact translated English text:`;
               section_name: sectionHint,
               segments: [],
               chunks_info: [],
-              engine_used: "In-Browser Local Audio Intelligence",
+              engine_used: "Google Gemini Cloud AI",
               denoised: false
             });
           }
@@ -2589,86 +2545,35 @@ Output ONLY the exact translated English text:`;
 
     function updateEngineBadge() {
       const badge = document.getElementById('ffmpegBadge');
-      const hasGemini = isValidGeminiKey(GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key'));
+      const hasGemini = isValidGeminiKey(GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY);
       const statusBadge = document.getElementById('geminiKeyStatusBadge');
       if (statusBadge) {
         if (hasGemini) {
           statusBadge.className = "text-[10px] text-emerald-600 dark:text-emerald-400 font-bold";
-          statusBadge.textContent = "✓ Active Key (AIzaSy...)";
+          statusBadge.textContent = "✓ Key Active";
         } else {
           statusBadge.className = "text-[10px] text-amber-600 dark:text-amber-400 font-bold";
-          statusBadge.textContent = "⚠️ Free In-Browser Mode";
+          statusBadge.textContent = "Not Configured";
         }
-      }
-
-      // Update banner title and subtitle
-      const bannerTitle = document.getElementById('bannerTitle');
-      const bannerSubtitle = document.getElementById('bannerSubtitle');
-      const bannerIconBox = document.getElementById('bannerIconBox');
-      if (bannerTitle && bannerSubtitle) {
-        if (hasGemini) {
-          bannerTitle.textContent = "⚡ Cloud Gemini AI Active.";
-          bannerSubtitle.textContent = " Pre-configured with your active Google AI Studio key! Select files or folder to transcribe.";
-          if (bannerIconBox) {
-            bannerIconBox.className = "w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0";
-            bannerIconBox.innerHTML = '<i data-lucide="zap" class="w-4 h-4"></i>';
-          }
-        } else {
-          bannerTitle.textContent = "🎙️ In-Browser Speech Engine Active.";
-          bannerSubtitle.textContent = " 100% Free client-side transcription (no API key required). Or add a free Gemini key for cloud diarization.";
-          if (bannerIconBox) {
-            bannerIconBox.className = "w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0";
-            bannerIconBox.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4"></i>';
-          }
-        }
-        if (window.lucide) lucide.createIcons();
       }
 
       if (!badge) return;
       badge.classList.remove('hidden');
-      if (isBackendAvailable) {
-        badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Local Audio Engine Ready</span>`;
-      } else if (hasGemini) {
-        badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-xs font-semibold";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span><span>⚡ Gemini Cloud Engine Active</span>`;
-      } else {
-        badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>💻 In-Browser Local Engine (Free)</span>`;
+      badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold";
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>⚡ Gemini Cloud Engine Active</span>`;
+    }
+
+    function checkAdminUI() {
+      const user = window.ManoAuth ? ManoAuth.getUser() : null;
+      const isAdmin = user && window.ManoAuth && ManoAuth.isAdmin(user);
+      const btn = document.getElementById('btnAdminSettings');
+      if (btn) {
+        btn.style.display = isAdmin ? 'inline-flex' : 'none';
       }
     }
 
     function updateEngineDisplay() {
-      const engine = document.getElementById('selectEngine').value;
-      const note = document.getElementById('engineNote');
-      if (!note) return;
-      if (engine === 'inbrowser') {
-        note.className = "text-[10px] text-emerald-600 dark:text-emerald-400 mt-1";
-        note.textContent = "💻 100% Free & Local. Runs directly in your browser with zero API keys required.";
-      } else if (engine === 'gemini') {
-        const hasKey = isValidGeminiKey(GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key'));
-        if (hasKey) {
-          note.className = "text-[10px] text-emerald-600 dark:text-emerald-400 mt-1";
-          note.textContent = "⚡ Fast & Free Cloud AI. Diarization, Indic scripts, verbatim English translation.";
-        } else {
-          note.className = "text-[10px] text-amber-600 dark:text-amber-400 mt-1";
-          note.textContent = "⚠️ Requires free Google Gemini Key (starts with AIzaSy). Click 'API Keys' above to add.";
-        }
-      } else if (engine === 'groq') {
-        note.className = "text-[10px] text-indigo-600 dark:text-indigo-400 mt-1";
-        note.textContent = "⚡ Blazing-fast Whisper Large v3 on Groq Cloud. Requires free Groq API key.";
-      } else if (engine === 'openai') {
-        note.className = "text-[10px] text-slate-500 dark:text-slate-400 mt-1";
-        note.textContent = "OpenAI Whisper Cloud API. Requires OpenAI API key.";
-      }
-    }
-
-    function useInBrowserMode() {
-      const sel = document.getElementById('selectEngine');
-      if (sel) sel.value = 'inbrowser';
-      updateEngineDisplay();
-      closeSettingsModal();
-      alert("Switched to Free In-Browser Mode! You can now transcribe without any API keys.");
+      // Automatic Gemini Cloud Engine
     }
 
     function openSettingsModal() {
@@ -2716,22 +2621,11 @@ Output ONLY the exact translated English text:`;
       const oai = document.getElementById('modalOpenAIKey').value.trim();
 
       if (gem) {
-        if (!isValidGeminiKey(gem)) {
-          if (gem.startsWith('AQ.')) {
-            alert("The key you entered starts with 'AQ.', which is a Google OAuth code, not an AI Studio API key.\n\nYour Google Gemini API key starts with 'AIzaSy' and is free at https://aistudio.google.com/apikey");
-            return;
-          } else {
-            const proceed = confirm("Warning: Google Gemini API keys start with 'AIzaSy'. Are you sure you want to save this key?");
-            if (!proceed) return;
-          }
-        }
         localStorage.setItem('omniscribe_gemini_key', gem);
         GEMINI_KEY = gem;
-        const sel = document.getElementById('selectEngine');
-        if (sel) sel.value = 'gemini';
       } else {
         localStorage.removeItem('omniscribe_gemini_key');
-        GEMINI_KEY = '';
+        GEMINI_KEY = DEFAULT_GEMINI_KEY;
       }
       if (groq) localStorage.setItem('omniscribe_groq_key', groq);
       if (oai) localStorage.setItem('omniscribe_openai_key', oai);
@@ -2754,25 +2648,18 @@ Output ONLY the exact translated English text:`;
       }
 
       closeSettingsModal();
-      alert("Settings and API keys saved successfully!");
-      updateEngineDisplay();
+      alert("Google Gemini Key saved successfully!");
       updateEngineBadge();
     }
 
     async function fetchSystemStatus() {
-      const stored = localStorage.getItem('omniscribe_gemini_key');
-      if (stored && isValidGeminiKey(stored)) {
+      const stored = localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+      if (stored) {
         GEMINI_KEY = stored;
         const gemInput = document.getElementById('modalGeminiKey');
         if (gemInput) gemInput.value = stored;
-        const sel = document.getElementById('selectEngine');
-        if (sel) sel.value = 'gemini';
-      } else {
-        GEMINI_KEY = '';
-        const sel = document.getElementById('selectEngine');
-        if (sel) sel.value = 'inbrowser';
       }
-      updateEngineDisplay();
+      checkAdminUI();
 
       const isLocalHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
       if (!isLocalHost && !API_BASE) {
