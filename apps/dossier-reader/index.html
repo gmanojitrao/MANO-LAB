@@ -735,6 +735,22 @@ The rapid convergence of localized neural inference (WebAssembly, WebGPU) with p
       analyzeDossier(fullText);
     }
 
+    function extractSentencesSafe(text) {
+      if (!text) return [];
+      const paras = text.split(/[\r\n]{2,}/);
+      const result = [];
+      for (const p of paras) {
+        const rawChunks = p.split(/(?<=[.!?])\s+|\n+/);
+        for (const c of rawChunks) {
+          const clean = c.trim().replace(/^[-*•\d.)\s]+/, '').replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+          if (clean.length >= 25 && clean.length <= 250) {
+            result.push(clean);
+          }
+        }
+      }
+      return result;
+    }
+
     // --- MULTI-LAYER DOSSIER INTELLIGENCE ENGINE ---
     function analyzeDossier(text) {
       const words = text.trim().split(/\s+/).filter(w => w.length > 0);
@@ -742,7 +758,7 @@ The rapid convergence of localized neural inference (WebAssembly, WebGPU) with p
       document.getElementById('statWords').textContent = wordCount.toLocaleString();
       document.getElementById('statReadTime').textContent = Math.max(1, Math.ceil(wordCount / 200)) + 'm';
 
-      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      const sentences = extractSentencesSafe(text);
       
       // 1. Executive Takeaways (Extract key informational sentences)
       const takeawaysEl = document.getElementById('takeawaysList');

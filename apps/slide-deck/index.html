@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
     :root {
@@ -864,7 +865,7 @@
           <i data-lucide="upload-cloud" style="width: 24px; height: 24px; color: var(--accent); margin-bottom: 4px;"></i>
           <div style="font-size: 13px; font-weight: 700;">Drop Document or Transcript</div>
           <div style="font-size: 11px; color: var(--text-dim);">PDF, TXT, MD, interview files</div>
-          <input type="file" id="fileDocInput" style="display: none;">
+          <input type="file" id="fileDocInput" accept=".pdf,.txt,.md,.json,.csv" style="display: none;">
         </div>
 
         <div>
@@ -1306,28 +1307,40 @@
       showToast(`Generated ${slides.length} slides with local synthesis engine!`);
     }
 
+    function extractCleanSentences(text) {
+      if (!text) return [];
+      const paragraphs = text.split(/[\r\n]{2,}/);
+      const sentences = [];
+      for (const para of paragraphs) {
+        const rawChunks = para.split(/(?<=[.!?])\s+|\n+/);
+        for (const chunk of rawChunks) {
+          const clean = chunk.trim()
+            .replace(/^[-*•\d.)\s]+/, '')
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+          if (clean.length >= 25 && clean.length <= 250 && !clean.startsWith('%PDF') && !clean.includes('obj') && !clean.includes('endobj')) {
+            sentences.push(clean);
+          }
+        }
+      }
+      return sentences;
+    }
+
     function synthesizeLocally(text, count) {
       const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      const paragraphs = text.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length > 20);
 
       // Extract candidate title
       let docTitle = "Strategic Overview";
       if (lines.length > 0) {
-        for (let i = 0; i < Math.min(4, lines.length); i++) {
-          const l = lines[i].replace(/^#+\s*/, '').replace(/^[A-Z\s]+:\s*/, '');
-          if (l.length > 5 && l.length < 80) {
+        for (let i = 0; i < Math.min(5, lines.length); i++) {
+          const l = lines[i].replace(/^#+\s*/, '').replace(/^[A-Z\s]+:\s*/, '').trim();
+          if (l.length > 5 && l.length < 80 && !l.startsWith('%PDF')) {
             docTitle = l;
             break;
           }
         }
       }
 
-      // Extract all meaningful sentences
-      const rawSentences = text.match(/[^.!?\n]+[.!?]+/g) || paragraphs;
-      const cleanSentences = rawSentences
-        .map(s => s.trim().replace(/^#+\s*/, '').replace(/^[-*\d.]+\s*/, ''))
-        .filter(s => s.length > 30 && s.length < 220);
-
+      const cleanSentences = extractCleanSentences(text);
       const isDialogue = text.includes('Interviewer:') || text.includes('Subject:') || (text.match(/^[A-Z][a-zA-Z\s]+:/m) !== null);
 
       const resultSlides = [];
@@ -1597,14 +1610,44 @@ ${text.slice(0, 12000)}`;
       if (e.target.files.length > 0) loadDocFile(e.target.files[0]);
     });
 
-    function loadDocFile(file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        document.getElementById('rawDocInput').value = ev.target.result;
-        showToast('Loaded ' + file.name);
-        generateAISlides();
-      };
-      reader.readAsText(file);
+    async function loadDocFile(file) {
+      if (!file) return;
+      showToast('Reading ' + file.name + '...');
+
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        try {
+          showToast('Extracting PDF text via PDF.js...');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+          let fullText = '';
+          const maxPages = Math.min(pdf.numPages, 40);
+          for (let i = 1; i <= maxPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n\n';
+          }
+          if (!fullText.trim()) {
+            showToast('PDF has no text layer (may be scanned image). Please paste text directly.');
+            return;
+          }
+          document.getElementById('rawDocInput').value = fullText.trim();
+          showToast(`Extracted ${maxPages} pages from ${file.name}`);
+          setTimeout(generateAISlides, 80);
+        } catch (err) {
+          console.error('PDF parsing error:', err);
+          showToast('Could not read PDF. Try copy-pasting the text.');
+        }
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById('rawDocInput').value = ev.target.result;
+          showToast('Loaded ' + file.name);
+          setTimeout(generateAISlides, 80);
+        };
+        reader.readAsText(file);
+      }
     }
 
     function switchInspectorTab(tab) {
