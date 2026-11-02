@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlideCraft - Instant Markdown Slide Deck Studio</title>
+  <meta name="description" content="Turn markdown into gorgeous presentation slide decks instantly. 16:9 aspect ratio, presentation mode, PDF export, zero server latency.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%2338bdf8%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22black%22>📽️</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: #0f172a;
+      --border: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Studio Header */
+    .header {
+      height: 60px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-pill {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      margin-left: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #38bdf8;
+    }
+
+    .btn-primary-present {
+      background: #38bdf8;
+      color: #000;
+      border: none;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+    }
+
+    .btn-primary-present:hover {
+      background: #7dd3fc;
+    }
+
+    /* Workspace Layout: Split Editor & Preview */
+    .studio-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* Left Pane: Markdown Editor */
+    .editor-pane {
+      background: #090d16;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .editor-toolbar {
+      padding: 10px 16px;
+      background: rgba(15, 23, 42, 0.6);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .template-select, .theme-select {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .markdown-textarea {
+      flex: 1;
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #f1f5f9;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.6;
+      padding: 18px;
+      outline: none;
+      resize: none;
+    }
+
+    /* Right Pane: Slide Canvas Preview */
+    .preview-pane {
+      background: #05070c;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 16:9 Slide Canvas Frame */
+    .slide-canvas-wrap {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Slide Content Inner */
+    .slide-stage {
+      flex: 1;
+      padding: 50px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Slide Navigation Controls */
+    .slide-nav-bar {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .btn-nav-arrow {
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .btn-nav-arrow:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      color: #38bdf8;
+    }
+
+    .btn-nav-arrow:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* =========================================================================
+       THEMES (Midnight, Cyberpunk, Editorial, Sunset, Emerald, Corporate)
+       ========================================================================= */
+
+    /* 1. Midnight Minimalist (Default) */
+    .theme-midnight {
+      background: #090d16;
+      color: #f8fafc;
+    }
+    .theme-midnight h1 { color: #fff; font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .theme-midnight h2 { color: #38bdf8; font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+    .theme-midnight p, .theme-midnight li { color: #cbd5e1; font-size: 18px; line-height: 1.55; }
+    .theme-midnight .pill { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    /* 2. Cyberpunk Neon */
+    .theme-cyberpunk {
+      background: radial-gradient(circle at top right, #1e1035, #08060f);
+      color: #f8fafc;
+    }
+    .theme-cyberpunk h1 { color: #f43f5e; font-size: 42px; font-weight: 800; text-shadow: 0 0 20px rgba(244, 63, 94, 0.5); }
+    .theme-cyberpunk h2 { color: #06b6d4; font-size: 32px; font-weight: 800; text-shadow: 0 0 16px rgba(6, 182, 212, 0.5); }
+    .theme-cyberpunk p, .theme-cyberpunk li { color: #e2e8f0; font-size: 18px; }
+    .theme-cyberpunk .pill { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
+
+    /* 3. Warm Editorial (Paper Style) */
+    .theme-editorial {
+      background: #fdfbf7;
+      color: #1e293b;
+    }
+    .theme-editorial h1 { font-family: 'Playfair Display', serif; color: #0f172a; font-size: 44px; font-style: italic; }
+    .theme-editorial h2 { font-family: 'Playfair Display', serif; color: #b45309; font-size: 32px; }
+    .theme-editorial p, .theme-editorial li { color: #334155; font-size: 18px; }
+    .theme-editorial .pill { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* 4. Sunset Gradient */
+    .theme-sunset {
+      background: linear-gradient(135deg, #1e1b4b 0%, #31102b 50%, #180d22 100%);
+      color: #fff;
+    }
+    .theme-sunset h1 { background: linear-gradient(90deg, #f59e0b, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 44px; font-weight: 800; }
+    .theme-sunset h2 { color: #fbbf24; font-size: 32px; }
+    .theme-sunset p, .theme-sunset li { color: #f1f5f9; font-size: 18px; }
+    .theme-sunset .pill { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+
+    /* 5. Emerald Matrix */
+    .theme-emerald {
+      background: #021a12;
+      color: #ecfdf5;
+    }
+    .theme-emerald h1 { color: #34d399; font-size: 42px; font-weight: 800; }
+    .theme-emerald h2 { color: #6ee7b7; font-size: 32px; }
+    .theme-emerald p, .theme-emerald li { color: #a7f3d0; font-size: 18px; }
+    .theme-emerald .pill { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid #34d399; }
+
+    /* 6. Corporate Navy */
+    .theme-corporate {
+      background: #0f172a;
+      color: #f8fafc;
+    }
+    .theme-corporate h1 { color: #ffffff; font-size: 42px; font-weight: 800; }
+    .theme-corporate h2 { color: #60a5fa; font-size: 32px; }
+    .theme-corporate p, .theme-corporate li { color: #cbd5e1; font-size: 18px; }
+    .theme-corporate .pill { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid #60a5fa; }
+
+    /* Slide Elements Typography */
+    .pill {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+
+    ul {
+      margin-left: 24px;
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .columns-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .column-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .stat-number {
+      font-size: 42px;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: -1px;
+    }
+
+    pre code {
+      display: block;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: #38bdf8;
+      margin-top: 16px;
+      overflow-x: auto;
+    }
+
+    /* FULLSCREEN PRESENTATION MODE */
+    body.presenting .header,
+    body.presenting .editor-pane,
+    body.presenting .slide-nav-bar {
+      display: none !important;
+    }
+
+    body.presenting .studio-layout {
+      grid-template-columns: 1fr;
+      height: 100vh;
+    }
+
+    body.presenting .preview-pane {
+      padding: 0;
+      background: #000;
+    }
+
+    body.presenting .slide-canvas-wrap {
+      max-width: 100vw;
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    body.presenting .slide-stage {
+      padding: 8vw 10vw;
+    }
+
+    /* Floating Presenter Controls */
+    .present-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+    }
+
+    body.presenting .present-controls {
+      display: flex;
+    }
+
+    /* Overview Gallery Grid */
+    .overview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 12, 0.95);
+      backdrop-filter: blur(20px);
+      z-index: 2000;
+      padding: 40px;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .overview-card {
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      overflow: hidden;
+      cursor: pointer;
+      transform: scale(1);
+      transition: all 0.2s;
+      background: #090d16;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .overview-card:hover {
+      border-color: #38bdf8;
+      transform: scale(1.03);
+    }
+
+    .overview-card.active {
+      border-color: #10b981;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #0f172a;
+      border: 1px solid #38bdf8;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: transform 0.3s;
+      z-index: 3000;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Header -->
+  <header class="header">
+    <a href="../../index.html" class="brand-wrap">
+      <div class="brand-logo">📽️</div>
+      <div>
+        <span class="brand-title">SlideCraft</span>
+        <span class="brand-pill">Markdown Decks</span>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <button class="btn-action" onclick="toggleOverview()">
+        <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
+        <span>Grid (O)</span>
+      </button>
+
+      <button class="btn-action" onclick="exportHTMLPresentation()">
+        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+        <span>Export HTML</span>
+      </button>
+
+      <button class="btn-action btn-primary-present" onclick="startPresenting()">
+        <i data-lucide="play" style="width: 15px; height: 15px;"></i>
+        <span>Present (F)</span>
+      </button>
+
+      <a href="../../index.html" class="btn-action" style="margin-left: 6px;">
+        <span>⌂ Mano Lab</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Split Studio Layout -->
+  <main class="studio-layout">
+
+    <!-- Left: Markdown Editor -->
+    <section class="editor-pane">
+      <div class="editor-toolbar">
+        <div style="display: flex; gap: 8px;">
+          <select id="selectTemplate" class="template-select" onchange="loadSelectedTemplate()">
+            <option value="pitch">Startup Pitch Deck</option>
+            <option value="tech">Tech Architecture</option>
+            <option value="roadmap">Product Roadmap</option>
+          </select>
+
+          <select id="selectTheme" class="theme-select" onchange="changeTheme()">
+            <option value="theme-midnight">Theme: Midnight</option>
+            <option value="theme-cyberpunk">Theme: Cyberpunk</option>
+            <option value="theme-editorial">Theme: Editorial Paper</option>
+            <option value="theme-sunset">Theme: Sunset Horizon</option>
+            <option value="theme-emerald">Theme: Emerald Matrix</option>
+            <option value="theme-corporate">Theme: Corporate Navy</option>
+          </select>
+        </div>
+
+        <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">Split with ---</span>
+      </div>
+
+      <textarea id="markdownEditor" class="markdown-textarea" placeholder="Type Markdown here..."></textarea>
+    </section>
+
+    <!-- Right: 16:9 Presentation Canvas -->
+    <section class="preview-pane">
+      <div class="slide-canvas-wrap theme-midnight" id="slideCanvas">
+        <div class="slide-stage" id="slideStage"></div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <div class="slide-nav-bar">
+        <button class="btn-nav-arrow" id="btnPrev" onclick="prevSlide()">
+          <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
+        </button>
+        <span class="slide-counter" id="slideCounter">Slide 1 of 1</span>
+        <button class="btn-nav-arrow" id="btnNext" onclick="nextSlide()">
+          <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Presenter Floating Bar -->
+  <div class="present-controls">
+    <button class="btn-nav-arrow" onclick="prevSlide()"><i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i></button>
+    <span class="slide-counter" id="presentCounter">1 / 1</span>
+    <button class="btn-nav-arrow" onclick="nextSlide()"><i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i></button>
+    <button class="btn-action" onclick="exitPresenting()" style="padding: 4px 10px; font-size: 11px;">ESC Exit</button>
+  </div>
+
+  <!-- Overview Modal -->
+  <div class="overview-modal" id="overviewModal">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 20px; font-weight: 800;">Slide Overview Gallery</h2>
+      <button class="btn-action" onclick="toggleOverview()">✕ Close</button>
+    </div>
+    <div class="overview-grid" id="overviewGrid"></div>
+  </div>
+
+  <div class="toast" id="toast">Action completed!</div>
+
+  <script>
+    // --- TEMPLATES ---
+    const TEMPLATES = {
+      pitch: `[badge: Series Seed Pitch]
+# Nova Intelligence
+The local-first AI speech engine for private enterprises.
+
+- Zero cloud latency
+- 100% On-device compliance
+- Enterprise speaker diarization
+
+---
+
+[badge: Problem]
+## Enterprise Audio is Leaking
+Organizations spend millions on speech transcription while exposing confidential IP.
+
+:::columns
+:::column
+### 93%
+Of legal teams cite AI cloud privacy as their #1 fear.
+:::
+:::column
+### \$4.2M
+Average cost of data leakage per cloud vendor breach.
+:::
+:::
+
+---
+
+[badge: Solution]
+## Nova Local-First Architecture
+High-precision neural models executing client-side in WebAssembly.
+
+- Instant diarization (Interviewer vs Subject)
+- Native regional script preservation
+- Instant structured PDF & Word dossier exports
+
+\`\`\`javascript
+const nova = new NovaStudio({ localFirst: true });
+const dossier = await nova.transcribe(audioBlob);
+\`\`\`
+
+---
+
+[badge: Traction]
+## Unprecedented Growth
+
+:::columns
+:::column
+<div class="stat-number">120k+</div>
+Active Monthly Sessions
+:::
+:::column
+<div class="stat-number">99.8%</div>
+Diarization Accuracy
+:::
+:::column
+<div class="stat-number">\$0</div>
+Server Processing Cost
+:::
+:::
+
+---
+
+[badge: The Ask]
+# Join the Revolution
+We are raising **\$2.5M** to scale on-device models to 40+ languages.
+
+Contact: **manojit@mano-lab.com**
+`,
+      tech: `[badge: Architecture Deep Dive]
+# Distributed P2P Mesh
+Direct WebRTC DataChannels with Zero Cloud Intermediaries.
+
+---
+
+[badge: Protocol]
+## DTLS-SRTP Encryption
+All binary payload chunks are sliced into 32KB frames and verified via cryptographic checksums.
+
+- Sub-50ms latency across global peers
+- Flow-controlled backpressure
+- Instant fallback STUN NAT traversal
+
+---
+
+[badge: Benchmarks]
+## Throughput & Scale
+
+:::columns
+:::column
+<div class="stat-number">180 MB/s</div>
+Local P2P Transfer Rate
+:::
+:::column
+<div class="stat-number">0 KB</div>
+Server Storage Footprint
+:::
+:::
+`,
+      roadmap: `[badge: 2026 Roadmap]
+# ManoLab Product Vision
+Next-generation intelligent and creative web systems.
+
+---
+
+[badge: Q1 - Complete]
+## Core Intelligence Platform
+- Multilingual Speech Transcription
+- Living Light Aether-Weave
+- P2P Encrypted File Transfer
+
+---
+
+[badge: Q2 - In Progress]
+## Visual Story Studio
+- 7.8-Head Anatomical Character Rigging
+- Real-time Phoneme Lip-Sync
+- Multi-Scene Narrative Director
+`
+    };
+
+    let slides = [];
+    let currentSlideIdx = 0;
+    let activeTheme = 'theme-midnight';
+
+    // --- PARSER ENGINE ---
+    function parseMarkdown(md) {
+      // Split slides on standard delimiter ---
+      const rawSlides = md.split(/^---$/m).map(s => s.trim()).filter(s => s.length > 0);
+      return rawSlides.map(renderSlideHTML);
+    }
+
+    function renderSlideHTML(raw) {
+      let text = raw;
+
+      // Badges: [badge: Text]
+      text = text.replace(/\[badge:\s*([^\]]+)\]/g, '<div class="pill">$1</div>');
+
+      // Headings
+      text = text.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+      text = text.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+      text = text.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+
+      // Code blocks
+      text = text.replace(/```([a-z]*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+
+      // Columns :::columns ... :::column ... :::
+      text = text.replace(/:::columns([\s\S]*?):::/g, '<div class="columns-wrap">$1</div>');
+      text = text.replace(/:::column([\s\S]*?):::/g, '<div class="column-box">$1</div>');
+
+      // Bold & Italic
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+      // Lists
+      text = text.replace(/^\-\s+(.+)$/gm, '<li>$1</li>');
+      text = text.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+      // Clean duplicate wrapping <ul>
+      text = text.replace(/<\/ul>\s*<ul>/g, '');
+
+      return text;
+    }
+
+    // --- UPDATE & RENDER ---
+    function updateSlides() {
+      const md = document.getElementById('markdownEditor').value;
+      slides = parseMarkdown(md);
+      if (slides.length === 0) slides = ['<h1>Empty Slide</h1>'];
+      if (currentSlideIdx >= slides.length) currentSlideIdx = slides.length - 1;
+      renderCurrentSlide();
+    }
+
+    function renderCurrentSlide() {
+      const stage = document.getElementById('slideStage');
+      stage.innerHTML = slides[currentSlideIdx] || '';
+
+      const counter = `Slide ${currentSlideIdx + 1} of ${slides.length}`;
+      document.getElementById('slideCounter').textContent = counter;
+      document.getElementById('presentCounter').textContent = `${currentSlideIdx + 1} / ${slides.length}`;
+
+      document.getElementById('btnPrev').disabled = currentSlideIdx === 0;
+      document.getElementById('btnNext').disabled = currentSlideIdx === slides.length - 1;
+    }
+
+    function nextSlide() {
+      if (currentSlideIdx < slides.length - 1) {
+        currentSlideIdx++;
+        renderCurrentSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIdx > 0) {
+        currentSlideIdx--;
+        renderCurrentSlide();
+      }
+    }
+
+    function changeTheme() {
+      activeTheme = document.getElementById('selectTheme').value;
+      const canvas = document.getElementById('slideCanvas');
+      canvas.className = 'slide-canvas-wrap ' + activeTheme;
+    }
+
+    function loadSelectedTemplate() {
+      const key = document.getElementById('selectTemplate').value;
+      document.getElementById('markdownEditor').value = TEMPLATES[key];
+      currentSlideIdx = 0;
+      updateSlides();
+      showToast('Loaded template: ' + key);
+    }
+
+    // --- FULLSCREEN PRESENTATION ---
+    function startPresenting() {
+      document.body.classList.add('presenting');
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+      renderCurrentSlide();
+    }
+
+    function exitPresenting() {
+      document.body.classList.remove('presenting');
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      renderCurrentSlide();
+    }
+
+    // --- OVERVIEW GRID ---
+    function toggleOverview() {
+      const modal = document.getElementById('overviewModal');
+      const isOpen = modal.style.display === 'flex';
+      modal.style.display = isOpen ? 'none' : 'flex';
+
+      if (!isOpen) {
+        const grid = document.getElementById('overviewGrid');
+        grid.innerHTML = '';
+        slides.forEach((html, idx) => {
+          const card = document.createElement('div');
+          card.className = 'overview-card ' + activeTheme + (idx === currentSlideIdx ? ' active' : '');
+          card.innerHTML = `<div style="transform: scale(0.65); transform-origin: top left; width: 150%;">${html}</div>`;
+          card.onclick = () => {
+            currentSlideIdx = idx;
+            renderCurrentSlide();
+            toggleOverview();
+          };
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    // --- EXPORT STANDALONE HTML ---
+    function exportHTMLPresentation() {
+      const md = document.getElementById('markdownEditor').value;
+      const title = slides[0].match(/<h[12]>([^<]+)<\/h[12]>/)?.[1] || 'Presentation';
+
+      const fullHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHTML(title)}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #000; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    .slide-wrap { width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 8vw 10vw; box-sizing: border-box; }
+    h1 { font-size: 44px; margin-bottom: 12px; }
+    h2 { font-size: 32px; color: #38bdf8; }
+    p, li { font-size: 20px; color: #cbd5e1; line-height: 1.6; }
+    .pill { display: inline-block; font-size: 12px; font-weight: 700; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 12px; border-radius: 9999px; margin-bottom: 16px; width: fit-content; }
+    .controls { position: fixed; bottom: 20px; right: 20px; background: rgba(15,23,42,0.9); padding: 8px 16px; border-radius: 9999px; font-family: monospace; font-size: 13px; }
+  </style>
+</head>
+<body class="${activeTheme}">
+  <div class="slide-wrap" id="stage"></div>
+  <div class="controls" id="counter">1 / ${slides.length}</div>
+  <script>
+    const slides = ${JSON.stringify(slides)};
+    let cur = 0;
+    function show() {
+      document.getElementById('stage').innerHTML = slides[cur];
+      document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+    }
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { if (cur < slides.length - 1) { cur++; show(); } }
+      if (e.key === 'ArrowLeft') { if (cur > 0) { cur--; show(); } }
+    });
+    show();
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-presentation.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported standalone presentation!');
+    }
+
+    // Keyboard Shortcuts (Arrow keys, F for present, O for overview, Escape to exit)
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement === document.getElementById('markdownEditor')) return;
+
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        startPresenting();
+      } else if (e.key === 'Escape') {
+        if (document.body.classList.contains('presenting')) exitPresenting();
+        const modal = document.getElementById('overviewModal');
+        if (modal.style.display === 'flex') modal.style.display = 'none';
+      } else if (e.key === 'o' || e.key === 'O') {
+        toggleOverview();
+      }
+    });
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      document.getElementById('markdownEditor').value = TEMPLATES.pitch;
+      document.getElementById('markdownEditor').addEventListener('input', updateSlides);
+      updateSlides();
+    });
+  </script>
+</body>
+</html>

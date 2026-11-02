@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocLens - Local PDF & Text Dossier Reader</title>
+  <meta name="description" content="Private, client-side PDF and text document reader with automated dossier summaries, instant full-text search, persistent scratchpad notes, and speech narration.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%236366f1%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22>📖</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: #0f172a;
+      --border: #1e293b;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      height: 60px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-pill {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      margin-left: 6px;
+    }
+
+    /* Actions */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #6366f1;
+    }
+
+    /* Main Workspace Layout (Sidebar + Reader Canvas + Dossier Notes) */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 240px 1fr 340px;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Document Outline & Search */
+    .sidebar {
+      background: #090d16;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      gap: 6px;
+    }
+
+    .search-input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+      width: 100%;
+    }
+
+    /* Page Thumbnails List */
+    .thumb-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .thumb-item {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s;
+    }
+
+    .thumb-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+
+    .thumb-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #6366f1;
+      color: #818cf8;
+    }
+
+    /* Center: PDF / Text Reader Stage */
+    .reader-pane {
+      background: #05070c;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Reader Control Bar */
+    .reader-controls {
+      height: 48px;
+      background: rgba(15, 23, 42, 0.7);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-indicator {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .btn-icon-sm {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .btn-icon-sm:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .btn-icon-sm:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Document View Scrollport */
+    .doc-viewport {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px;
+      gap: 24px;
+    }
+
+    /* Rendered Canvas / Sheet */
+    .doc-sheet {
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      transition: all 0.2s;
+      max-width: 100%;
+    }
+
+    /* Text Document View */
+    .text-view-card {
+      width: 100%;
+      max-width: 780px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px 48px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      font-family: var(--font-sans);
+    }
+
+    /* Reading Themes */
+    .mode-obsidian { background: #05070c; }
+    .mode-sepia .doc-viewport { background: #f4ecd8; }
+    .mode-sepia .text-view-card { background: #faf4e8; color: #433422; border-color: #e6dac2; }
+    .mode-light .doc-viewport { background: #f1f5f9; }
+    .mode-light .text-view-card { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+
+    /* Right: Dossier Summary & Scratchpad */
+    .dossier-pane {
+      background: #090d16;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .dossier-tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .dossier-tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .dossier-tab.active {
+      color: #6366f1;
+      border-bottom-color: #6366f1;
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .dossier-content {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stat-pill-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #818cf8;
+      margin-top: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .scratchpad-area {
+      flex: 1;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #f1f5f9;
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      line-height: 1.6;
+      padding: 14px;
+      outline: none;
+      resize: none;
+    }
+
+    /* TTS Audio Narration Bar */
+    .tts-bar {
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.9);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tts-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tts-btn:hover {
+      background: #4f46e5;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #0f172a;
+      border: 1px solid #6366f1;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: transform 0.3s;
+      z-index: 3000;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body class="mode-obsidian">
+
+  <!-- Header -->
+  <header class="header">
+    <a href="../../index.html" class="brand-wrap">
+      <div class="brand-logo">📖</div>
+      <div>
+        <span class="brand-title">DocLens</span>
+        <span class="brand-pill">Local Dossier</span>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <label class="btn-action" style="cursor: pointer;">
+        <i data-lucide="upload" style="width: 14px; height: 14px;"></i>
+        <span>Open PDF / Text</span>
+        <input type="file" id="fileInput" accept=".pdf,.txt,.md" style="display: none;">
+      </label>
+
+      <button class="btn-action" onclick="loadSampleDoc()">
+        <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+        <span>Sample Dossier</span>
+      </button>
+
+      <a href="../../index.html" class="btn-action" style="margin-left: 6px;">
+        <span>⌂ Mano Lab</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+
+    <!-- Left Sidebar: Outline & Pages -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Document Search</div>
+        <div class="search-box">
+          <i data-lucide="search" style="width: 13px; height: 13px; color: var(--text-muted);"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search keywords..." oninput="handleSearch()">
+        </div>
+        <div id="searchCount" style="font-size: 11px; color: #818cf8; margin-top: 6px; display: none;"></div>
+      </div>
+
+      <div class="sidebar-section" style="flex: 1; overflow-y: auto;">
+        <div class="sidebar-title">Pages & Thumbnails</div>
+        <div class="thumb-list" id="thumbList"></div>
+      </div>
+    </aside>
+
+    <!-- Center: Document Reader -->
+    <section class="reader-pane">
+      <div class="reader-controls">
+        <div class="control-group">
+          <button class="btn-icon-sm" id="btnPrevPage" onclick="prevPage()">
+            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+          </button>
+          <span class="page-indicator" id="pageIndicator">Page 1 of 1</span>
+          <button class="btn-icon-sm" id="btnNextPage" onclick="nextPage()">
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+
+        <div class="control-group">
+          <button class="btn-icon-sm" onclick="zoomDoc(-0.15)" title="Zoom Out">
+            <i data-lucide="zoom-out" style="width: 15px; height: 15px;"></i>
+          </button>
+          <span id="zoomIndicator" style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">100%</span>
+          <button class="btn-icon-sm" onclick="zoomDoc(0.15)" title="Zoom In">
+            <i data-lucide="zoom-in" style="width: 15px; height: 15px;"></i>
+          </button>
+
+          <div style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
+
+          <button class="btn-icon-sm" onclick="setReadingTheme('mode-obsidian')" title="Obsidian Dark">🌙</button>
+          <button class="btn-icon-sm" onclick="setReadingTheme('mode-sepia')" title="Warm Sepia">📜</button>
+          <button class="btn-icon-sm" onclick="setReadingTheme('mode-light')" title="Clean Light">☀️</button>
+        </div>
+      </div>
+
+      <!-- Scrollable Viewport -->
+      <div class="doc-viewport" id="docViewport">
+        <canvas id="pdfCanvas" class="doc-sheet" style="display: none;"></canvas>
+        <div id="textView" class="text-view-card" style="display: none;"></div>
+      </div>
+
+      <!-- Text-to-Speech Audio Narration Bar -->
+      <div class="tts-bar">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="volume-2" style="width: 16px; height: 16px; color: #818cf8;"></i>
+          <span style="font-size: 12px; font-weight: 600; color: #cbd5e1;">Voice Narration</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="tts-btn" id="btnTTS" onclick="toggleTTS()">
+            <i data-lucide="play" style="width: 13px; height: 13px;"></i>
+            <span>Read Aloud</span>
+          </button>
+          <select id="ttsRate" style="background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: #fff; border-radius: 6px; padding: 2px 6px; font-size: 11px;">
+            <option value="1.0">1.0x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Dossier Summary & Scratchpad -->
+    <aside class="dossier-pane">
+      <div class="dossier-tab-bar">
+        <div class="dossier-tab active" id="tabDossier" onclick="switchDossierTab('summary')">Dossier Intel</div>
+        <div class="dossier-tab" id="tabNotes" onclick="switchDossierTab('notes')">Scratchpad</div>
+      </div>
+
+      <!-- Tab: Summary -->
+      <div class="dossier-content" id="viewSummary">
+        <div class="stat-pill-row">
+          <div class="stat-card">
+            <div class="stat-label">Word Count</div>
+            <div class="stat-val" id="statWords">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Est. Read Time</div>
+            <div class="stat-val" id="statReadTime">0m</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-title">Key Outline & Takeaways</div>
+          <div id="outlineList" style="font-size: 13px; color: #cbd5e1; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+            No document loaded. Open a PDF or click Sample Dossier.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Notes Scratchpad -->
+      <div class="dossier-content" id="viewNotes" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="sidebar-title">Persistent Notes</span>
+          <button class="btn-icon-sm" onclick="exportNotes()" title="Export Markdown">
+            <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+        <textarea id="scratchpadArea" class="scratchpad-area" placeholder="Take notes, record insights, or write dossier summaries... Auto-saved to your browser."></textarea>
+      </div>
+    </aside>
+
+  </main>
+
+  <div class="toast" id="toast">Action completed!</div>
+
+  <script>
+    // --- STATE ---
+    let currentDocType = 'text'; // 'pdf' or 'text'
+    let pdfDoc = null;
+    let pageNum = 1;
+    let totalPages = 1;
+    let currentScale = 1.25;
+    let extractedText = '';
+    let isSpeaking = false;
+
+    // Sample Document
+    const SAMPLE_DOSSIER = `# Autonomous Agent Frameworks: Executive Dossier 2026
+Prepared for ManoLab Research Core • Client-First Intelligent Systems
+
+## 1. Executive Summary
+The rapid convergence of localized neural inference (WebAssembly, WebGPU) with peer-to-peer decentralized networks is ushering in an era of zero-cloud personal computing. Organizations across legal, healthcare, and engineering sectors are aggressively dismantling centralized SaaS pipelines in favor of browser-native execution.
+
+## 2. Key Pillars of Local-First Architecture
+- Complete Data Privacy: Zero plaintext transmission over untrusted cloud infrastructure.
+- Zero Server Costs: Client devices supply the compute power (WebAssembly / GPU).
+- Instant Offline Operation: Direct execution from local service workers and IndexedDB caches.
+- Cryptographic Verification: P2P data exchange secured with WebRTC DTLS-SRTP.
+
+## 3. High-Impact Observations
+1. Latency Reduction: Bypassing cloud roundtrips reduces interactive UI feedback loops from 450ms down to sub-16ms frames.
+2. Compliance Sovereignty: When sensitive biometric audio or legal contracts never leave RAM, HIPAA and GDPR compliance audits become trivial.
+3. Resilience Against Outages: Distributed peer networks operate continuously regardless of AWS, Azure, or Cloudflare regional downtime.
+
+## 4. Strategic Recommendations
+Adopt modular, client-side WebAssembly runtimes for speech transcription, generative light synthesis, and peer-to-peer collaboration. Empower users with full data sovereignty.`;
+
+    // --- PDF / TEXT LOADER ---
+    const fileInput = document.getElementById('fileInput');
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      loadLocalFile(file);
+    });
+
+    function loadLocalFile(file) {
+      if (file.name.endsWith('.pdf')) {
+        currentDocType = 'pdf';
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const typedarray = new Uint8Array(ev.target.result);
+          loadPDF(typedarray);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        // Plaintext or Markdown
+        currentDocType = 'text';
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          displayTextDocument(ev.target.result, file.name);
+        };
+        reader.readAsText(file);
+      }
+      showToast('Loaded: ' + file.name);
+    }
+
+    function loadSampleDoc() {
+      currentDocType = 'text';
+      displayTextDocument(SAMPLE_DOSSIER, 'Autonomous_Agent_Frameworks_2026.md');
+      showToast('Loaded Sample Dossier');
+    }
+
+    // --- PDF.JS RENDERER ---
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    function loadPDF(data) {
+      pdfjsLib.getDocument({ data: data }).promise.then(pdf => {
+        pdfDoc = pdf;
+        totalPages = pdf.numPages;
+        pageNum = 1;
+
+        document.getElementById('pdfCanvas').style.display = 'block';
+        document.getElementById('textView').style.display = 'none';
+
+        renderPDFPage(pageNum);
+        buildPDFThumbnails();
+        extractPDFText();
+      });
+    }
+
+    function renderPDFPage(num) {
+      if (!pdfDoc) return;
+      pdfDoc.getPage(num).then(page => {
+        const viewport = page.getViewport({ scale: currentScale });
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        page.render(renderContext);
+
+        updatePageControls();
+      });
+    }
+
+    function buildPDFThumbnails() {
+      const list = document.getElementById('thumbList');
+      list.innerHTML = '';
+      for (let p = 1; p <= totalPages; p++) {
+        const item = document.createElement('div');
+        item.className = 'thumb-item' + (p === pageNum ? ' active' : '');
+        item.innerHTML = `<span>Page ${p}</span> <i data-lucide="chevron-right" style="width: 12px; height: 12px;"></i>`;
+        const pNum = p;
+        item.onclick = () => {
+          pageNum = pNum;
+          renderPDFPage(pageNum);
+          highlightActiveThumb();
+        };
+        list.appendChild(item);
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function extractPDFText() {
+      let fullText = '';
+      for (let p = 1; p <= totalPages; p++) {
+        const page = await pdfDoc.getPage(p);
+        const textContent = await page.getTextContent();
+        const pageStr = textContent.items.map(item => item.str).join(' ');
+        fullText += pageStr + '\n';
+      }
+      extractedText = fullText;
+      generateDossierIntelligence(fullText);
+    }
+
+    // --- TEXT DOCUMENT RENDERER ---
+    function displayTextDocument(content, filename) {
+      pdfDoc = null;
+      totalPages = 1;
+      pageNum = 1;
+      extractedText = content;
+
+      document.getElementById('pdfCanvas').style.display = 'none';
+      const tv = document.getElementById('textView');
+      tv.style.display = 'block';
+      tv.textContent = content;
+
+      updatePageControls();
+
+      // Build thumbnail
+      const list = document.getElementById('thumbList');
+      list.innerHTML = `<div class="thumb-item active"><span>${filename || 'Document'}</span></div>`;
+
+      generateDossierIntelligence(content);
+    }
+
+    // --- DOSSIER INTELLIGENCE GENERATOR ---
+    function generateDossierIntelligence(text) {
+      const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+      const wordCount = words.length;
+      const readMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
+      document.getElementById('statWords').textContent = wordCount.toLocaleString();
+      document.getElementById('statReadTime').textContent = readMinutes + 'm';
+
+      // Extract Headings or bullet points
+      const lines = text.split('\n').map(l => l.trim());
+      const headings = lines.filter(l => l.startsWith('#') || (l.match(/^\d+\./) && l.length < 80)).slice(0, 8);
+
+      const outline = document.getElementById('outlineList');
+      if (headings.length > 0) {
+        outline.innerHTML = headings.map(h => {
+          const clean = h.replace(/^#+\s*/, '');
+          return `<div style="padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid #6366f1;">${clean}</div>`;
+        }).join('');
+      } else {
+        outline.innerHTML = `
+          <div style="padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid #6366f1;">
+            • ${words.slice(0, 15).join(' ')}...
+          </div>
+        `;
+      }
+    }
+
+    // --- PAGE CONTROLS ---
+    function nextPage() {
+      if (pageNum < totalPages) {
+        pageNum++;
+        renderPDFPage(pageNum);
+        highlightActiveThumb();
+      }
+    }
+
+    function prevPage() {
+      if (pageNum > 1) {
+        pageNum--;
+        renderPDFPage(pageNum);
+        highlightActiveThumb();
+      }
+    }
+
+    function updatePageControls() {
+      document.getElementById('pageIndicator').textContent = `Page ${pageNum} of ${totalPages}`;
+      document.getElementById('btnPrevPage').disabled = pageNum <= 1;
+      document.getElementById('btnNextPage').disabled = pageNum >= totalPages;
+    }
+
+    function highlightActiveThumb() {
+      const thumbs = document.querySelectorAll('.thumb-item');
+      thumbs.forEach((t, i) => {
+        t.classList.toggle('active', i + 1 === pageNum);
+      });
+    }
+
+    function zoomDoc(delta) {
+      currentScale = Math.max(0.6, Math.min(2.5, currentScale + delta));
+      document.getElementById('zoomIndicator').textContent = Math.round(currentScale * 100) + '%';
+      if (pdfDoc) renderPDFPage(pageNum);
+      else {
+        document.getElementById('textView').style.fontSize = (15 * (currentScale / 1.25)) + 'px';
+      }
+    }
+
+    function setReadingTheme(theme) {
+      document.body.className = theme;
+      showToast('Reading mode updated');
+    }
+
+    // --- SEARCH IN DOCUMENT ---
+    function handleSearch() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const countEl = document.getElementById('searchCount');
+      if (!query || !extractedText) {
+        countEl.style.display = 'none';
+        return;
+      }
+
+      const matches = (extractedText.toLowerCase().match(new RegExp(query, 'g')) || []).length;
+      countEl.style.display = 'block';
+      countEl.textContent = `Found ${matches} occurrence${matches === 1 ? '' : 's'}`;
+    }
+
+    // --- TABS & SCRATCHPAD ---
+    function switchDossierTab(tab) {
+      document.getElementById('tabDossier').classList.toggle('active', tab === 'summary');
+      document.getElementById('tabNotes').classList.toggle('active', tab === 'notes');
+      document.getElementById('viewSummary').style.display = tab === 'summary' ? 'flex' : 'none';
+      document.getElementById('viewNotes').style.display = tab === 'notes' ? 'flex' : 'none';
+    }
+
+    // Scratchpad persistent auto-save
+    const scratchpad = document.getElementById('scratchpadArea');
+    scratchpad.value = localStorage.getItem('manolab_doclens_scratchpad') || '';
+    scratchpad.addEventListener('input', (e) => {
+      localStorage.setItem('manolab_doclens_scratchpad', e.target.value);
+    });
+
+    function exportNotes() {
+      const text = scratchpad.value;
+      if (!text) {
+        showToast('Scratchpad is empty');
+        return;
+      }
+      const blob = new Blob([text], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DocLens-Notes-${Date.now()}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported scratchpad notes!');
+    }
+
+    // --- TEXT TO SPEECH ---
+    function toggleTTS() {
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        document.getElementById('btnTTS').innerHTML = '<i data-lucide="play" style="width: 13px; height: 13px;"></i> <span>Read Aloud</span>';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      const textToRead = extractedText.slice(0, 3000); // Read first section
+      if (!textToRead) {
+        showToast('No text available to read');
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(textToRead);
+      const rate = parseFloat(document.getElementById('ttsRate').value) || 1.0;
+      utterance.rate = rate;
+
+      utterance.onend = () => {
+        isSpeaking = false;
+        document.getElementById('btnTTS').innerHTML = '<i data-lucide="play" style="width: 13px; height: 13px;"></i> <span>Read Aloud</span>';
+        if (window.lucide) lucide.createIcons();
+      };
+
+      window.speechSynthesis.speak(utterance);
+      isSpeaking = true;
+      document.getElementById('btnTTS').innerHTML = '<i data-lucide="square" style="width: 13px; height: 13px;"></i> <span>Stop Voice</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // Launch
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      loadSampleDoc();
+    });
+  </script>
+</body>
+</html>

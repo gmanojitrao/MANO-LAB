@@ -1,7 +1,7 @@
 /**
  * MANO-LAB Application Registry
- * Active Curated Public Suite: Audio Transcription, Aether-Weave, and Visual Story Generator.
- * Note: All other applications remain preserved in the codebase and are temporarily hidden from the public UI.
+ * Active Curated Public Suite: Audio Transcription, Aether-Weave, ManoDrop, SlideCraft, DocLens, and Visual Story Generator (Dev).
+ * Note: Preserved applications remain in the codebase.
  */
 
 // Master registry preserving all applications
@@ -19,6 +19,48 @@ const ALL_MANO_APPS = [
     accentColor: "#3b82f6",
     tags: ["Speech-to-Text", "Diarization", "Bilingual", "Dossier Export"],
     badge: "Flagship Application"
+  },
+  {
+    id: "p2p-transfer",
+    name: "ManoDrop: Encrypted P2P Transfer",
+    tagline: "Browser-to-browser encrypted file transfer with unlimited file size",
+    description: "Direct peer-to-peer WebRTC file transfer with end-to-end DTLS-SRTP encryption. No size limits, zero server storage, live speed metrics, and instant room code connection.",
+    category: "Productivity & Utilities",
+    route: "apps/p2p-transfer/",
+    status: "Available",
+    featured: true,
+    emoji: "⚡",
+    accentColor: "#10b981",
+    tags: ["Encrypted", "WebRTC P2P", "Zero Server Storage", "Unlimited Size"],
+    badge: "Encrypted P2P"
+  },
+  {
+    id: "slide-deck",
+    name: "SlideCraft: Markdown Slide Studio",
+    tagline: "Instant 16:9 widescreen presentation slide decks directly from Markdown",
+    description: "Craft dynamic, presentation-ready slide decks directly from Markdown. Features 16:9 widescreen canvas, 6 designer color themes, presentation mode with speaker notes, column layouts, and self-contained HTML export.",
+    category: "Creative & Art",
+    route: "apps/slide-deck/",
+    status: "Available",
+    featured: true,
+    emoji: "📽️",
+    accentColor: "#38bdf8",
+    tags: ["Markdown Decks", "16:9 Presentation", "6 Themes", "HTML Export"],
+    badge: "Slide Studio"
+  },
+  {
+    id: "dossier-reader",
+    name: "DocLens: Local PDF & Dossier Reader",
+    tagline: "Client-side PDF & text reader with dossier intelligence and narration",
+    description: "Zero-cloud private document intelligence reader. Render PDFs, text, and markdown with instant full-text search, reading themes, automated dossier metrics (word count, reading time), persistent scratchpad notes, and text-to-speech audio narration.",
+    category: "Productivity & Utilities",
+    route: "apps/dossier-reader/",
+    status: "Available",
+    featured: true,
+    emoji: "📖",
+    accentColor: "#6366f1",
+    tags: ["Local PDF", "Dossier Summary", "TTS Narration", "Private Notes"],
+    badge: "Dossier Reader"
   },
   {
     id: "aether-weave",
@@ -156,7 +198,8 @@ const MANO_APPS = ALL_MANO_APPS.filter(app => !app.hidden);
 const MANO_CATEGORIES = [
   { id: "all", label: "All Creations" },
   { id: "Speech & AI", label: "🎙️ Speech & AI" },
-  { id: "Creative & Art", label: "✨ Creative & Art" }
+  { id: "Creative & Art", label: "✨ Creative & Art" },
+  { id: "Productivity & Utilities", label: "⚡ Productivity & Utilities" }
 ];
 
 if (typeof module !== 'undefined' && module.exports) {

@@ -33,6 +33,7 @@ wheels/
 # Processing Dumps & Output Files
 temp_processing/
 transcriptions_output/
+scratch/
 *.wav
 *.mp3
 *.m4a

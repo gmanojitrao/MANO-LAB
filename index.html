@@ -31,6 +31,9 @@
 
       <nav class="header-nav">
         <a href="#transcription" class="nav-link">Audio Transcription</a>
+        <a href="#p2p-transfer" class="nav-link">P2P Transfer</a>
+        <a href="#slide-deck" class="nav-link">Slide Decks</a>
+        <a href="#dossier-reader" class="nav-link">Dossier Reader</a>
         <a href="#aether-weave" class="nav-link">Aether-Weave</a>
         <a href="#visual-story" class="nav-link" data-owner-only="true" style="display: none;">Visual Story Studio (Private Dev)</a>
       </nav>
@@ -54,7 +57,7 @@
         </h1>
 
         <p class="hero-desc">
-          Audio transcription and speech intelligence, and living light generative art.
+          High-precision client-side web software: speech intelligence, encrypted P2P file transfer, markdown slide decks, local document dossiers, and generative art.
         </p>
 
         <div class="hero-actions">
@@ -62,12 +65,24 @@
             <i data-lucide="mic" style="width: 17px; height: 17px;"></i>
             <span>Audio Transcription</span>
           </a>
+          <a href="apps/p2p-transfer/" class="btn-secondary" style="border-color: rgba(16, 185, 129, 0.4);">
+            <i data-lucide="zap" style="width: 17px; height: 17px; color: #10b981;"></i>
+            <span>ManoDrop P2P</span>
+          </a>
+          <a href="apps/slide-deck/" class="btn-secondary" style="border-color: rgba(56, 189, 248, 0.4);">
+            <i data-lucide="presentation" style="width: 17px; height: 17px; color: #38bdf8;"></i>
+            <span>SlideCraft Studio</span>
+          </a>
+          <a href="apps/dossier-reader/" class="btn-secondary" style="border-color: rgba(99, 102, 241, 0.4);">
+            <i data-lucide="book-open" style="width: 17px; height: 17px; color: #818cf8;"></i>
+            <span>DocLens Dossier</span>
+          </a>
           <a href="apps/aether-weave/" class="btn-secondary">
-            <i data-lucide="sparkles" style="width: 17px; height: 17px;"></i>
+            <i data-lucide="sparkles" style="width: 17px; height: 17px; color: #ec4899;"></i>
             <span>Aether-Weave Art</span>
           </a>
           <a href="apps/visual-story-generator/" class="btn-secondary" data-owner-only="true" style="display: none;">
-            <i data-lucide="clapperboard" style="width: 17px; height: 17px;"></i>
+            <i data-lucide="clapperboard" style="width: 17px; height: 17px; color: #facc15;"></i>
             <span>Visual Story Studio (Private Dev)</span>
           </a>
         </div>
@@ -137,6 +152,219 @@
             </div>
             <a href="apps/audio-transcription/" style="font-size: 0.85rem; font-weight: 700; color: #93c5fd; display: inline-flex; align-items: center; gap: 0.35rem;">
               <span>Launch Audio Transcription Studio</span>
+              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 2. ENCRYPTED P2P TRANSFER: MANODROP                          -->
+    <!-- ============================================================ -->
+    <section id="p2p-transfer" class="section" style="padding-top: 1rem;">
+      <div class="container">
+        
+        <div class="section-header">
+          <div class="section-tag" style="color: #10b981;">Peer-to-Peer Privacy</div>
+          <h2 class="section-title">ManoDrop — Encrypted File Transfer</h2>
+          <p class="section-subtitle">Direct browser-to-browser encrypted file delivery with unlimited sizes, zero cloud storage, and live transfer telemetry.</p>
+        </div>
+
+        <div class="flagship-card" style="border-color: rgba(16, 185, 129, 0.3); background: linear-gradient(145deg, #091a14 0%, #081014 100%);">
+          <div class="flagship-top">
+            <div class="flagship-meta">
+              <div class="flagship-badge" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">
+                <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
+                <span>DIRECT WEBRTC DATACHANNEL &bull; ZERO SERVER STORAGE</span>
+              </div>
+              <h3 class="flagship-title">Zero-Cloud Direct Browser File Sharing</h3>
+              <p class="flagship-desc">
+                Share files directly with anyone in seconds without sending your data to any third-party server. Establish end-to-end encrypted WebRTC tunnels with short share codes or direct URLs, real-time chunk streaming, and transfer speeds limited only by your internet connection.
+              </p>
+            </div>
+            <a href="apps/p2p-transfer/" class="btn-primary" style="background: #10b981; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); white-space: nowrap;">
+              <span>Open ManoDrop</span>
+              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+            </a>
+          </div>
+
+          <div class="flagship-features">
+            <div class="feat-item">
+              <div class="feat-icon">🔐</div>
+              <div class="feat-name">DTLS-SRTP Encryption</div>
+              <div class="feat-text">Direct end-to-end cryptographic channel. Intermediate servers can never view or intercept payloads.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">⚡</div>
+              <div class="feat-name">Unlimited File Size</div>
+              <div class="feat-text">Stream high-resolution videos, raw archives, or datasets with 32KB chunk buffers without browser freezing.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">☁️</div>
+              <div class="feat-name">100% Serverless</div>
+              <div class="feat-text">Zero files stored on any cloud database. Once the browser tab closes, the direct pipeline ceases.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">📊</div>
+              <div class="feat-name">Live Telemetry</div>
+              <div class="feat-text">Real-time progress bars, live transfer speed gauges in MB/s, chunk telemetry, and 1-click downloads.</div>
+            </div>
+          </div>
+
+          <div class="flagship-bottom">
+            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
+              <span style="color: #10b981;">●</span>
+              <span>WebRTC Direct DataChannels &bull; Global Public STUN Turnkey</span>
+            </div>
+            <a href="apps/p2p-transfer/" style="font-size: 0.85rem; font-weight: 700; color: #6ee7b7; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>Launch ManoDrop Transfer Studio</span>
+              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 3. SLIDECRAFT: INSTANT MARKDOWN SLIDE STUDIO                 -->
+    <!-- ============================================================ -->
+    <section id="slide-deck" class="section" style="padding-top: 1rem;">
+      <div class="container">
+        
+        <div class="section-header">
+          <div class="section-tag" style="color: #38bdf8;">Visual Presentation</div>
+          <h2 class="section-title">SlideCraft — Markdown Slide Studio</h2>
+          <p class="section-subtitle">Transform simple Markdown notes into widescreen 16:9 presentation slide decks with 6 designer themes and standalone HTML export.</p>
+        </div>
+
+        <div class="flagship-card" style="border-color: rgba(56, 189, 248, 0.3); background: linear-gradient(145deg, #091624 0%, #08101a 100%);">
+          <div class="flagship-top">
+            <div class="flagship-meta">
+              <div class="flagship-badge" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3); color: #7dd3fc;">
+                <i data-lucide="presentation" style="width: 12px; height: 12px;"></i>
+                <span>WIDESCREEN 16:9 DECK GENERATOR &bull; ZERO CONFIGURATION</span>
+              </div>
+              <h3 class="flagship-title">Instant Presentations Directly from Raw Markdown</h3>
+              <p class="flagship-desc">
+                No bloated slide software or complex PowerPoint tools needed. Write standard Markdown with simple <code>---</code> dividers, multi-column blocks, code snippets, and callouts. Preview changes live side-by-side and deliver smooth presentations with fullscreen presenter controls.
+              </p>
+            </div>
+            <a href="apps/slide-deck/" class="btn-primary" style="background: #0284c7; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35); white-space: nowrap;">
+              <span>Open SlideCraft</span>
+              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+            </a>
+          </div>
+
+          <div class="flagship-features">
+            <div class="feat-item">
+              <div class="feat-icon">📽️</div>
+              <div class="feat-name">16:9 Aspect Ratio</div>
+              <div class="feat-text">Optimized for high-resolution displays, projectors, and modern video conferences with automatic text scaling.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">🎨</div>
+              <div class="feat-name">6 Designer Themes</div>
+              <div class="feat-text">One-click aesthetic shifting between Midnight Deep, Cyberpunk Neon, Editorial Serif, Sunset, Emerald, and Clean Paper.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">⌨️</div>
+              <div class="feat-name">Presenter Mode (F)</div>
+              <div class="feat-text">Keyboard arrow navigation, full-screen projection, live presentation timer, and thumbnail grid overview modal (O).</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">📦</div>
+              <div class="feat-name">Standalone Export</div>
+              <div class="feat-text">Export decks as self-contained offline HTML presentations or print directly to vector-clean PDF slide decks.</div>
+            </div>
+          </div>
+
+          <div class="flagship-bottom">
+            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
+              <span style="color: #38bdf8;">●</span>
+              <span>Pure Client-Side Engine &bull; Instant Offline Execution</span>
+            </div>
+            <a href="apps/slide-deck/" style="font-size: 0.85rem; font-weight: 700; color: #7dd3fc; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>Launch SlideCraft Studio</span>
+              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 4. DOCLENS: LOCAL PDF & DOSSIER READER                       -->
+    <!-- ============================================================ -->
+    <section id="dossier-reader" class="section" style="padding-top: 1rem;">
+      <div class="container">
+        
+        <div class="section-header">
+          <div class="section-tag" style="color: #818cf8;">Document Intelligence</div>
+          <h2 class="section-title">DocLens — Local PDF & Dossier Reader</h2>
+          <p class="section-subtitle">Zero-cloud document reader for PDFs, TXT, and Markdown files with instant full-text search, automated intelligence metrics, and speech narration.</p>
+        </div>
+
+        <div class="flagship-card" style="border-color: rgba(99, 102, 241, 0.3); background: linear-gradient(145deg, #101226 0%, #0b0c1c 100%);">
+          <div class="flagship-top">
+            <div class="flagship-meta">
+              <div class="flagship-badge" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #a5b4fc;">
+                <i data-lucide="book-open" style="width: 12px; height: 12px;"></i>
+                <span>100% PRIVATE CLIENT-SIDE VIEWER &bull; ZERO SERVER UPLOAD</span>
+              </div>
+              <h3 class="flagship-title">Private In-Browser Document Dossier Intelligence</h3>
+              <p class="flagship-desc">
+                Review confidential contracts, research papers, and technical dossiers with complete peace of mind. Render documents with PDF.js, search keywords instantly with occurrences count, generate automated outline digests, auto-save personal notes to localStorage, and listen via text-to-speech narration.
+              </p>
+            </div>
+            <a href="apps/dossier-reader/" class="btn-primary" style="background: #4f46e5; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); white-space: nowrap;">
+              <span>Open DocLens</span>
+              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+            </a>
+          </div>
+
+          <div class="flagship-features">
+            <div class="feat-item">
+              <div class="feat-icon">🔒</div>
+              <div class="feat-name">100% Local Privacy</div>
+              <div class="feat-text">Files never leave your machine. Parsed strictly in browser memory with zero network requests or uploads.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">🔍</div>
+              <div class="feat-name">Instant Full-Text Search</div>
+              <div class="feat-text">Lightning-fast keyword indexing across all pages with occurrence counts and instant result navigation.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">🧠</div>
+              <div class="feat-name">Dossier Intelligence</div>
+              <div class="feat-text">Calculates total words, reading time, heading outlines, and document statistics automatically on load.</div>
+            </div>
+
+            <div class="feat-item">
+              <div class="feat-icon">🎙️</div>
+              <div class="feat-name">TTS Audio & Notes</div>
+              <div class="feat-text">Web Speech API voice narration with playback speed control plus persistent scratchpad auto-saved to localStorage.</div>
+            </div>
+          </div>
+
+          <div class="flagship-bottom">
+            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
+              <span style="color: #818cf8;">●</span>
+              <span>Mozilla PDF.js &bull; Client-Side Web Speech API &bull; LocalStorage Sync</span>
+            </div>
+            <a href="apps/dossier-reader/" style="font-size: 0.85rem; font-weight: 700; color: #a5b4fc; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>Launch DocLens Dossier Reader</span>
               <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
             </a>
           </div>
