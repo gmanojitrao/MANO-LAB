@@ -16,7 +16,7 @@ const ALL_MANO_APPS = [
     status: "Available",
     featured: true,
     emoji: "🎙️",
-    accentColor: "#3b82f6",
+    accentColor: "#c25e38",
     tags: ["Speech-to-Text", "Diarization", "Bilingual", "Dossier Export"],
     badge: "Flagship Application"
   },
@@ -30,7 +30,7 @@ const ALL_MANO_APPS = [
     status: "Available",
     featured: true,
     emoji: "⚡",
-    accentColor: "#10b981",
+    accentColor: "#2e7d5b",
     tags: ["Encrypted", "WebRTC P2P", "Zero Server Storage", "Unlimited Size"],
     badge: "Encrypted P2P"
   },
@@ -44,7 +44,7 @@ const ALL_MANO_APPS = [
     status: "Available",
     featured: true,
     emoji: "📽️",
-    accentColor: "#38bdf8",
+    accentColor: "#b45309",
     tags: ["Markdown Decks", "16:9 Presentation", "6 Themes", "HTML Export"],
     badge: "Slide Studio"
   },
@@ -58,7 +58,7 @@ const ALL_MANO_APPS = [
     status: "Available",
     featured: true,
     emoji: "📖",
-    accentColor: "#6366f1",
+    accentColor: "#2e7d5b",
     tags: ["Local PDF", "Dossier Summary", "TTS Narration", "Private Notes"],
     badge: "Dossier Reader"
   },
@@ -72,7 +72,7 @@ const ALL_MANO_APPS = [
     status: "Available",
     featured: true,
     emoji: "✨",
-    accentColor: "#ec4899",
+    accentColor: "#c25e38",
     tags: ["Living Art", "Light Weaving", "Generative", "4K Export"],
     badge: "Original Art Form"
   },
@@ -86,7 +86,7 @@ const ALL_MANO_APPS = [
     status: "Available",
     featured: true,
     emoji: "🎬",
-    accentColor: "#facc15",
+    accentColor: "#b45309",
     tags: ["Rigged Characters", "Real Lip-Sync", "Studio Voice", "9:16 Video Export"],
     badge: "Animation Studio"
   },

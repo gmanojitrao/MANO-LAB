@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MANO-LAB — Precision Web Software & Digital Art</title>
-  <meta name="description" content="A focused workbench of high-precision web applications. Featuring our flagship audio transcription studio, the living light art Aether-Weave, and 2.5D character animation studio.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%233b82f6%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22>M</text></svg>">
+  <meta name="description" content="A focused workbench of high-precision web applications. Speech intelligence, encrypted P2P transfer, markdown slide studio, local dossier reader, and generative art.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23c25e38%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22>M</text></svg>">
 
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,12 +30,12 @@
       </a>
 
       <nav class="header-nav">
-        <a href="#transcription" class="nav-link">Audio Transcription</a>
-        <a href="#p2p-transfer" class="nav-link">P2P Transfer</a>
-        <a href="#slide-deck" class="nav-link">Slide Decks</a>
-        <a href="#dossier-reader" class="nav-link">Dossier Reader</a>
-        <a href="#aether-weave" class="nav-link">Aether-Weave</a>
-        <a href="#visual-story" class="nav-link" data-owner-only="true" style="display: none;">Visual Story Studio (Private Dev)</a>
+        <a href="apps/audio-transcription/" class="nav-link">Audio Transcription</a>
+        <a href="apps/p2p-transfer/" class="nav-link">P2P Transfer</a>
+        <a href="apps/slide-deck/" class="nav-link">Slide Decks</a>
+        <a href="apps/dossier-reader/" class="nav-link">DocLens</a>
+        <a href="apps/aether-weave/" class="nav-link">Aether-Weave</a>
+        <a href="apps/visual-story-generator/" class="nav-link" data-owner-only="true" style="display: none;">Story Studio (Private)</a>
       </nav>
 
       <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -47,419 +47,147 @@
   <main>
 
     <!-- ============================================================ -->
-    <!-- MINIMALIST HERO SECTION                                      -->
+    <!-- MINIMALIST HERO                                              -->
     <!-- ============================================================ -->
     <section class="hero-section">
       <div class="container">
         <h1 class="hero-title">
           ManoLab <br>
-          <span class="highlight">Creative Applications & Intelligent Tools</span>
+          <span class="highlight">Precision Applications</span>
         </h1>
 
         <p class="hero-desc">
-          High-precision client-side web software: speech intelligence, encrypted P2P file transfer, markdown slide decks, local document dossiers, and generative art.
+          High-precision client-side web software and creative tools.
         </p>
-
-        <div class="hero-actions">
-          <a href="apps/audio-transcription/" class="btn-primary">
-            <i data-lucide="mic" style="width: 17px; height: 17px;"></i>
-            <span>Audio Transcription</span>
-          </a>
-          <a href="apps/p2p-transfer/" class="btn-secondary" style="border-color: rgba(16, 185, 129, 0.4);">
-            <i data-lucide="zap" style="width: 17px; height: 17px; color: #10b981;"></i>
-            <span>ManoDrop P2P</span>
-          </a>
-          <a href="apps/slide-deck/" class="btn-secondary" style="border-color: rgba(56, 189, 248, 0.4);">
-            <i data-lucide="presentation" style="width: 17px; height: 17px; color: #38bdf8;"></i>
-            <span>SlideCraft Studio</span>
-          </a>
-          <a href="apps/dossier-reader/" class="btn-secondary" style="border-color: rgba(99, 102, 241, 0.4);">
-            <i data-lucide="book-open" style="width: 17px; height: 17px; color: #818cf8;"></i>
-            <span>DocLens Dossier</span>
-          </a>
-          <a href="apps/aether-weave/" class="btn-secondary">
-            <i data-lucide="sparkles" style="width: 17px; height: 17px; color: #ec4899;"></i>
-            <span>Aether-Weave Art</span>
-          </a>
-          <a href="apps/visual-story-generator/" class="btn-secondary" data-owner-only="true" style="display: none;">
-            <i data-lucide="clapperboard" style="width: 17px; height: 17px; color: #facc15;"></i>
-            <span>Visual Story Studio (Private Dev)</span>
-          </a>
-        </div>
       </div>
     </section>
 
     <!-- ============================================================ -->
-    <!-- 1. FLAGSHIP: AUDIO TRANSCRIPTION STUDIO                      -->
+    <!-- APPS SHOWCASE GRID                                           -->
     <!-- ============================================================ -->
-    <section id="transcription" class="section">
+    <section class="section">
       <div class="container">
-        
-        <div class="section-header">
-          <div class="section-tag">Speech Intelligence</div>
-          <h2 class="section-title">Audio Transcription Studio</h2>
-          <p class="section-subtitle">Multilingual speech intelligence with speaker diarization, native script preservation, and instant dossier generation.</p>
-        </div>
+        <div class="apps-grid">
 
-        <div class="flagship-card">
-          <div class="flagship-top">
-            <div class="flagship-meta">
-              <div class="flagship-badge">
-                <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i>
-                <span>FLAGSHIP PRODUCTION ENGINE</span>
+          <!-- 1. Audio Transcription Studio -->
+          <div class="app-card">
+            <div class="app-card-header">
+              <div class="app-card-icon" style="background: rgba(194, 94, 56, 0.1); color: #c25e38;">
+                <i data-lucide="mic" style="width: 22px; height: 22px;"></i>
               </div>
-              <h3 class="flagship-title">Enterprise-Grade Speech-to-Text Platform</h3>
-              <p class="flagship-desc">
-                Engineered for field interviews, bilingual research, and qualitative documentation. Upload audio recordings to get precision speaker breakdown, native regional script preservation, and side-by-side English translations.
-              </p>
+              <div class="app-card-title-group">
+                <h2 class="app-card-title">Audio Transcription Studio</h2>
+                <span class="app-card-tag">Speech Intelligence</span>
+              </div>
             </div>
-            <a href="apps/audio-transcription/" class="btn-primary" style="white-space: nowrap;">
+            <a href="apps/audio-transcription/" class="btn-card-launch">
               <span>Open Studio</span>
-              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
             </a>
           </div>
 
-          <div class="flagship-features">
-            <div class="feat-item">
-              <div class="feat-icon">👥</div>
-              <div class="feat-name">Speaker Diarization</div>
-              <div class="feat-text">Automatically differentiates between Interviewer and Subject voices across long sessions.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">🌐</div>
-              <div class="feat-name">Bilingual Script</div>
-              <div class="feat-text">Preserves authentic native scripts (Hindi, Bengali, Maithili) side-by-side with genuine English.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">📁</div>
-              <div class="feat-name">Batch Organization</div>
-              <div class="feat-text">Automatically collates multi-part interview folders into unified, coherent artisan profiles.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">📄</div>
-              <div class="feat-name">1-Click Dossiers</div>
-              <div class="feat-text">Instant export to formatted Microsoft Word (.docx), ReportLab PDF, and clean Markdown files.</div>
-            </div>
-          </div>
-
-          <div class="flagship-bottom">
-            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: var(--accent-green);">●</span>
-              <span>Backend Ready: Gemini 2.5, Groq Whisper, OpenAI Whisper</span>
-            </div>
-            <a href="apps/audio-transcription/" style="font-size: 0.85rem; font-weight: 700; color: #93c5fd; display: inline-flex; align-items: center; gap: 0.35rem;">
-              <span>Launch Audio Transcription Studio</span>
-              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
-            </a>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 2. ENCRYPTED P2P TRANSFER: MANODROP                          -->
-    <!-- ============================================================ -->
-    <section id="p2p-transfer" class="section" style="padding-top: 1rem;">
-      <div class="container">
-        
-        <div class="section-header">
-          <div class="section-tag" style="color: #10b981;">Peer-to-Peer Privacy</div>
-          <h2 class="section-title">ManoDrop — Encrypted File Transfer</h2>
-          <p class="section-subtitle">Direct browser-to-browser encrypted file delivery with unlimited sizes, zero cloud storage, and live transfer telemetry.</p>
-        </div>
-
-        <div class="flagship-card" style="border-color: rgba(16, 185, 129, 0.3); background: linear-gradient(145deg, #091a14 0%, #081014 100%);">
-          <div class="flagship-top">
-            <div class="flagship-meta">
-              <div class="flagship-badge" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">
-                <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
-                <span>DIRECT WEBRTC DATACHANNEL &bull; ZERO SERVER STORAGE</span>
+          <!-- 2. ManoDrop: Encrypted P2P Transfer -->
+          <div class="app-card">
+            <div class="app-card-header">
+              <div class="app-card-icon" style="background: rgba(46, 125, 91, 0.1); color: #2e7d5b;">
+                <i data-lucide="zap" style="width: 22px; height: 22px;"></i>
               </div>
-              <h3 class="flagship-title">Zero-Cloud Direct Browser File Sharing</h3>
-              <p class="flagship-desc">
-                Share files directly with anyone in seconds without sending your data to any third-party server. Establish end-to-end encrypted WebRTC tunnels with short share codes or direct URLs, real-time chunk streaming, and transfer speeds limited only by your internet connection.
-              </p>
+              <div class="app-card-title-group">
+                <h2 class="app-card-title">ManoDrop</h2>
+                <span class="app-card-tag">P2P File Transfer</span>
+              </div>
             </div>
-            <a href="apps/p2p-transfer/" class="btn-primary" style="background: #10b981; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); white-space: nowrap;">
+            <a href="apps/p2p-transfer/" class="btn-card-launch">
               <span>Open ManoDrop</span>
-              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
             </a>
           </div>
 
-          <div class="flagship-features">
-            <div class="feat-item">
-              <div class="feat-icon">🔐</div>
-              <div class="feat-name">DTLS-SRTP Encryption</div>
-              <div class="feat-text">Direct end-to-end cryptographic channel. Intermediate servers can never view or intercept payloads.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">⚡</div>
-              <div class="feat-name">Unlimited File Size</div>
-              <div class="feat-text">Stream high-resolution videos, raw archives, or datasets with 32KB chunk buffers without browser freezing.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">☁️</div>
-              <div class="feat-name">100% Serverless</div>
-              <div class="feat-text">Zero files stored on any cloud database. Once the browser tab closes, the direct pipeline ceases.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">📊</div>
-              <div class="feat-name">Live Telemetry</div>
-              <div class="feat-text">Real-time progress bars, live transfer speed gauges in MB/s, chunk telemetry, and 1-click downloads.</div>
-            </div>
-          </div>
-
-          <div class="flagship-bottom">
-            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: #10b981;">●</span>
-              <span>WebRTC Direct DataChannels &bull; Global Public STUN Turnkey</span>
-            </div>
-            <a href="apps/p2p-transfer/" style="font-size: 0.85rem; font-weight: 700; color: #6ee7b7; display: inline-flex; align-items: center; gap: 0.35rem;">
-              <span>Launch ManoDrop Transfer Studio</span>
-              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
-            </a>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 3. SLIDECRAFT: INSTANT MARKDOWN SLIDE STUDIO                 -->
-    <!-- ============================================================ -->
-    <section id="slide-deck" class="section" style="padding-top: 1rem;">
-      <div class="container">
-        
-        <div class="section-header">
-          <div class="section-tag" style="color: #38bdf8;">Visual Presentation</div>
-          <h2 class="section-title">SlideCraft — Markdown Slide Studio</h2>
-          <p class="section-subtitle">Transform simple Markdown notes into widescreen 16:9 presentation slide decks with 6 designer themes and standalone HTML export.</p>
-        </div>
-
-        <div class="flagship-card" style="border-color: rgba(56, 189, 248, 0.3); background: linear-gradient(145deg, #091624 0%, #08101a 100%);">
-          <div class="flagship-top">
-            <div class="flagship-meta">
-              <div class="flagship-badge" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3); color: #7dd3fc;">
-                <i data-lucide="presentation" style="width: 12px; height: 12px;"></i>
-                <span>WIDESCREEN 16:9 DECK GENERATOR &bull; ZERO CONFIGURATION</span>
+          <!-- 3. SlideCraft: Markdown Slide Studio -->
+          <div class="app-card">
+            <div class="app-card-header">
+              <div class="app-card-icon" style="background: rgba(180, 83, 9, 0.1); color: #b45309;">
+                <i data-lucide="presentation" style="width: 22px; height: 22px;"></i>
               </div>
-              <h3 class="flagship-title">Instant Presentations Directly from Raw Markdown</h3>
-              <p class="flagship-desc">
-                No bloated slide software or complex PowerPoint tools needed. Write standard Markdown with simple <code>---</code> dividers, multi-column blocks, code snippets, and callouts. Preview changes live side-by-side and deliver smooth presentations with fullscreen presenter controls.
-              </p>
+              <div class="app-card-title-group">
+                <h2 class="app-card-title">SlideCraft</h2>
+                <span class="app-card-tag">Document to Slides</span>
+              </div>
             </div>
-            <a href="apps/slide-deck/" class="btn-primary" style="background: #0284c7; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35); white-space: nowrap;">
+            <a href="apps/slide-deck/" class="btn-card-launch">
               <span>Open SlideCraft</span>
-              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
             </a>
           </div>
 
-          <div class="flagship-features">
-            <div class="feat-item">
-              <div class="feat-icon">📽️</div>
-              <div class="feat-name">16:9 Aspect Ratio</div>
-              <div class="feat-text">Optimized for high-resolution displays, projectors, and modern video conferences with automatic text scaling.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">🎨</div>
-              <div class="feat-name">6 Designer Themes</div>
-              <div class="feat-text">One-click aesthetic shifting between Midnight Deep, Cyberpunk Neon, Editorial Serif, Sunset, Emerald, and Clean Paper.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">⌨️</div>
-              <div class="feat-name">Presenter Mode (F)</div>
-              <div class="feat-text">Keyboard arrow navigation, full-screen projection, live presentation timer, and thumbnail grid overview modal (O).</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">📦</div>
-              <div class="feat-name">Standalone Export</div>
-              <div class="feat-text">Export decks as self-contained offline HTML presentations or print directly to vector-clean PDF slide decks.</div>
-            </div>
-          </div>
-
-          <div class="flagship-bottom">
-            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: #38bdf8;">●</span>
-              <span>Pure Client-Side Engine &bull; Instant Offline Execution</span>
-            </div>
-            <a href="apps/slide-deck/" style="font-size: 0.85rem; font-weight: 700; color: #7dd3fc; display: inline-flex; align-items: center; gap: 0.35rem;">
-              <span>Launch SlideCraft Studio</span>
-              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
-            </a>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 4. DOCLENS: LOCAL PDF & DOSSIER READER                       -->
-    <!-- ============================================================ -->
-    <section id="dossier-reader" class="section" style="padding-top: 1rem;">
-      <div class="container">
-        
-        <div class="section-header">
-          <div class="section-tag" style="color: #818cf8;">Document Intelligence</div>
-          <h2 class="section-title">DocLens — Local PDF & Dossier Reader</h2>
-          <p class="section-subtitle">Zero-cloud document reader for PDFs, TXT, and Markdown files with instant full-text search, automated intelligence metrics, and speech narration.</p>
-        </div>
-
-        <div class="flagship-card" style="border-color: rgba(99, 102, 241, 0.3); background: linear-gradient(145deg, #101226 0%, #0b0c1c 100%);">
-          <div class="flagship-top">
-            <div class="flagship-meta">
-              <div class="flagship-badge" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #a5b4fc;">
-                <i data-lucide="book-open" style="width: 12px; height: 12px;"></i>
-                <span>100% PRIVATE CLIENT-SIDE VIEWER &bull; ZERO SERVER UPLOAD</span>
+          <!-- 4. DocLens: Dossier Reader -->
+          <div class="app-card">
+            <div class="app-card-header">
+              <div class="app-card-icon" style="background: rgba(46, 125, 91, 0.1); color: #2e7d5b;">
+                <i data-lucide="book-open" style="width: 22px; height: 22px;"></i>
               </div>
-              <h3 class="flagship-title">Private In-Browser Document Dossier Intelligence</h3>
-              <p class="flagship-desc">
-                Review confidential contracts, research papers, and technical dossiers with complete peace of mind. Render documents with PDF.js, search keywords instantly with occurrences count, generate automated outline digests, auto-save personal notes to localStorage, and listen via text-to-speech narration.
-              </p>
+              <div class="app-card-title-group">
+                <h2 class="app-card-title">DocLens</h2>
+                <span class="app-card-tag">Dossier Reader</span>
+              </div>
             </div>
-            <a href="apps/dossier-reader/" class="btn-primary" style="background: #4f46e5; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); white-space: nowrap;">
+            <a href="apps/dossier-reader/" class="btn-card-launch">
               <span>Open DocLens</span>
-              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
             </a>
           </div>
 
-          <div class="flagship-features">
-            <div class="feat-item">
-              <div class="feat-icon">🔒</div>
-              <div class="feat-name">100% Local Privacy</div>
-              <div class="feat-text">Files never leave your machine. Parsed strictly in browser memory with zero network requests or uploads.</div>
+          <!-- 5. Aether-Weave -->
+          <div class="app-card">
+            <div class="app-card-header">
+              <div class="app-card-icon" style="background: rgba(194, 94, 56, 0.1); color: #c25e38;">
+                <i data-lucide="sparkles" style="width: 22px; height: 22px;"></i>
+              </div>
+              <div class="app-card-title-group">
+                <h2 class="app-card-title">Aether-Weave</h2>
+                <span class="app-card-tag">Living Light Art</span>
+              </div>
             </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">🔍</div>
-              <div class="feat-name">Instant Full-Text Search</div>
-              <div class="feat-text">Lightning-fast keyword indexing across all pages with occurrence counts and instant result navigation.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">🧠</div>
-              <div class="feat-name">Dossier Intelligence</div>
-              <div class="feat-text">Calculates total words, reading time, heading outlines, and document statistics automatically on load.</div>
-            </div>
-
-            <div class="feat-item">
-              <div class="feat-icon">🎙️</div>
-              <div class="feat-name">TTS Audio & Notes</div>
-              <div class="feat-text">Web Speech API voice narration with playback speed control plus persistent scratchpad auto-saved to localStorage.</div>
-            </div>
-          </div>
-
-          <div class="flagship-bottom">
-            <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: #818cf8;">●</span>
-              <span>Mozilla PDF.js &bull; Client-Side Web Speech API &bull; LocalStorage Sync</span>
-            </div>
-            <a href="apps/dossier-reader/" style="font-size: 0.85rem; font-weight: 700; color: #a5b4fc; display: inline-flex; align-items: center; gap: 0.35rem;">
-              <span>Launch DocLens Dossier Reader</span>
-              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+            <a href="apps/aether-weave/" class="btn-card-launch">
+              <span>Enter Canvas</span>
+              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
             </a>
           </div>
+
+          <!-- 6. Visual Story Studio (Owner Only) -->
+          <div class="app-card" data-owner-only="true" style="display: none;">
+            <div class="app-card-header">
+              <div class="app-card-icon" style="background: rgba(180, 83, 9, 0.1); color: #b45309;">
+                <i data-lucide="clapperboard" style="width: 22px; height: 22px;"></i>
+              </div>
+              <div class="app-card-title-group">
+                <h2 class="app-card-title">Visual Story Studio</h2>
+                <span class="app-card-tag">Private Dev</span>
+              </div>
+            </div>
+            <a href="apps/visual-story-generator/" class="btn-card-launch">
+              <span>Launch Studio</span>
+              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
+            </a>
+          </div>
+
         </div>
-
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 2. ORIGINAL LIVING ART: AETHER-WEAVE                         -->
-    <!-- ============================================================ -->
-    <section id="aether-weave" class="section" style="padding-top: 1rem;">
-      <div class="container">
-        
-        <div class="art-spotlight">
-          <div class="art-spotlight-left">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
-              <span class="art-badge-tag">✦ Original Art Form</span>
-              <span class="badge-art-origin">BORN FROM NOTHING</span>
-            </div>
-            <h3 class="art-spotlight-title">Aether-Weave: The Living Art Form</h3>
-            <p class="art-spotlight-desc">
-              Paint not with static pigment, but with multi-dimensional vibrating ribbons of refractive light. Filaments twist in zero gravity, create magnetic quantum gossamer bridges when crossing, shift with thin-film optical dispersion, and sing with crystalline acoustic resonance.
-            </p>
-            <div class="art-pills">
-              <span class="pill-feat">✨ Refractive Dispersion</span>
-              <span class="pill-feat">🧬 Quantum Entanglement</span>
-              <span class="pill-feat">🌀 6-Fold Sacred Mandala</span>
-              <span class="pill-feat">🎵 432Hz Crystal Chimes</span>
-              <span class="pill-feat">📸 4K Canvas Export</span>
-            </div>
-          </div>
-          <div>
-            <a href="apps/aether-weave/" class="btn-art-cta">
-              <i data-lucide="sparkles" style="width: 17px; height: 17px;"></i>
-              <span>Enter Living Canvas</span>
-            </a>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 3. ANIMATION STUDIO: VISUAL STORY GENERATOR (OWNER ONLY)     -->
-    <!-- ============================================================ -->
-    <section id="visual-story" class="section" data-owner-only="true" style="display: none; padding-top: 1rem; padding-bottom: 3rem;">
-      <div class="container">
-        
-        <div class="cosmos-spotlight" style="border-color: rgba(250, 204, 21, 0.4); background: linear-gradient(135deg, rgba(67, 20, 7, 0.35) 0%, rgba(18, 20, 28, 0.85) 100%);">
-          <div class="cosmos-spotlight-left">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
-              <span class="cosmos-badge-tag" style="background: rgba(250, 204, 21, 0.15); color: #facc15; border-color: rgba(250, 204, 21, 0.3);">🎬 Character Animation & Lip-Sync Studio</span>
-              <span class="badge-cosmos-live" style="background: rgba(250, 204, 21, 0.15); color: #facc15;">
-                <span class="live-beacon" style="background: #facc15;"></span>
-                <span>STUDIO READY</span>
-              </span>
-            </div>
-            <h3 class="cosmos-title" style="color: #fff;">Visual Story Generator</h3>
-            <p class="cosmos-desc">
-              Create cinematic 9:16 animated shorts with sculpted 2.5D rigged characters. Features procedural breathing, natural eye blinking, real-time audio-driven mouth lip-sync (A, O, E, Rest phonemes), in-studio microphone recording with warm mastering DSP, and 60 FPS video export.
-            </p>
-            <div class="cosmos-pills">
-              <span class="pill-feat">👑 4 Rigged Character Archetypes</span>
-              <span class="pill-feat">🗣️ Real-Time Audio Lip-Sync</span>
-              <span class="pill-feat">🎙️ Studio Voice Mastering DSP</span>
-              <span class="pill-feat">🎥 Multi-Angle Cinematic Camera</span>
-              <span class="pill-feat">🟡 Viral Karaoke Subtitles</span>
-              <span class="pill-feat">🔴 60 FPS Video Recording</span>
-            </div>
-          </div>
-          <div>
-            <a href="apps/visual-story-generator/" class="btn-cosmos-cta" style="background: linear-gradient(135deg, #facc15 0%, #eab308 100%); color: #000; box-shadow: 0 4px 20px rgba(250, 204, 21, 0.4);">
-              <i data-lucide="play" style="width: 18px; height: 18px;"></i>
-              <span>Launch Story Studio</span>
-            </a>
-          </div>
-        </div>
-
       </div>
     </section>
 
   </main>
 
   <!-- ============================================================ -->
-  <!-- MINIMALIST FOOTER                                            -->
+  <!-- FOOTER                                                       -->
   <!-- ============================================================ -->
   <footer class="site-footer">
     <div class="container footer-inner">
       <div>
         <div class="footer-brand">MANO-LAB</div>
-        <div class="footer-copy">Web applications, generative art, and creative tools.</div>
+        <div class="footer-copy">High-precision web applications & digital art.</div>
       </div>
       <div class="footer-copy">
-        MANO-LAB &bull; Client-Side Digital Tools
+        ManoLab &bull; Client-Side Digital Tools
       </div>
     </div>
   </footer>

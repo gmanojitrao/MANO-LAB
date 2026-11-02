@@ -156,35 +156,37 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        color: #f1f5f9;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: #ffffff;
+        color: #1c1917;
+        border: 1px solid #e7e2d9;
         padding: 0.45rem 0.85rem;
         border-radius: 9999px;
         font-size: 0.82rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       }
       .mano-btn-signin:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.3);
+        background: #f5f2ea;
+        border-color: #d8d0c2;
       }
       .mano-user-pill {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: #ffffff;
+        border: 1px solid #e7e2d9;
         padding: 0.3rem 0.65rem 0.3rem 0.35rem;
         border-radius: 9999px;
         cursor: pointer;
         transition: all 0.2s ease;
         user-select: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       }
       .mano-user-pill:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.25);
+        background: #f5f2ea;
+        border-color: #d8d0c2;
       }
       .mano-user-avatar {
         width: 1.65rem;
@@ -195,7 +197,7 @@
       .mano-user-name {
         font-size: 0.82rem;
         font-weight: 600;
-        color: #f8fafc;
+        color: #1c1917;
         max-width: 110px;
         white-space: nowrap;
         overflow: hidden;
@@ -206,10 +208,10 @@
         top: calc(100% + 0.6rem);
         right: 0;
         width: 270px;
-        background: #0b0f19;
-        border: 1px solid #1e293b;
+        background: #ffffff;
+        border: 1px solid #e7e2d9;
         border-radius: 0.85rem;
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 12px 32px rgba(60, 50, 40, 0.12);
         padding: 0.5rem;
         display: none;
         flex-direction: column;
@@ -227,18 +229,18 @@
       }
       .mano-dropdown-header {
         padding: 0.65rem 0.75rem 0.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid #ede8df;
         margin-bottom: 0.25rem;
       }
       .mano-dropdown-user-name {
         font-size: 0.85rem;
         font-weight: 700;
-        color: #fff;
+        color: #1c1917;
         line-height: 1.2;
       }
       .mano-dropdown-user-email {
         font-size: 0.72rem;
-        color: #94a3b8;
+        color: #78716c;
         font-family: 'JetBrains Mono', monospace;
         margin-top: 0.15rem;
         overflow: hidden;
@@ -255,26 +257,26 @@
         margin-top: 0.35rem;
       }
       .mano-dropdown-role-badge.admin {
-        background: rgba(250, 204, 21, 0.15);
-        color: #facc15;
-        border: 1px solid rgba(250, 204, 21, 0.3);
+        background: rgba(180, 83, 9, 0.12);
+        color: #b45309;
+        border: 1px solid rgba(180, 83, 9, 0.25);
       }
       .mano-dropdown-role-badge.member {
-        background: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        background: rgba(46, 125, 91, 0.12);
+        color: #2e7d5b;
+        border: 1px solid rgba(46, 125, 91, 0.25);
       }
       .mano-dropdown-role-badge.visitor {
-        background: rgba(148, 163, 184, 0.15);
-        color: #94a3b8;
-        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(120, 113, 108, 0.12);
+        color: #78716c;
+        border: 1px solid rgba(120, 113, 108, 0.25);
       }
       .mano-dropdown-section-title {
         font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #64748b;
+        color: #78716c;
         padding: 0.35rem 0.75rem 0.15rem;
       }
       .mano-menu-item {
@@ -283,7 +285,7 @@
         gap: 0.65rem;
         padding: 0.55rem 0.75rem;
         border-radius: 0.5rem;
-        color: #cbd5e1;
+        color: #44403c;
         font-size: 0.82rem;
         font-weight: 500;
         text-decoration: none;
@@ -295,26 +297,26 @@
         transition: all 0.15s ease;
       }
       .mano-menu-item:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
+        background: #f5f2ea;
+        color: #1c1917;
       }
       .mano-menu-item.logout {
-        color: #f87171;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        color: #c25e38;
+        border-top: 1px solid #ede8df;
         margin-top: 0.25rem;
         padding-top: 0.6rem;
       }
       .mano-menu-item.logout:hover {
-        background: rgba(239, 68, 68, 0.15);
-        color: #fca5a5;
+        background: rgba(194, 94, 56, 0.1);
+        color: #c25e38;
       }
 
       /* Modal Styling */
       .mano-modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.78);
-        backdrop-filter: blur(8px);
+        background: rgba(28, 25, 23, 0.6);
+        backdrop-filter: blur(6px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -325,12 +327,13 @@
         display: none;
       }
       .mano-modal-card {
-        background: #090d16;
-        border: 1px solid #1e293b;
+        background: #ffffff;
+        border: 1px solid #e7e2d9;
+        color: #1c1917;
         border-radius: 1.25rem;
         width: 100%;
         max-width: 540px;
-        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 20px 48px rgba(60, 50, 40, 0.16);
         overflow: hidden;
         animation: manoScaleIn 0.2s ease-out;
       }
@@ -340,7 +343,7 @@
       }
       .mano-modal-header {
         padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid #1e293b;
+        border-bottom: 1px solid #ede8df;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -348,20 +351,20 @@
       .mano-modal-title {
         font-size: 1.05rem;
         font-weight: 700;
-        color: #fff;
+        color: #1c1917;
       }
       .mano-modal-close {
         background: transparent;
         border: none;
-        color: #94a3b8;
+        color: #78716c;
         font-size: 1.3rem;
         cursor: pointer;
         padding: 0.25rem 0.5rem;
         border-radius: 0.35rem;
       }
       .mano-modal-close:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.08);
+        color: #1c1917;
+        background: #f5f2ea;
       }
       .mano-modal-body {
         padding: 1.5rem;
@@ -375,16 +378,16 @@
         display: block;
         font-size: 0.8rem;
         font-weight: 600;
-        color: #cbd5e1;
+        color: #44403c;
         margin-bottom: 0.4rem;
       }
       .mano-input {
         width: 100%;
         padding: 0.65rem 0.85rem;
-        background: rgba(18, 24, 38, 0.8);
-        border: 1px solid #1e293b;
+        background: #faf8f5;
+        border: 1px solid #e7e2d9;
         border-radius: 0.6rem;
-        color: #fff;
+        color: #1c1917;
         font-size: 0.85rem;
         font-family: inherit;
         outline: none;
@@ -392,7 +395,7 @@
         box-sizing: border-box;
       }
       .mano-input:focus {
-        border-color: #3b82f6;
+        border-color: #c25e38;
       }
       .mano-checkbox-group {
         display: grid;
@@ -404,30 +407,30 @@
         display: flex;
         align-items: flex-start;
         gap: 0.65rem;
-        background: rgba(15, 23, 42, 0.5);
-        border: 1px solid #1e293b;
+        background: #faf8f5;
+        border: 1px solid #e7e2d9;
         padding: 0.65rem 0.85rem;
         border-radius: 0.65rem;
         cursor: pointer;
         transition: all 0.15s ease;
       }
       .mano-checkbox-card:hover {
-        background: rgba(30, 41, 59, 0.6);
-        border-color: rgba(59, 130, 246, 0.4);
+        background: #f5f2ea;
+        border-color: #c25e38;
       }
       .mano-checkbox-title {
         font-size: 0.82rem;
         font-weight: 700;
-        color: #f1f5f9;
+        color: #1c1917;
       }
       .mano-checkbox-desc {
         font-size: 0.72rem;
-        color: #94a3b8;
+        color: #78716c;
         line-height: 1.3;
         margin-top: 0.15rem;
       }
       .mano-btn-primary {
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        background: #1c1917;
         color: #fff;
         border: none;
         padding: 0.7rem 1.25rem;
@@ -435,18 +438,18 @@
         font-size: 0.85rem;
         font-weight: 700;
         cursor: pointer;
-        transition: filter 0.15s;
+        transition: background 0.15s;
       }
       .mano-btn-primary:hover {
-        filter: brightness(1.1);
+        background: #c25e38;
       }
       .mano-user-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0.75rem 0.85rem;
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid #1e293b;
+        background: #faf8f5;
+        border: 1px solid #e7e2d9;
         border-radius: 0.65rem;
         margin-bottom: 0.5rem;
       }

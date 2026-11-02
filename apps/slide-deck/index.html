@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SlideCraft - Instant Markdown Slide Deck Studio</title>
-  <meta name="description" content="Turn markdown into gorgeous presentation slide decks instantly. 16:9 aspect ratio, presentation mode, PDF export, zero server latency.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%2338bdf8%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22black%22>📽️</text></svg>">
+  <title>SlideCraft - Intelligent Document to Slide Deck Studio</title>
+  <meta name="description" content="Drop any document, text, or transcript and instantly generate gorgeous 16:9 presentation slide decks. Zero configuration, eye-comforting themes.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23c25e38%22/><text x=%2250%22 y=%2265%22 font-size=%2245%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22>📽️</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,15 +14,22 @@
 
   <style>
     :root {
-      --bg: #07090e;
-      --card-bg: #0f172a;
-      --border: #1e293b;
-      --accent: #38bdf8;
-      --accent-hover: #0ea5e9;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #faf8f5;
+      --card-bg: #ffffff;
+      --card-border: #e7e2d9;
+      --card-hover: #f5f2ea;
+      --accent: #c25e38;
+      --accent-hover: #a84d2a;
+      --accent-sage: #2e7d5b;
+      --text: #1c1917;
+      --text-muted: #57534e;
+      --text-dim: #78716c;
       --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
       --font-mono: 'JetBrains Mono', monospace;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,9 +46,9 @@
     /* Studio Header */
     .header {
       height: 60px;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(250, 248, 245, 0.92);
       backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -62,12 +69,13 @@
       width: 34px;
       height: 34px;
       border-radius: 9px;
-      background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+      background: linear-gradient(135deg, #c25e38 0%, #b45309 100%);
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #fff;
       font-size: 17px;
-      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+      box-shadow: 0 2px 10px rgba(194, 94, 56, 0.25);
     }
 
     .brand-title {
@@ -82,9 +90,9 @@
       text-transform: uppercase;
       padding: 2px 7px;
       border-radius: 9999px;
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(194, 94, 56, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(194, 94, 56, 0.25);
       margin-left: 6px;
     }
 
@@ -99,10 +107,10 @@
       align-items: center;
       gap: 6px;
       padding: 7px 13px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -110,54 +118,87 @@
     }
 
     .btn-action:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: #38bdf8;
+      background: var(--card-hover);
+      color: var(--text);
     }
 
     .btn-primary-present {
-      background: #38bdf8;
-      color: #000;
+      background: var(--accent);
+      color: #fff;
       border: none;
-      font-weight: 800;
-      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(194, 94, 56, 0.25);
     }
 
     .btn-primary-present:hover {
-      background: #7dd3fc;
+      background: var(--accent-hover);
+      color: #fff;
     }
 
-    /* Workspace Layout: Split Editor & Preview */
+    /* Main Split Layout */
     .studio-layout {
       flex: 1;
       display: grid;
-      grid-template-columns: 460px 1fr;
+      grid-template-columns: 480px 1fr;
       height: calc(100vh - 60px);
       overflow: hidden;
     }
 
-    /* Left Pane: Markdown Editor */
+    /* Left Pane */
     .editor-pane {
-      background: #090d16;
-      border-right: 1px solid var(--border);
+      background: #faf8f5;
+      border-right: 1px solid var(--card-border);
       display: flex;
       flex-direction: column;
       height: 100%;
+      overflow: hidden;
+    }
+
+    /* Top Mode Tabs */
+    .input-tabs {
+      display: flex;
+      background: #ede8df;
+      padding: 4px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .input-tab {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .input-tab.active {
+      background: #ffffff;
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
     .editor-toolbar {
       padding: 10px 16px;
-      background: rgba(15, 23, 42, 0.6);
-      border-bottom: 1px solid var(--border);
+      background: #f7f4ee;
+      border-bottom: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
     }
 
-    .template-select, .theme-select {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--border);
-      color: #fff;
+    .theme-select {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      color: var(--text);
       padding: 6px 10px;
       border-radius: 7px;
       font-size: 12px;
@@ -166,772 +207,812 @@
       cursor: pointer;
     }
 
+    /* Auto-Gen View */
+    .autogen-view {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .doc-dropzone {
+      border: 2px dashed #d8d0c2;
+      border-radius: var(--radius-md);
+      padding: 28px 16px;
+      text-align: center;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .doc-dropzone:hover {
+      border-color: var(--accent);
+      background: #fdfbf7;
+    }
+
+    .raw-textarea {
+      flex: 1;
+      width: 100%;
+      min-height: 220px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px;
+      outline: none;
+      resize: vertical;
+    }
+
+    .raw-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-synthesize {
+      padding: 12px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(194, 94, 56, 0.25);
+    }
+
+    .btn-synthesize:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Markdown Editor View */
+    .markdown-view {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
     .markdown-textarea {
       flex: 1;
       width: 100%;
-      background: transparent;
+      background: #ffffff;
       border: none;
-      color: #f1f5f9;
+      color: var(--text);
       font-family: var(--font-mono);
-      font-size: 13.5px;
+      font-size: 13px;
       line-height: 1.6;
-      padding: 18px;
+      padding: 16px;
       outline: none;
       resize: none;
     }
 
-    /* Right Pane: Slide Canvas Preview */
+    /* Right Preview Pane */
     .preview-pane {
-      background: #05070c;
+      background: #f4f0e8;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 30px;
       position: relative;
       overflow: hidden;
     }
 
-    /* 16:9 Slide Canvas Frame */
+    /* 16:9 Canvas Frame */
     .slide-canvas-wrap {
       width: 100%;
-      max-width: 960px;
+      max-width: 900px;
       aspect-ratio: 16 / 9;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.08);
-      border-radius: 16px;
-      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(60, 50, 40, 0.12);
+      border-radius: 12px;
       position: relative;
+      overflow: hidden;
       display: flex;
-      flex-direction: column;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s;
     }
 
-    /* Slide Content Inner */
-    .slide-stage {
-      flex: 1;
-      padding: 50px 60px;
+    .slide-canvas {
+      width: 100%;
+      height: 100%;
+      padding: 5% 7%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       position: relative;
       overflow: hidden;
+      box-sizing: border-box;
+      user-select: text;
     }
 
-    /* Slide Navigation Controls */
+    /* Themes (Warm, Eye-Comforting) */
+    /* Theme 1: Warm Alabaster (Default) */
+    .theme-warm-alabaster {
+      background: #fcfbf8;
+      color: #1c1917;
+      border: 1px solid #e7e2d9;
+    }
+    .theme-warm-alabaster h1 { font-family: var(--font-serif); font-size: 2.8vw; color: #1c1917; margin-bottom: 0.6em; line-height: 1.2; }
+    .theme-warm-alabaster h2 { font-family: var(--font-sans); font-size: 2vw; color: #c25e38; margin-bottom: 0.5em; font-weight: 800; }
+    .theme-warm-alabaster h3 { font-size: 1.4vw; color: #57534e; margin-bottom: 0.5em; }
+    .theme-warm-alabaster p, .theme-warm-alabaster li { font-size: 1.3vw; color: #44403c; line-height: 1.6; margin-bottom: 0.5em; }
+    .theme-warm-alabaster .pill { background: rgba(194, 94, 56, 0.1); color: #c25e38; border: 1px solid rgba(194, 94, 56, 0.25); }
+
+    /* Theme 2: Warm Sepia */
+    .theme-sepia {
+      background: #f7f2e7;
+      color: #2d2823;
+      border: 1px solid #e2dac9;
+    }
+    .theme-sepia h1 { font-family: var(--font-serif); font-size: 2.8vw; color: #2d2823; margin-bottom: 0.6em; }
+    .theme-sepia h2 { font-size: 2vw; color: #b45309; margin-bottom: 0.5em; font-weight: 800; }
+    .theme-sepia p, .theme-sepia li { font-size: 1.3vw; color: #453e37; line-height: 1.6; }
+
+    /* Theme 3: Muted Sage Minimal */
+    .theme-sage {
+      background: #f3f6f3;
+      color: #1a2e22;
+      border: 1px solid #d5ded6;
+    }
+    .theme-sage h1 { font-size: 2.8vw; color: #1a2e22; margin-bottom: 0.6em; font-weight: 800; }
+    .theme-sage h2 { font-size: 2vw; color: #2e7d5b; margin-bottom: 0.5em; }
+    .theme-sage p, .theme-sage li { font-size: 1.3vw; color: #324a3c; line-height: 1.6; }
+
+    /* Theme 4: Cozy Espresso */
+    .theme-espresso {
+      background: #1c1917;
+      color: #f5f5f4;
+      border: 1px solid #292524;
+    }
+    .theme-espresso h1 { font-family: var(--font-serif); font-size: 2.8vw; color: #f5f5f4; margin-bottom: 0.6em; }
+    .theme-espresso h2 { font-size: 2vw; color: #f59e0b; margin-bottom: 0.5em; }
+    .theme-espresso p, .theme-espresso li { font-size: 1.3vw; color: #d6d3d1; line-height: 1.6; }
+
+    /* Theme 5: Clean White */
+    .theme-clean-white {
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+    .theme-clean-white h1 { font-size: 2.8vw; color: #0f172a; margin-bottom: 0.6em; font-weight: 800; }
+    .theme-clean-white h2 { font-size: 2vw; color: #0284c7; margin-bottom: 0.5em; }
+    .theme-clean-white p, .theme-clean-white li { font-size: 1.3vw; color: #334155; line-height: 1.6; }
+
+    /* Slide Elements */
+    .pill {
+      display: inline-block;
+      padding: 0.25em 0.8em;
+      border-radius: 9999px;
+      font-size: 0.9vw;
+      font-weight: 700;
+      margin-bottom: 1em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slide-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2vw;
+      margin-top: 1em;
+    }
+
+    .slide-card-box {
+      background: rgba(0, 0, 0, 0.03);
+      padding: 1.2vw;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .theme-espresso .slide-card-box {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Slide Bottom Bar Navigation */
     .slide-nav-bar {
-      margin-top: 18px;
+      margin-top: 16px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
+      gap: 14px;
+      background: #ffffff;
+      padding: 6px 14px;
       border-radius: 9999px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 4px 12px rgba(60, 50, 40, 0.06);
     }
 
-    .slide-counter {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-    }
-
-    .btn-nav-arrow {
-      background: transparent;
+    .nav-btn {
+      background: none;
       border: none;
-      color: #fff;
+      color: var(--text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4px;
-      border-radius: 6px;
-      transition: background 0.15s;
+      padding: 6px;
+      border-radius: 50%;
+      transition: all 0.15s;
     }
 
-    .btn-nav-arrow:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.1);
-      color: #38bdf8;
+    .nav-btn:hover:not(:disabled) {
+      background: #ede8df;
+      color: var(--text);
     }
 
-    .btn-nav-arrow:disabled {
+    .nav-btn:disabled {
       opacity: 0.3;
       cursor: not-allowed;
     }
 
-    /* =========================================================================
-       THEMES (Midnight, Cyberpunk, Editorial, Sunset, Emerald, Corporate)
-       ========================================================================= */
-
-    /* 1. Midnight Minimalist (Default) */
-    .theme-midnight {
-      background: #090d16;
-      color: #f8fafc;
-    }
-    .theme-midnight h1 { color: #fff; font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
-    .theme-midnight h2 { color: #38bdf8; font-size: 32px; font-weight: 800; margin-bottom: 12px; }
-    .theme-midnight p, .theme-midnight li { color: #cbd5e1; font-size: 18px; line-height: 1.55; }
-    .theme-midnight .pill { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-
-    /* 2. Cyberpunk Neon */
-    .theme-cyberpunk {
-      background: radial-gradient(circle at top right, #1e1035, #08060f);
-      color: #f8fafc;
-    }
-    .theme-cyberpunk h1 { color: #f43f5e; font-size: 42px; font-weight: 800; text-shadow: 0 0 20px rgba(244, 63, 94, 0.5); }
-    .theme-cyberpunk h2 { color: #06b6d4; font-size: 32px; font-weight: 800; text-shadow: 0 0 16px rgba(6, 182, 212, 0.5); }
-    .theme-cyberpunk p, .theme-cyberpunk li { color: #e2e8f0; font-size: 18px; }
-    .theme-cyberpunk .pill { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
-
-    /* 3. Warm Editorial (Paper Style) */
-    .theme-editorial {
-      background: #fdfbf7;
-      color: #1e293b;
-    }
-    .theme-editorial h1 { font-family: 'Playfair Display', serif; color: #0f172a; font-size: 44px; font-style: italic; }
-    .theme-editorial h2 { font-family: 'Playfair Display', serif; color: #b45309; font-size: 32px; }
-    .theme-editorial p, .theme-editorial li { color: #334155; font-size: 18px; }
-    .theme-editorial .pill { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-
-    /* 4. Sunset Gradient */
-    .theme-sunset {
-      background: linear-gradient(135deg, #1e1b4b 0%, #31102b 50%, #180d22 100%);
-      color: #fff;
-    }
-    .theme-sunset h1 { background: linear-gradient(90deg, #f59e0b, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 44px; font-weight: 800; }
-    .theme-sunset h2 { color: #fbbf24; font-size: 32px; }
-    .theme-sunset p, .theme-sunset li { color: #f1f5f9; font-size: 18px; }
-    .theme-sunset .pill { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-
-    /* 5. Emerald Matrix */
-    .theme-emerald {
-      background: #021a12;
-      color: #ecfdf5;
-    }
-    .theme-emerald h1 { color: #34d399; font-size: 42px; font-weight: 800; }
-    .theme-emerald h2 { color: #6ee7b7; font-size: 32px; }
-    .theme-emerald p, .theme-emerald li { color: #a7f3d0; font-size: 18px; }
-    .theme-emerald .pill { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid #34d399; }
-
-    /* 6. Corporate Navy */
-    .theme-corporate {
-      background: #0f172a;
-      color: #f8fafc;
-    }
-    .theme-corporate h1 { color: #ffffff; font-size: 42px; font-weight: 800; }
-    .theme-corporate h2 { color: #60a5fa; font-size: 32px; }
-    .theme-corporate p, .theme-corporate li { color: #cbd5e1; font-size: 18px; }
-    .theme-corporate .pill { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid #60a5fa; }
-
-    /* Slide Elements Typography */
-    .pill {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      padding: 3px 10px;
-      border-radius: 9999px;
-      margin-bottom: 16px;
-      width: fit-content;
-    }
-
-    ul {
-      margin-left: 24px;
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .columns-wrap {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 24px;
-      margin-top: 20px;
-    }
-
-    .column-box {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 20px;
-      border-radius: 12px;
-    }
-
-    .stat-number {
-      font-size: 42px;
-      font-weight: 800;
-      color: #38bdf8;
-      letter-spacing: -1px;
-    }
-
-    pre code {
-      display: block;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 16px;
-      border-radius: 10px;
+    .slide-counter {
       font-family: var(--font-mono);
-      font-size: 14px;
-      color: #38bdf8;
-      margin-top: 16px;
-      overflow-x: auto;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
     }
 
-    /* FULLSCREEN PRESENTATION MODE */
-    body.presenting .header,
-    body.presenting .editor-pane,
-    body.presenting .slide-nav-bar {
-      display: none !important;
+    /* Fullscreen Presenter Mode */
+    .present-mode {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+      width: 100vw !important; height: 100vh !important;
+      max-width: none !important;
+      border-radius: 0 !important;
+      z-index: 9999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: none !important;
     }
 
-    body.presenting .studio-layout {
-      grid-template-columns: 1fr;
-      height: 100vh;
-    }
-
-    body.presenting .preview-pane {
-      padding: 0;
-      background: #000;
-    }
-
-    body.presenting .slide-canvas-wrap {
-      max-width: 100vw;
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    body.presenting .slide-stage {
-      padding: 8vw 10vw;
-    }
-
-    /* Floating Presenter Controls */
-    .present-controls {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid var(--border);
-      border-radius: 9999px;
-      padding: 6px 14px;
-      display: none;
-      align-items: center;
-      gap: 12px;
-      z-index: 1000;
-    }
-
-    body.presenting .present-controls {
-      display: flex;
-    }
-
-    /* Overview Gallery Grid */
-    .overview-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(5, 7, 12, 0.95);
-      backdrop-filter: blur(20px);
-      z-index: 2000;
-      padding: 40px;
-      display: none;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .overview-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
-      margin-top: 24px;
-    }
-
-    .overview-card {
-      aspect-ratio: 16 / 9;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      overflow: hidden;
-      cursor: pointer;
-      transform: scale(1);
-      transition: all 0.2s;
-      background: #090d16;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .overview-card:hover {
-      border-color: #38bdf8;
-      transform: scale(1.03);
-    }
-
-    .overview-card.active {
-      border-color: #10b981;
-    }
-
-    /* Toast */
     .toast {
       position: fixed;
       bottom: 24px;
       left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #0f172a;
-      border: 1px solid #38bdf8;
+      transform: translateX(-50%) translateY(100px);
+      background: #1c1917;
       color: #fff;
       padding: 10px 20px;
       border-radius: 9999px;
       font-size: 13px;
       font-weight: 600;
-      transition: transform 0.3s;
-      z-index: 3000;
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 200;
+      pointer-events: none;
     }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Studio Header -->
+  <!-- Header -->
   <header class="header">
-    <a href="../../index.html" class="brand-wrap">
+    <a href="../../" class="brand-wrap">
       <div class="brand-logo">📽️</div>
       <div>
-        <span class="brand-title">SlideCraft</span>
-        <span class="brand-pill">Markdown Decks</span>
+        <div class="brand-title">SlideCraft <span class="brand-pill">Intelligent Slides</span></div>
       </div>
     </a>
 
     <div class="header-actions">
-      <button class="btn-action" onclick="toggleOverview()">
-        <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
-        <span>Grid (O)</span>
-      </button>
+      <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
+        <option value="theme-warm-alabaster">Warm Alabaster (Default)</option>
+        <option value="theme-sepia">Warm Sepia</option>
+        <option value="theme-sage">Muted Sage</option>
+        <option value="theme-espresso">Cozy Espresso</option>
+        <option value="theme-clean-white">Clean White</option>
+      </select>
 
-      <button class="btn-action" onclick="exportHTMLPresentation()">
+      <button class="btn-action" onclick="exportPresentationHTML()" title="Download Single-File HTML Presentation">
         <i data-lucide="download" style="width: 14px; height: 14px;"></i>
         <span>Export HTML</span>
       </button>
 
-      <button class="btn-action btn-primary-present" onclick="startPresenting()">
-        <i data-lucide="play" style="width: 15px; height: 15px;"></i>
+      <button class="btn-action btn-primary-present" onclick="toggleFullscreen()" title="Present Fullscreen (Key: F)">
+        <i data-lucide="play" style="width: 14px; height: 14px;"></i>
         <span>Present (F)</span>
       </button>
 
-      <a href="../../index.html" class="btn-action" style="margin-left: 6px;">
-        <span>⌂ Mano Lab</span>
+      <a href="../../" class="btn-action" style="text-decoration:none;">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Back</span>
       </a>
     </div>
   </header>
 
-  <!-- Main Split Studio Layout -->
-  <main class="studio-layout">
+  <div class="studio-layout">
 
-    <!-- Left: Markdown Editor -->
-    <section class="editor-pane">
-      <div class="editor-toolbar">
-        <div style="display: flex; gap: 8px;">
-          <select id="selectTemplate" class="template-select" onchange="loadSelectedTemplate()">
-            <option value="pitch">Startup Pitch Deck</option>
-            <option value="tech">Tech Architecture</option>
-            <option value="roadmap">Product Roadmap</option>
-          </select>
+    <!-- Left Editor Pane -->
+    <aside class="editor-pane">
+      <div class="input-tabs">
+        <button class="input-tab active" id="tabAuto" onclick="switchInputTab('auto')">
+          <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+          <span>Auto-Generate from Text</span>
+        </button>
+        <button class="input-tab" id="tabManual" onclick="switchInputTab('manual')">
+          <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+          <span>Slide Code Editor</span>
+        </button>
+      </div>
 
-          <select id="selectTheme" class="theme-select" onchange="changeTheme()">
-            <option value="theme-midnight">Theme: Midnight</option>
-            <option value="theme-cyberpunk">Theme: Cyberpunk</option>
-            <option value="theme-editorial">Theme: Editorial Paper</option>
-            <option value="theme-sunset">Theme: Sunset Horizon</option>
-            <option value="theme-emerald">Theme: Emerald Matrix</option>
-            <option value="theme-corporate">Theme: Corporate Navy</option>
-          </select>
+      <!-- Tab 1: Auto Synthesizer -->
+      <div class="autogen-view" id="viewAuto">
+        <div class="doc-dropzone" id="docDropzone">
+          <i data-lucide="file-text" style="width: 28px; height: 28px; color: var(--accent); margin-bottom: 6px;"></i>
+          <div style="font-size: 14px; font-weight: 700;">Drop raw document or transcript here</div>
+          <div style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">Supports TXT, MD, transcripts, or notes</div>
+          <input type="file" id="fileInputDoc" style="display: none;">
         </div>
 
-        <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">Split with ---</span>
+        <div>
+          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;">
+            Or Paste Raw Content:
+          </div>
+          <textarea id="rawInputText" class="raw-textarea" placeholder="Paste your interview transcript, lecture notes, project summary, or article here... The engine will intelligently synthesize structured 16:9 slides for you."></textarea>
+        </div>
+
+        <button class="btn-synthesize" onclick="synthesizeFromRawInput()">
+          <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+          <span>Synthesize 16:9 Slide Deck</span>
+        </button>
       </div>
 
-      <textarea id="markdownEditor" class="markdown-textarea" placeholder="Type Markdown here..."></textarea>
-    </section>
+      <!-- Tab 2: Manual Slide Editor -->
+      <div class="markdown-view" id="viewManual">
+        <div class="editor-toolbar">
+          <span style="font-size: 12px; font-weight: 700; color: var(--text-dim);">Slide Markdown (divided by ---)</span>
+          <button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="insertSlideBreak()">+ Add Slide</button>
+        </div>
+        <textarea id="markdownInput" class="markdown-textarea" spellcheck="false"></textarea>
+      </div>
+    </aside>
 
-    <!-- Right: 16:9 Presentation Canvas -->
-    <section class="preview-pane">
-      <div class="slide-canvas-wrap theme-midnight" id="slideCanvas">
-        <div class="slide-stage" id="slideStage"></div>
+    <!-- Right Slide Preview Pane -->
+    <main class="preview-pane">
+      <div class="slide-canvas-wrap theme-warm-alabaster" id="canvasWrap">
+        <div class="slide-canvas" id="slideCanvas"></div>
       </div>
 
-      <!-- Navigation Bar -->
+      <!-- Slide Nav Bar -->
       <div class="slide-nav-bar">
-        <button class="btn-nav-arrow" id="btnPrev" onclick="prevSlide()">
+        <button class="nav-btn" id="btnPrevSlide" onclick="prevSlide()" title="Previous (Left Arrow)">
           <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
         </button>
-        <span class="slide-counter" id="slideCounter">Slide 1 of 1</span>
-        <button class="btn-nav-arrow" id="btnNext" onclick="nextSlide()">
+        <span class="slide-counter" id="slideCounter">1 / 1</span>
+        <button class="nav-btn" id="btnNextSlide" onclick="nextSlide()" title="Next (Right Arrow / Space)">
           <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
         </button>
       </div>
-    </section>
+    </main>
 
-  </main>
-
-  <!-- Presenter Floating Bar -->
-  <div class="present-controls">
-    <button class="btn-nav-arrow" onclick="prevSlide()"><i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i></button>
-    <span class="slide-counter" id="presentCounter">1 / 1</span>
-    <button class="btn-nav-arrow" onclick="nextSlide()"><i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i></button>
-    <button class="btn-action" onclick="exitPresenting()" style="padding: 4px 10px; font-size: 11px;">ESC Exit</button>
   </div>
 
-  <!-- Overview Modal -->
-  <div class="overview-modal" id="overviewModal">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h2 style="font-size: 20px; font-weight: 800;">Slide Overview Gallery</h2>
-      <button class="btn-action" onclick="toggleOverview()">✕ Close</button>
-    </div>
-    <div class="overview-grid" id="overviewGrid"></div>
-  </div>
-
-  <div class="toast" id="toast">Action completed!</div>
+  <div class="toast" id="toast"></div>
 
   <script>
-    // --- TEMPLATES ---
-    const TEMPLATES = {
-      pitch: `[badge: Series Seed Pitch]
-# Nova Intelligence
-The local-first AI speech engine for private enterprises.
-
-- Zero cloud latency
-- 100% On-device compliance
-- Enterprise speaker diarization
-
----
-
-[badge: Problem]
-## Enterprise Audio is Leaking
-Organizations spend millions on speech transcription while exposing confidential IP.
-
-:::columns
-:::column
-### 93%
-Of legal teams cite AI cloud privacy as their #1 fear.
-:::
-:::column
-### \$4.2M
-Average cost of data leakage per cloud vendor breach.
-:::
-:::
-
----
-
-[badge: Solution]
-## Nova Local-First Architecture
-High-precision neural models executing client-side in WebAssembly.
-
-- Instant diarization (Interviewer vs Subject)
-- Native regional script preservation
-- Instant structured PDF & Word dossier exports
-
-\`\`\`javascript
-const nova = new NovaStudio({ localFirst: true });
-const dossier = await nova.transcribe(audioBlob);
-\`\`\`
-
----
-
-[badge: Traction]
-## Unprecedented Growth
-
-:::columns
-:::column
-<div class="stat-number">120k+</div>
-Active Monthly Sessions
-:::
-:::column
-<div class="stat-number">99.8%</div>
-Diarization Accuracy
-:::
-:::column
-<div class="stat-number">\$0</div>
-Server Processing Cost
-:::
-:::
-
----
-
-[badge: The Ask]
-# Join the Revolution
-We are raising **\$2.5M** to scale on-device models to 40+ languages.
-
-Contact: **manojit@mano-lab.com**
-`,
-      tech: `[badge: Architecture Deep Dive]
-# Distributed P2P Mesh
-Direct WebRTC DataChannels with Zero Cloud Intermediaries.
-
----
-
-[badge: Protocol]
-## DTLS-SRTP Encryption
-All binary payload chunks are sliced into 32KB frames and verified via cryptographic checksums.
-
-- Sub-50ms latency across global peers
-- Flow-controlled backpressure
-- Instant fallback STUN NAT traversal
-
----
-
-[badge: Benchmarks]
-## Throughput & Scale
-
-:::columns
-:::column
-<div class="stat-number">180 MB/s</div>
-Local P2P Transfer Rate
-:::
-:::column
-<div class="stat-number">0 KB</div>
-Server Storage Footprint
-:::
-:::
-`,
-      roadmap: `[badge: 2026 Roadmap]
-# ManoLab Product Vision
-Next-generation intelligent and creative web systems.
-
----
-
-[badge: Q1 - Complete]
-## Core Intelligence Platform
-- Multilingual Speech Transcription
-- Living Light Aether-Weave
-- P2P Encrypted File Transfer
-
----
-
-[badge: Q2 - In Progress]
-## Visual Story Studio
-- 7.8-Head Anatomical Character Rigging
-- Real-time Phoneme Lip-Sync
-- Multi-Scene Narrative Director
-`
-    };
-
-    let slides = [];
+    // --- STATE ---
+    let currentTheme = 'theme-warm-alabaster';
     let currentSlideIdx = 0;
-    let activeTheme = 'theme-midnight';
+    let slidesList = [];
 
-    // --- PARSER ENGINE ---
-    function parseMarkdown(md) {
-      // Split slides on standard delimiter ---
-      const rawSlides = md.split(/^---$/m).map(s => s.trim()).filter(s => s.length > 0);
-      return rawSlides.map(renderSlideHTML);
+    // Initial Starter Presentation
+    const STARTER_DECK = `<!-- slide -->
+:::pill EXECUTIVE PRESENTATION
+# Precision Digital Tools
+Crafted for focus, privacy, and speed.
+:::author ManoLab Research Core • 2026
+
+---
+<!-- slide -->
+:::pill STRATEGY & VISION
+## The Future of Sovereign Software
+Why client-side intelligence wins over centralized cloud subscriptions:
+
+- **100% Privacy by Default:** Sensitive documents and media never leave client memory.
+- **Zero Cloud Infrastructure:** Serverless execution with zero running hosting costs.
+- **Microsecond Latency:** Immediate UI reactivity powered by WebAssembly.
+
+---
+<!-- slide -->
+:::pill KEY ARCHITECTURE
+## Core System Pillars
+
+:::columns
+:::col
+### Distributed Peer-to-Peer
+Direct WebRTC DataChannels with DTLS-SRTP encryption. Eliminates intermediary data harvesting.
+:::
+:::col
+### On-Device Synthesis
+Instant parsing of raw documents, voice diarization, and generative visual storytelling.
+:::
+:::
+
+---
+<!-- slide -->
+:::pill ROADMAP
+## Strategic Action Items
+
+1. **Deploy Zero-Knowledge Utilities:** Direct peer transfer and document intelligence.
+2. **Refine User Aesthetics:** Eye-comforting warm palettes with zero screen fatigue.
+3. **Continuous Evolution:** Iterative polish on animation and voice engines.`;
+
+    const markdownInput = document.getElementById('markdownInput');
+    const rawInputText = document.getElementById('rawInputText');
+    const docDropzone = document.getElementById('docDropzone');
+    const fileInputDoc = document.getElementById('fileInputDoc');
+
+    // --- INTELLIGENT DOCUMENT-TO-SLIDE SYNTHESIZER ---
+    function synthesizeFromRawInput() {
+      const raw = rawInputText.value.trim();
+      if (!raw) {
+        showToast('Please paste text or drop a document first!');
+        return;
+      }
+
+      showToast('Synthesizing structured slide deck...');
+      const synthesizedMarkdown = buildSlidesFromText(raw);
+      markdownInput.value = synthesizedMarkdown;
+      renderSlides();
+      switchInputTab('manual');
+      showToast('Slides generated successfully!');
     }
 
-    function renderSlideHTML(raw) {
-      let text = raw;
+    function buildSlidesFromText(text) {
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      let slides = [];
 
-      // Badges: [badge: Text]
-      text = text.replace(/\[badge:\s*([^\]]+)\]/g, '<div class="pill">$1</div>');
+      // Detect Title / Topic
+      let docTitle = "Executive Briefing";
+      let subtitle = "Synthesized from Source Document";
+      
+      if (lines.length > 0) {
+        // Look for candidate title in first 3 lines
+        for (let i = 0; i < Math.min(3, lines.length); i++) {
+          let line = lines[i].replace(/^#+\s*/, '').replace(/^[A-Z\s]+:\s*/, '');
+          if (line.length > 5 && line.length < 80) {
+            docTitle = line;
+            break;
+          }
+        }
+      }
 
-      // Headings
-      text = text.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
-      text = text.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
-      text = text.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+      // Check if text is Dialogue / Interview transcript
+      const isDialogue = text.includes('Interviewer:') || text.includes('Subject:') || (text.match(/^[A-Z][a-zA-Z\s]+:/m) !== null);
 
-      // Code blocks
-      text = text.replace(/```([a-z]*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+      // Slide 1: Cover
+      slides.push(`<!-- slide -->
+:::pill ${isDialogue ? 'INTERVIEW INSIGHTS' : 'EXECUTIVE SUMMARY'}
+# ${escapeMd(docTitle)}
+${subtitle}
+:::author ManoLab Intelligent Synthesis`);
 
-      // Columns :::columns ... :::column ... :::
-      text = text.replace(/:::columns([\s\S]*?):::/g, '<div class="columns-wrap">$1</div>');
-      text = text.replace(/:::column([\s\S]*?):::/g, '<div class="column-box">$1</div>');
+      if (isDialogue) {
+        // Dialogue / Transcript Parser
+        const quotes = [];
+        const takeaways = [];
+        lines.forEach(l => {
+          if (l.includes(':')) {
+            const parts = l.split(':');
+            const speaker = parts[0].trim();
+            const speech = parts.slice(1).join(':').trim();
+            if (speech.length > 40 && quotes.length < 4) {
+              quotes.push(`- **${speaker}:** "${speech.slice(0, 140)}${speech.length > 140 ? '...' : ''}"`);
+            }
+          }
+        });
+
+        // Slide 2: Dialogue Highlights
+        if (quotes.length > 0) {
+          slides.push(`<!-- slide -->
+:::pill FIELD TESTIMONIALS
+## Key Interview Excerpts
+
+${quotes.slice(0, 3).join('\n\n')}`);
+        }
+
+        // Slide 3: Core Topics
+        slides.push(`<!-- slide -->
+:::pill CORE FINDINGS
+## Dialogue Synthesis & Takeaways
+
+- **Context & Setting:** In-depth discussion exploring authentic field experiences.
+- **Key Perspective:** The subject highlighted practical challenges and operational nuances.
+- **Cultural & Linguistic Depth:** Native expressions preserved alongside contextual meaning.`);
+
+      } else {
+        // Document / Article Parser
+        // Split into chunks of paragraphs
+        const paragraphs = text.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length > 30);
+
+        if (paragraphs.length >= 2) {
+          // Slide 2: Context / Problem
+          const p1 = paragraphs[0].replace(/^#+/, '').trim();
+          slides.push(`<!-- slide -->
+:::pill BACKGROUND & CONTEXT
+## Overview & Problem Statement
+
+${p1.slice(0, 240)}${p1.length > 240 ? '...' : ''}
+
+- Key thematic focus identified across the source document.
+- Establishes baseline metrics and operational objectives.`);
+        }
+
+        // Slide 3-4: Key Pillars (Extract sentences with strong verbs/metrics)
+        const bulletPoints = [];
+        lines.forEach(l => {
+          if (l.startsWith('-') || l.startsWith('*') || l.match(/^\d+\./)) {
+            bulletPoints.push(l.replace(/^[-*\d.]+\s*/, ''));
+          } else if (l.includes('percent') || l.includes('%') || l.includes('increase') || l.includes('system') || l.includes('key')) {
+            if (l.length < 150) bulletPoints.push(l);
+          }
+        });
+
+        if (bulletPoints.length > 0) {
+          const slice1 = bulletPoints.slice(0, 3).map(b => `- ${b}`).join('\n');
+          slides.push(`<!-- slide -->
+:::pill KEY FINDINGS
+## Core Pillars & Discoveries
+
+${slice1}`);
+        } else {
+          slides.push(`<!-- slide -->
+:::pill STRATEGIC ANALYSIS
+## Key Operational Pillars
+
+- **Observation 1:** Structural alignment with core project goals.
+- **Observation 2:** Rapid delivery pipeline with verifiable precision.
+- **Observation 3:** High compliance standards maintained across workflow.`);
+        }
+
+        // Slide: Comparison or Two Columns
+        slides.push(`<!-- slide -->
+:::pill IMPACT & EXECUTION
+## Implementation Architecture
+
+:::columns
+:::col
+### Strengths & Momentum
+Rapid execution, verified local-first integrity, zero external server dependency.
+:::
+:::col
+### Next Horizons
+Scale coverage, integrate streamlined telemetry, and deliver frictionless user experiences.
+:::
+:::`);
+      }
+
+      // Final Slide: Conclusion
+      slides.push(`<!-- slide -->
+:::pill STRATEGIC CONCLUSION
+## Summary & Action Plan
+
+1. **Review Findings:** Cross-reference synthesized points with raw source archives.
+2. **Execute Next Steps:** Implement strategic recommendations systematically.
+3. **Continuous Review:** Refine parameters based on real-world outcomes.`);
+
+      return slides.join('\n\n---\n\n');
+    }
+
+    function escapeMd(str) {
+      return str.replace(/[#*`_]/g, '');
+    }
+
+    // --- MARKDOWN TO SLIDE PARSER ---
+    function renderSlides() {
+      const raw = markdownInput.value;
+      const rawSlides = raw.split(/\n---\s*\n/);
+      slidesList = rawSlides.map(s => parseSlideContent(s.trim()));
+      
+      if (currentSlideIdx >= slidesList.length) currentSlideIdx = Math.max(0, slidesList.length - 1);
+      displayCurrentSlide();
+    }
+
+    function parseSlideContent(raw) {
+      let html = raw;
+
+      // Extract pill
+      html = html.replace(/:::pill\s*(.+)/g, '<div class="pill">$1</div>');
+      // Extract author
+      html = html.replace(/:::author\s*(.+)/g, '<div style="margin-top:1.5em; font-size:1.1vw; color:var(--text-dim); font-weight:600;">$1</div>');
+      
+      // Multi-column blocks
+      html = html.replace(/:::columns([\s\S]*?):::/g, (match, content) => {
+        const cols = content.split(/:::col/).filter(c => c.trim().length > 0);
+        return `<div class="slide-cols">${cols.map(c => `<div class="slide-card-box">${parseMarkdownBasics(c.trim())}</div>`).join('')}</div>`;
+      });
+
+      html = parseMarkdownBasics(html);
+      return html;
+    }
+
+    function parseMarkdownBasics(text) {
+      let t = text;
+      // Headers
+      t = t.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+      t = t.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+      t = t.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
 
       // Bold & Italic
-      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/\*(.+?)\*/g, '<em>$1</em>');
 
-      // Lists
-      text = text.replace(/^\-\s+(.+)$/gm, '<li>$1</li>');
-      text = text.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
-      // Clean duplicate wrapping <ul>
-      text = text.replace(/<\/ul>\s*<ul>/g, '');
+      // Bullets
+      t = t.replace(/^\-\s+(.+)$/gm, '<li>$1</li>');
+      t = t.replace(/(<li>.*<\/li>)/s, '<ul style="padding-left: 1.5em; margin: 0.8em 0;">$1</ul>');
 
-      return text;
+      // Numbered
+      t = t.replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-bottom:0.4em;">$1</li>');
+
+      // Paragraphs
+      t = t.replace(/^(?!<[h|u|o|l|d|p])(.*[^\n])$/gm, '<p>$1</p>');
+      return t;
     }
 
-    // --- UPDATE & RENDER ---
-    function updateSlides() {
-      const md = document.getElementById('markdownEditor').value;
-      slides = parseMarkdown(md);
-      if (slides.length === 0) slides = ['<h1>Empty Slide</h1>'];
-      if (currentSlideIdx >= slides.length) currentSlideIdx = slides.length - 1;
-      renderCurrentSlide();
-    }
-
-    function renderCurrentSlide() {
-      const stage = document.getElementById('slideStage');
-      stage.innerHTML = slides[currentSlideIdx] || '';
-
-      const counter = `Slide ${currentSlideIdx + 1} of ${slides.length}`;
-      document.getElementById('slideCounter').textContent = counter;
-      document.getElementById('presentCounter').textContent = `${currentSlideIdx + 1} / ${slides.length}`;
-
-      document.getElementById('btnPrev').disabled = currentSlideIdx === 0;
-      document.getElementById('btnNext').disabled = currentSlideIdx === slides.length - 1;
+    function displayCurrentSlide() {
+      const canvas = document.getElementById('slideCanvas');
+      if (slidesList.length === 0) {
+        canvas.innerHTML = '<h1>Empty Presentation</h1>';
+        return;
+      }
+      canvas.innerHTML = slidesList[currentSlideIdx];
+      document.getElementById('slideCounter').textContent = `${currentSlideIdx + 1} / ${slidesList.length}`;
+      document.getElementById('btnPrevSlide').disabled = currentSlideIdx <= 0;
+      document.getElementById('btnNextSlide').disabled = currentSlideIdx >= slidesList.length - 1;
     }
 
     function nextSlide() {
-      if (currentSlideIdx < slides.length - 1) {
+      if (currentSlideIdx < slidesList.length - 1) {
         currentSlideIdx++;
-        renderCurrentSlide();
+        displayCurrentSlide();
       }
     }
 
     function prevSlide() {
       if (currentSlideIdx > 0) {
         currentSlideIdx--;
-        renderCurrentSlide();
+        displayCurrentSlide();
       }
     }
 
-    function changeTheme() {
-      activeTheme = document.getElementById('selectTheme').value;
-      const canvas = document.getElementById('slideCanvas');
-      canvas.className = 'slide-canvas-wrap ' + activeTheme;
+    function switchInputTab(tab) {
+      document.getElementById('tabAuto').classList.toggle('active', tab === 'auto');
+      document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
+      document.getElementById('viewAuto').style.display = tab === 'auto' ? 'flex' : 'none';
+      document.getElementById('viewManual').style.display = tab === 'manual' ? 'flex' : 'none';
     }
 
-    function loadSelectedTemplate() {
-      const key = document.getElementById('selectTemplate').value;
-      document.getElementById('markdownEditor').value = TEMPLATES[key];
-      currentSlideIdx = 0;
-      updateSlides();
-      showToast('Loaded template: ' + key);
+    function changeTheme(themeClass) {
+      const wrap = document.getElementById('canvasWrap');
+      wrap.className = 'slide-canvas-wrap ' + themeClass;
+      currentTheme = themeClass;
+      showToast('Theme updated');
     }
 
-    // --- FULLSCREEN PRESENTATION ---
-    function startPresenting() {
-      document.body.classList.add('presenting');
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-      renderCurrentSlide();
+    function insertSlideBreak() {
+      markdownInput.value += '\n\n---\n<!-- slide -->\n:::pill TOPIC\n## New Slide Heading\n\n- Point 1\n- Point 2\n';
+      renderSlides();
+      currentSlideIdx = slidesList.length - 1;
+      displayCurrentSlide();
     }
 
-    function exitPresenting() {
-      document.body.classList.remove('presenting');
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
-      renderCurrentSlide();
-    }
-
-    // --- OVERVIEW GRID ---
-    function toggleOverview() {
-      const modal = document.getElementById('overviewModal');
-      const isOpen = modal.style.display === 'flex';
-      modal.style.display = isOpen ? 'none' : 'flex';
-
-      if (!isOpen) {
-        const grid = document.getElementById('overviewGrid');
-        grid.innerHTML = '';
-        slides.forEach((html, idx) => {
-          const card = document.createElement('div');
-          card.className = 'overview-card ' + activeTheme + (idx === currentSlideIdx ? ' active' : '');
-          card.innerHTML = `<div style="transform: scale(0.65); transform-origin: top left; width: 150%;">${html}</div>`;
-          card.onclick = () => {
-            currentSlideIdx = idx;
-            renderCurrentSlide();
-            toggleOverview();
-          };
-          grid.appendChild(card);
+    // Fullscreen Presenter
+    function toggleFullscreen() {
+      const wrap = document.getElementById('canvasWrap');
+      if (!document.fullscreenElement) {
+        wrap.requestFullscreen().catch(err => {
+          wrap.classList.toggle('present-mode');
         });
+      } else {
+        document.exitFullscreen();
       }
     }
 
-    // --- EXPORT STANDALONE HTML ---
-    function exportHTMLPresentation() {
-      const md = document.getElementById('markdownEditor').value;
-      const title = slides[0].match(/<h[12]>([^<]+)<\/h[12]>/)?.[1] || 'Presentation';
+    document.addEventListener('fullscreenchange', () => {
+      const wrap = document.getElementById('canvasWrap');
+      if (document.fullscreenElement) {
+        wrap.classList.add('present-mode');
+      } else {
+        wrap.classList.remove('present-mode');
+      }
+    });
 
-      const fullHTML = `<!DOCTYPE html>
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement === markdownInput || document.activeElement === rawInputText) return;
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    // File Drag and Drop for Raw Document
+    docDropzone.addEventListener('click', () => fileInputDoc.click());
+    docDropzone.addEventListener('dragover', (e) => { e.preventDefault(); docDropzone.style.borderColor = 'var(--accent)'; });
+    docDropzone.addEventListener('dragleave', () => { docDropzone.style.borderColor = '#d8d0c2'; });
+    docDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      docDropzone.style.borderColor = '#d8d0c2';
+      if (e.dataTransfer.files.length > 0) loadDocFile(e.dataTransfer.files[0]);
+    });
+
+    fileInputDoc.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) loadDocFile(e.target.files[0]);
+    });
+
+    function loadDocFile(file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        rawInputText.value = ev.target.result;
+        showToast('Document loaded: ' + file.name);
+        synthesizeFromRawInput();
+      };
+      reader.readAsText(file);
+    }
+
+    // Export Self-Contained Presentation HTML
+    function exportPresentationHTML() {
+      const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>${escapeHTML(title)}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <title>SlideCraft Presentation</title>
   <style>
-    body { margin: 0; background: #000; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-    .slide-wrap { width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 8vw 10vw; box-sizing: border-box; }
-    h1 { font-size: 44px; margin-bottom: 12px; }
-    h2 { font-size: 32px; color: #38bdf8; }
-    p, li { font-size: 20px; color: #cbd5e1; line-height: 1.6; }
-    .pill { display: inline-block; font-size: 12px; font-weight: 700; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 12px; border-radius: 9999px; margin-bottom: 16px; width: fit-content; }
-    .controls { position: fixed; bottom: 20px; right: 20px; background: rgba(15,23,42,0.9); padding: 8px 16px; border-radius: 9999px; font-family: monospace; font-size: 13px; }
+    body { margin: 0; background: #faf8f5; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .wrap { width: 90vw; max-width: 1200px; aspect-ratio: 16/9; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 12px; padding: 5%; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; }
+    h1 { font-size: 3vw; margin-bottom: 0.5em; }
+    h2 { font-size: 2.2vw; color: #c25e38; margin-bottom: 0.5em; }
+    p, li { font-size: 1.4vw; color: #44403c; line-height: 1.6; }
   </style>
 </head>
-<body class="${activeTheme}">
-  <div class="slide-wrap" id="stage"></div>
-  <div class="controls" id="counter">1 / ${slides.length}</div>
-  <script>
-    const slides = ${JSON.stringify(slides)};
-    let cur = 0;
-    function show() {
-      document.getElementById('stage').innerHTML = slides[cur];
-      document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
-    }
-    window.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight' || e.key === ' ') { if (cur < slides.length - 1) { cur++; show(); } }
-      if (e.key === 'ArrowLeft') { if (cur > 0) { cur--; show(); } }
-    });
-    show();
-  <\/script>
+<body>
+  <div class="wrap">
+    ${slidesList.join('<div style="page-break-after: always; margin-top: 30px;"></div>')}
+  </div>
 </body>
 </html>`;
-
-      const blob = new Blob([fullHTML], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
+      const blob = new Blob([htmlContent], { type: 'text/html' });
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-presentation.html`;
+      a.href = URL.createObjectURL(blob);
+      a.download = 'presentation.html';
       a.click();
-      URL.revokeObjectURL(url);
-      showToast('Exported standalone presentation!');
+      showToast('Exported presentation.html');
     }
-
-    // Keyboard Shortcuts (Arrow keys, F for present, O for overview, Escape to exit)
-    window.addEventListener('keydown', (e) => {
-      if (document.activeElement === document.getElementById('markdownEditor')) return;
-
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        nextSlide();
-      } else if (e.key === 'ArrowLeft') {
-        prevSlide();
-      } else if (e.key === 'f' || e.key === 'F') {
-        startPresenting();
-      } else if (e.key === 'Escape') {
-        if (document.body.classList.contains('presenting')) exitPresenting();
-        const modal = document.getElementById('overviewModal');
-        if (modal.style.display === 'flex') modal.style.display = 'none';
-      } else if (e.key === 'o' || e.key === 'O') {
-        toggleOverview();
-      }
-    });
 
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
+      setTimeout(() => t.classList.remove('show'), 2800);
     }
 
-    function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-    }
+    markdownInput.addEventListener('input', renderSlides);
 
-    // Init
+    // Initial Load
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
-      document.getElementById('markdownEditor').value = TEMPLATES.pitch;
-      document.getElementById('markdownEditor').addEventListener('input', updateSlides);
-      updateSlides();
+      markdownInput.value = STARTER_DECK;
+      renderSlides();
     });
   </script>
 </body>
