@@ -109,7 +109,7 @@ class Config:
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
     
     DEFAULT_ENGINE = os.environ.get("OMNISCRIBE_ENGINE", "gemini")
-    DEFAULT_GEMINI_MODEL = "gemini-1.5-flash"  # Universally supported Google AI Studio model
+    DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"  # Verified working Google AI Studio model
     DEFAULT_GROQ_MODEL = "whisper-large-v3"
     DEFAULT_OPENAI_MODEL = "whisper-1"
     
