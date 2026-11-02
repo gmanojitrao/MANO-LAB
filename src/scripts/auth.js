@@ -15,6 +15,13 @@
 
   // Available Protected Sections in Mano Lab
   const SECTIONS = {
+    doc_lens: {
+      key: 'doc_lens',
+      label: 'DocLens: Dossier Reader (Private)',
+      description: 'Zero-cloud local PDF & document intelligence reader with TTS audio narration',
+      url: '/apps/dossier-reader/',
+      icon: '📖'
+    },
     slide_craft: {
       key: 'slide_craft',
       label: 'SlideCraft Studio (Private)',
@@ -117,8 +124,8 @@
     if (permission === 'secret_room') permKey = 'private_lounge';
     if (permission === 'extra_features') permKey = 'story_studio_pro';
 
-    // SlideCraft and Visual Story Studio Pro are strictly restricted to Owner only during development!
-    if (permKey === 'story_studio_pro' || permKey === 'slide_craft') return false;
+    // DocLens, SlideCraft and Visual Story Studio Pro are strictly restricted to Owner only during development!
+    if (permKey === 'story_studio_pro' || permKey === 'slide_craft' || permKey === 'doc_lens') return false;
 
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
@@ -132,6 +139,7 @@
     if (!u || !u.email) return {};
     if (isAdmin(u)) {
       return {
+        doc_lens: true,
         slide_craft: true,
         story_studio_pro: true,
         private_lounge: true,
@@ -142,10 +150,11 @@
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
     const perms = entry && entry.permissions ? { ...entry.permissions } : {};
-    // Ensure story_studio_pro and slide_craft are strictly private to owner
+    // Ensure story_studio_pro, slide_craft, and doc_lens are strictly private to owner
     delete perms.story_studio_pro;
     delete perms.extra_features;
     delete perms.slide_craft;
+    delete perms.doc_lens;
     return perms;
   }
 
@@ -757,6 +766,9 @@
       
       // Determine what sections to display in the menu
       const allowedSections = [];
+      if (userIsAdmin || perms.doc_lens) {
+        allowedSections.push(SECTIONS.doc_lens);
+      }
       if (userIsAdmin || perms.slide_craft) {
         allowedSections.push(SECTIONS.slide_craft);
       }
@@ -1193,8 +1205,18 @@
     }
   }
 
-  // --- OWNER PRIVATE CORNER SUITE (11 PRESERVED & PRIVATE APPS) ---
+  // --- OWNER PRIVATE CORNER SUITE (12 PRESERVED & PRIVATE APPS) ---
   const OWNER_PRIVATE_APPS = [
+    {
+      id: "dossier-reader",
+      name: "DocLens: Dossier Reader",
+      category: "Private Suite",
+      emoji: "📖",
+      tagline: "Local PDF & Dossier Reader",
+      description: "Zero-cloud private document intelligence reader with full-text search, reading themes, metrics, and TTS audio narration.",
+      url: "/apps/dossier-reader/",
+      badge: "Owner Suite"
+    },
     {
       id: "slide-deck",
       name: "SlideCraft Studio",

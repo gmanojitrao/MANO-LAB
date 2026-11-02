@@ -35,20 +35,6 @@ const ALL_MANO_APPS = [
     badge: "Encrypted P2P"
   },
   {
-    id: "dossier-reader",
-    name: "DocLens: Local PDF & Dossier Reader",
-    tagline: "Client-side PDF & text reader with dossier intelligence and narration",
-    description: "Zero-cloud private document intelligence reader. Render PDFs, text, and markdown with instant full-text search, reading themes, automated dossier metrics (word count, reading time), persistent scratchpad notes, and text-to-speech audio narration.",
-    category: "Productivity & Utilities",
-    route: "apps/dossier-reader/",
-    status: "Available",
-    featured: true,
-    emoji: "📖",
-    accentColor: "#2e7d5b",
-    tags: ["Local PDF", "Dossier Summary", "TTS Narration", "Private Notes"],
-    badge: "Dossier Reader"
-  },
-  {
     id: "aether-weave",
     name: "Aether-Weave",
     tagline: "The living art form: weave breathing harmonic light ribbons in void space",
@@ -63,6 +49,22 @@ const ALL_MANO_APPS = [
     badge: "Original Art Form"
   },
   // Private Corner / Owner Apps (Preserved in codebase):
+  {
+    id: "dossier-reader",
+    name: "DocLens: Dossier Reader",
+    tagline: "Client-side PDF & text reader with dossier intelligence and narration",
+    description: "Zero-cloud private document intelligence reader. Render PDFs, text, and markdown with instant full-text search, reading themes, automated metrics, scratchpad, and text-to-speech audio narration.",
+    category: "Private",
+    route: "apps/dossier-reader/",
+    status: "Private Dev",
+    featured: false,
+    hidden: true,
+    private: true,
+    emoji: "📖",
+    accentColor: "#2e7d5b",
+    tags: ["Local PDF", "Dossier Summary", "TTS Narration", "Private Notes"],
+    badge: "Private Suite"
+  },
   {
     id: "slide-deck",
     name: "SlideCraft Studio",
