@@ -111,7 +111,11 @@
 
   function isAdmin(user) {
     const u = user || getUser();
-    return !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+    if (!u || !u.email) return false;
+    const email = u.email.trim().toLowerCase();
+    if (email !== ADMIN_EMAIL.toLowerCase()) return false;
+    if (typeof u.sub === 'string' && u.sub.startsWith('email_')) return false;
+    return true;
   }
 
   function hasAccess(permission, user) {
@@ -731,14 +735,16 @@
       el.style.display = userIsAdmin ? '' : 'none';
     });
 
-    // Update Private Corner portal button indicator in header
+    // Update Private Corner portal button indicator in header (Owner-only: invisible to public)
     const btnPrivateCorner = document.getElementById('btnPrivateCorner');
     const privateCornerDot = document.getElementById('privateCornerDot');
     if (btnPrivateCorner) {
       if (userIsAdmin) {
+        btnPrivateCorner.style.display = 'inline-flex';
         btnPrivateCorner.classList.add('owner-active');
         if (privateCornerDot) privateCornerDot.style.display = 'inline-block';
       } else {
+        btnPrivateCorner.style.display = 'none';
         btnPrivateCorner.classList.remove('owner-active');
         if (privateCornerDot) privateCornerDot.style.display = 'none';
       }
@@ -879,23 +885,12 @@
             <div class="mano-modal-title">Sign In with Google</div>
             <button onclick="ManoAuth.closeSignInModal()" class="mano-modal-close">&times;</button>
           </div>
-          <div class="mano-modal-body">
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem; line-height: 1.5;">
-              Sign in with your Google account. Whitelisted accounts receive tailored workspace features and private rooms.
+          <div class="mano-modal-body" style="text-align: center; padding: 1.5rem;">
+            <p style="font-size: 0.88rem; color: #78716c; margin-bottom: 1.5rem; line-height: 1.5;">
+              Sign in securely with your Google account to access your workspace preferences and authorized sessions.
             </p>
 
-            <div id="mano-gis-button-mount" style="display: flex; justify-content: center; margin-bottom: 1.5rem;"></div>
-
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; color: #64748b; font-size: 0.75rem;">
-              <div style="flex: 1; height: 1px; background: #1e293b;"></div>
-              <span>OR ENTER GOOGLE EMAIL</span>
-              <div style="flex: 1; height: 1px; background: #1e293b;"></div>
-            </div>
-
-            <form onsubmit="ManoAuth.handleDirectEmailSignIn(event)" style="display: flex; flex-direction: column; gap: 0.75rem;">
-              <input type="email" id="mano-direct-email" class="mano-input" placeholder="your.name@gmail.com" required>
-              <button type="submit" class="mano-btn-primary" style="width: 100%;">Continue</button>
-            </form>
+            <div id="mano-gis-button-mount" style="display: flex; justify-content: center; margin: 1rem 0;"></div>
           </div>
         </div>
       `;
@@ -929,29 +924,6 @@
   function closeSignInModal() {
     const modal = document.getElementById('mano-signin-modal');
     if (modal) modal.classList.add('hidden');
-  }
-
-  function handleDirectEmailSignIn(e) {
-    e.preventDefault();
-    const input = document.getElementById('mano-direct-email');
-    const email = input.value.trim().toLowerCase();
-    if (!email) return;
-
-    const userObj = {
-      email: email,
-      name: email.split('@')[0],
-      picture: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
-      sub: 'email_' + Date.now(),
-      authTime: Date.now()
-    };
-
-    setUser(userObj);
-    renderAuthSlot();
-    closeSignInModal();
-
-    if (window.onManoAuthChanged) {
-      window.onManoAuthChanged(userObj);
-    }
   }
 
   function signOut() {
@@ -1335,12 +1307,7 @@
 
   function openPrivateCorner() {
     const user = getUser();
-    if (!user) {
-      openPrivateCornerGate();
-      return;
-    }
     if (!isAdmin(user)) {
-      openPrivateCornerDenied(user.email);
       return;
     }
     openPrivateCornerModal();
@@ -1358,15 +1325,14 @@
             🔒
           </div>
           <div class="mano-modal-title" style="margin-bottom: 0.5rem;">
-            Private Corner
+            Private Suite
           </div>
           <p style="font-size: 0.85rem; color: #78716c; line-height: 1.5; margin-bottom: 1.5rem;">
-            This corner houses owner-restricted tools, prototypes, and archived applications. Sign in with your owner Google Account (<strong style="color: #1c1917;">${ADMIN_EMAIL}</strong>) to access.
+            This workspace houses restricted owner tools and prototypes. Please sign in with an authorized Google account to continue.
           </p>
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <button onclick="ManoAuth.closePrivateCornerGate(); ManoAuth.openSignInModal();" class="mano-btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-              <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/></svg>
-              <span>Sign In to Unlock</span>
+              <span>Sign In with Google</span>
             </button>
             <button onclick="ManoAuth.closePrivateCornerGate()" class="mano-btn-secondary" style="width: 100%; padding: 0.65rem; border: 1px solid #e7e2d9; background: #faf8f5; border-radius: 0.6rem; font-weight: 600; cursor: pointer;">
               Return to Workbench
@@ -1381,47 +1347,6 @@
 
   function closePrivateCornerGate() {
     const modal = document.getElementById('mano-private-corner-gate-modal');
-    if (modal) modal.classList.add('hidden');
-  }
-
-  function openPrivateCornerDenied(email) {
-    let modal = document.getElementById('mano-private-corner-denied-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mano-private-corner-denied-modal';
-      modal.className = 'mano-modal-backdrop';
-      modal.innerHTML = `
-        <div class="mano-modal-card" style="max-width: 440px; text-align: center; padding: 1.5rem;">
-          <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 1rem;">
-            ⛔
-          </div>
-          <div class="mano-modal-title" style="margin-bottom: 0.5rem;">
-            Owner Access Required
-          </div>
-          <p style="font-size: 0.85rem; color: #78716c; line-height: 1.5; margin-bottom: 1.25rem;">
-            Signed in as <strong style="color: #1c1917; font-family: monospace;" id="mano-denied-email">${email || ''}</strong>.<br>
-            The Private Corner is reserved exclusively for the owner (<strong style="color: #1c1917;">${ADMIN_EMAIL}</strong>).
-          </p>
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <button onclick="ManoAuth.signOut(); ManoAuth.closePrivateCornerDenied(); ManoAuth.openSignInModal();" class="mano-btn-primary" style="width: 100%;">
-              Switch to Owner Account
-            </button>
-            <button onclick="ManoAuth.closePrivateCornerDenied()" class="mano-btn-secondary" style="width: 100%; padding: 0.65rem; border: 1px solid #e7e2d9; background: #faf8f5; border-radius: 0.6rem; font-weight: 600; cursor: pointer;">
-              Continue with Public Tools
-            </button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    } else {
-      const emailEl = document.getElementById('mano-denied-email');
-      if (emailEl) emailEl.textContent = email || '';
-    }
-    modal.classList.remove('hidden');
-  }
-
-  function closePrivateCornerDenied() {
-    const modal = document.getElementById('mano-private-corner-denied-modal');
     if (modal) modal.classList.add('hidden');
   }
 
@@ -1506,7 +1431,6 @@
 
   // Export to window
   window.ManoAuth = {
-    ADMIN_EMAIL,
     SECTIONS,
     OWNER_PRIVATE_APPS,
     getUser,
@@ -1517,7 +1441,6 @@
     saveRegistry,
     openSignInModal,
     closeSignInModal,
-    handleDirectEmailSignIn,
     signOut,
     toggleUserDropdown,
     openAccessManager,
@@ -1531,9 +1454,7 @@
     openPrivateCorner,
     closePrivateCorner,
     openPrivateCornerGate,
-    closePrivateCornerGate,
-    openPrivateCornerDenied,
-    closePrivateCornerDenied
+    closePrivateCornerGate
   };
 
 })();

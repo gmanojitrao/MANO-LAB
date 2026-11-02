@@ -640,15 +640,16 @@
     function isValidGeminiKey(k) {
       if (!k || typeof k !== 'string') return false;
       const trimmed = k.trim();
-      return trimmed.length >= 20; // Accepts all valid Gemini API keys (standard and AQ... auth keys)
+      return trimmed.startsWith('AIzaSy') && trimmed.length >= 35;
     }
 
-    // Default built-in key for zero-config public access
-    const DEFAULT_GEMINI_KEY = (() => {
-      try {
-        return atob('QVEuQWI4Uk42SVduRVNfZHltS0FzeDRPYTJJUVRVc3NRc1E2d3FIQ01QOVFRMDh0bjBnWkE=');
-      } catch (e) {
-        return '';
+    // Default built-in key
+    const DEFAULT_GEMINI_KEY = '';
+    // Auto-clean any expired OAuth AQ token from localStorage
+    (() => {
+      const stored = localStorage.getItem('omniscribe_gemini_key');
+      if (stored && stored.startsWith('AQ.')) {
+        localStorage.removeItem('omniscribe_gemini_key');
       }
     })();
     let GEMINI_KEY = localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
@@ -1068,70 +1069,162 @@
     }
 
     // ============================================================
-    // GEMINI FILES API FOR LARGE AUDIO FILES (> 15MB up to 2GB)
+    // CLIENT-SIDE AUDIO RESAMPLER & WAV CHUNKING ENGINE
+    // Handles any audio file (small or 100MB+) natively in browser
     // ============================================================
-    async function uploadFileToGeminiFilesApi(file, mimeType, activeKey) {
-      const startUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${activeKey}`;
-      const startHeaders = {
-        'X-Goog-Upload-Protocol': 'resumable',
-        'X-Goog-Upload-Command': 'start',
-        'X-Goog-Upload-Header-Content-Length': file.size.toString(),
-        'X-Goog-Upload-Header-Content-Type': mimeType,
-        'Content-Type': 'application/json'
+    function encodeWAV(samples, sampleRate = 16000) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+
+      // RIFF identifier
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      writeString(view, 8, 'WAVE');
+
+      // format chunk identifier
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // Linear PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true); // 16 bits per sample
+
+      // data chunk identifier
+      writeString(view, 36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+
+      // Write PCM samples
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        offset += 2;
+      }
+      return buffer;
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      const chunkSize = 0x8000;
+      for (let i = 0; i < len; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
+      }
+      return btoa(binary);
+    }
+
+    async function decodeAndResampleAudio(file, targetSampleRate = 16000) {
+      const arrayBuffer = await file.arrayBuffer();
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtxClass) {
+        throw new Error("Web Audio API not supported in this browser.");
+      }
+      const audioCtx = new AudioCtxClass();
+      let audioBuffer;
+      try {
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      } finally {
+        audioCtx.close().catch(() => {});
+      }
+
+      const numChannels = audioBuffer.numberOfChannels;
+      const length = audioBuffer.length;
+      const monoData = new Float32Array(length);
+
+      for (let c = 0; c < numChannels; c++) {
+        const channelData = audioBuffer.getChannelData(c);
+        for (let i = 0; i < length; i++) {
+          monoData[i] += channelData[i] / numChannels;
+        }
+      }
+
+      if (audioBuffer.sampleRate === targetSampleRate) {
+        return {
+          samples: monoData,
+          duration: audioBuffer.duration,
+          sampleRate: targetSampleRate
+        };
+      }
+
+      const totalRenderedSamples = Math.ceil(audioBuffer.duration * targetSampleRate);
+      const offlineCtx = new OfflineAudioContext(1, totalRenderedSamples, targetSampleRate);
+      const source = offlineCtx.createBufferSource();
+      const monoBuffer = offlineCtx.createBuffer(1, length, audioBuffer.sampleRate);
+      monoBuffer.copyToChannel(monoData, 0);
+      source.buffer = monoBuffer;
+      source.connect(offlineCtx.destination);
+      source.start(0);
+
+      const renderedBuffer = await offlineCtx.startRendering();
+      return {
+        samples: renderedBuffer.getChannelData(0),
+        duration: renderedBuffer.duration,
+        sampleRate: targetSampleRate
       };
+    }
 
-      const startResp = await fetch(startUrl, {
-        method: 'POST',
-        headers: startHeaders,
-        body: JSON.stringify({ file: { display_name: file.name } })
-      });
+    async function callGeminiContent(activeKey, prompt, filePart) {
+      const fallbackModels = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-8b"
+      ];
+      let lastError = null;
 
-      if (!startResp.ok) {
-        const err = await startResp.json().catch(() => ({}));
-        throw new Error(err.error?.message || `Files API start returned HTTP ${startResp.status}`);
-      }
+      for (const m of fallbackModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  filePart
+                ]
+              }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 8192,
+                response_mime_type: "application/json"
+              }
+            })
+          });
 
-      const uploadUrl = startResp.headers.get('x-goog-upload-url') || startResp.headers.get('upload-url');
-      if (!uploadUrl) {
-        throw new Error("Did not receive upload URL from Gemini Files API.");
-      }
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            const msg = errJson.error?.message || `HTTP ${res.status}`;
+            throw new Error(`[${m}] ${msg}`);
+          }
 
-      const uploadResp = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Length': file.size.toString(),
-          'X-Goog-Upload-Offset': '0',
-          'X-Goog-Upload-Command': 'upload, finalize'
-        },
-        body: file // Direct streaming of raw file blob
-      });
-
-      if (!uploadResp.ok) {
-        const err = await uploadResp.json().catch(() => ({}));
-        throw new Error(err.error?.message || `File upload failed with HTTP ${uploadResp.status}`);
-      }
-
-      const fileData = await uploadResp.json();
-      const fileUri = fileData.file?.uri;
-      if (!fileUri) {
-        throw new Error("Did not receive file URI from Gemini Files API.");
-      }
-
-      // If file state is PROCESSING, poll until ACTIVE
-      if (fileData.file?.state === 'PROCESSING') {
-        const checkUrl = `https://generativelanguage.googleapis.com/v1beta/${fileData.file.name}?key=${activeKey}`;
-        for (let attempt = 0; attempt < 12; attempt++) {
-          await new Promise(r => setTimeout(r, 1500));
-          const pollRes = await fetch(checkUrl);
-          if (pollRes.ok) {
-            const pollData = await pollRes.json();
-            if (pollData.state === 'ACTIVE') break;
-            if (pollData.state === 'FAILED') throw new Error("Gemini file processing failed.");
+          const data = await res.json();
+          const candidate = data.candidates?.[0];
+          const rawText = candidate?.content?.parts?.[0]?.text || '';
+          const parsed = extractJsonFromResponse(rawText);
+          if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+            return parsed;
+          }
+        } catch (e) {
+          lastError = e;
+          console.warn(`Model ${m} call failed:`, e.message);
+          if (e.message.includes('API key not valid') || e.message.includes('400')) {
+            throw e;
           }
         }
       }
 
-      return fileUri;
+      throw lastError || new Error("Gemini cloud processing returned an empty transcript.");
     }
 
     async function callGeminiTextTranslation(prompt, activeKey) {
@@ -1163,49 +1256,22 @@
       return '';
     }
 
-    async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '') {
-      let mimeType = (file.type || 'audio/mp3').split(';')[0].trim();
-      if (!mimeType || mimeType === 'application/octet-stream') {
-        const ext = file.name.split('.').pop().toLowerCase();
-        mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : (ext === 'webm' ? 'audio/webm' : 'audio/mp3')));
-      }
-
-      const activeKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || '';
+    async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '', onProgress = null) {
+      const activeKey = (GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || '').trim();
       if (!isValidGeminiKey(activeKey)) {
-        throw new Error("No valid Google Gemini API Key configured. Please enter your free key (starts with 'AIzaSy') or use In-Browser engine.");
+        throw new Error("No valid Google Gemini API Key configured. Please enter your Google AI Studio key starting with 'AIzaSy'.");
       }
 
-      // Handle large files (> 15MB or > 100MB) using the Gemini Files API
-      let filePart = null;
-      if (file.size > 15 * 1024 * 1024) {
-        console.log(`Large audio file detected (${(file.size / (1024*1024)).toFixed(1)} MB). Streaming to Gemini Files API...`);
-        const fileUri = await uploadFileToGeminiFilesApi(file, mimeType, activeKey);
-        filePart = {
-          file_data: {
-            file_uri: fileUri,
-            mime_type: mimeType
-          }
-        };
-      } else {
-        const base64Data = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const res = reader.result;
-            const b64 = res.split(',')[1];
-            resolve(b64);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        filePart = {
-          inline_data: {
-            mime_type: mimeType,
-            data: base64Data
-          }
-        };
+      if (onProgress) onProgress("Decoding audio stream into memory...");
+
+      let decoded = null;
+      try {
+        decoded = await decodeAndResampleAudio(file, 16000);
+      } catch (decodeErr) {
+        console.warn("Browser audio decode failed, falling back to direct stream:", decodeErr);
       }
 
-      const prompt = `You are a precise, professional verbatim audio transcription and translation engine.
+      const basePrompt = `You are a precise, professional verbatim audio transcription and translation engine.
 Listen carefully to the provided audio file.
 
 CORE OBJECTIVE:
@@ -1217,21 +1283,18 @@ ABSOLUTE ZERO-HALLUCINATION RULE:
 
 SPEAKER RULES:
 1. SINGLE SPEAKER (Monologue, Dictation, Voice Note, Lecture, Solo Speech):
-   - If only ONE person is speaking in the audio:
-   - Output the pure verbatim text directly.
-   - DO NOT prefix with "Interviewer:", "Interviewee:", "Speaker 1:", or any speaker tags. Just provide the clean spoken words.
+   - If only ONE person is speaking in the audio: Output the pure verbatim text directly. DO NOT prefix with "Speaker 1:" or speaker tags.
 2. MULTIPLE SPEAKERS (Actual Conversation / Dialogue):
-   - ONLY if two or more distinct people are genuinely conversing or taking turns speaking:
-   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:".
+   - ONLY if two or more distinct people are genuinely conversing: Label distinct turns clearly using speaker names or "Speaker 1:", "Speaker 2:".
 
 REQUIRED OUTPUT FIELDS (JSON):
-1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script বাংলা লিপি for Bengali, etc.). No timestamps.
+1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script for Bengali, etc.). No timestamps.
 2. "english_transcript":
    - If the audio is already in English: output the identical verbatim English transcription.
    - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
 3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
-4. "is_multi_speaker": boolean (true if 2+ speakers conversing; false if single speaker).
-5. "title": A clean short title (e.g. "Voice Recording", "English Memo", or speaker name if stated).
+4. "is_multi_speaker": boolean.
+5. "title": Clean short title.
 
 Output STRICTLY a JSON object with this structure:
 {
@@ -1240,99 +1303,111 @@ Output STRICTLY a JSON object with this structure:
   "title": "Voice Recording",
   "native_transcript": "...",
   "english_transcript": "..."
-}
-Output only the valid JSON without any other conversational commentary.`;
+}`;
 
-      const fallbackModels = [
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash-8b"
-      ];
+      // Case 1: Audio decoded successfully
+      if (decoded && decoded.samples && decoded.samples.length > 0) {
+        const { samples, duration } = decoded;
+        const totalDurationMins = (duration / 60).toFixed(1);
 
-      let lastError = null;
-      let parsed = null;
+        // If audio is <= 360 seconds (6 minutes), send as a single chunk
+        if (duration <= 360) {
+          if (onProgress) onProgress(`Transcribing audio (${totalDurationMins}m) via Google Gemini Cloud AI...`);
+          const wavBuffer = encodeWAV(samples, 16000);
+          const b64 = arrayBufferToBase64(wavBuffer);
+          const filePart = {
+            inline_data: {
+              mime_type: "audio/wav",
+              data: b64
+            }
+          };
+          const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
+          parsed.duration_seconds = Math.round(duration);
+          parsed.duration_formatted = `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`;
+          return parsed;
+        }
 
-      for (const m of fallbackModels) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  filePart
-                ]
-              }],
-              generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 8192,
-                response_mime_type: "application/json"
-              }
-            })
-          });
+        // If audio > 360 seconds (e.g. 10m, 30m, 60m), slice into 5-minute chunks
+        const CHUNK_DURATION_SEC = 300;
+        const CHUNK_SAMPLES = 16000 * CHUNK_DURATION_SEC;
+        const totalChunks = Math.ceil(samples.length / CHUNK_SAMPLES);
 
-          if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            throw new Error(errJson.error?.message || `HTTP ${res.status}`);
+        const allNativeParts = [];
+        const allEnglishParts = [];
+        let detectedLanguage = "English";
+        let isMultiSpeaker = false;
+        let finalTitle = artisanHint || file.name.replace(/\.[^/.]+$/, '');
+
+        for (let k = 0; k < totalChunks; k++) {
+          const startSec = k * CHUNK_DURATION_SEC;
+          const endSec = Math.min((k + 1) * CHUNK_DURATION_SEC, duration);
+          const startMin = Math.floor(startSec / 60);
+          const endMin = Math.floor(endSec / 60);
+
+          if (onProgress) {
+            onProgress(`Transcribing segment ${k + 1} of ${totalChunks} (${startMin}m - ${endMin}m of ${totalDurationMins}m)...`);
           }
 
-          const data = await res.json();
-          const candidate = data.candidates?.[0];
-          const rawText = candidate?.content?.parts?.[0]?.text || '';
-          parsed = extractJsonFromResponse(rawText);
-          if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
-            break;
+          const chunkSamples = samples.subarray(k * CHUNK_SAMPLES, Math.min((k + 1) * CHUNK_SAMPLES, samples.length));
+          const wavBuffer = encodeWAV(chunkSamples, 16000);
+          const b64 = arrayBufferToBase64(wavBuffer);
+          const filePart = {
+            inline_data: {
+              mime_type: "audio/wav",
+              data: b64
+            }
+          };
+
+          const chunkPrompt = `${basePrompt}\n\nNOTE: This is segment ${k + 1} of ${totalChunks} of a continuous interview recording (timestamps ~${startMin}:00 to ~${endMin}:00). Transcribe this segment verbatim.`;
+          const chunkResult = await callGeminiContent(activeKey, chunkPrompt, filePart);
+
+          if (chunkResult.detected_language) detectedLanguage = chunkResult.detected_language;
+          if (chunkResult.is_multi_speaker) isMultiSpeaker = true;
+          if (chunkResult.title && !artisanHint) finalTitle = chunkResult.title;
+
+          if (chunkResult.native_transcript && chunkResult.native_transcript.trim()) {
+            allNativeParts.push(chunkResult.native_transcript.trim());
           }
-        } catch (e) {
-          lastError = e;
-          console.warn(`Model ${m} attempt failed:`, e);
-        }
-      }
-
-      if (!parsed) {
-        throw lastError || new Error("Gemini could not process this audio file.");
-      }
-
-      // ============================================================
-      // GUARANTEE: If English translation is missing or duplicate, run secondary pass!
-      // ============================================================
-      let eng = (parsed.english_transcript || '').trim();
-      const nat = (parsed.native_transcript || '').trim();
-      const detectedLang = (parsed.detected_language || '').toLowerCase();
-      const isEnglishSpoken = detectedLang.includes('eng') || /^[a-zA-Z0-9\s.,!?'"()\-:;\n]+$/.test(nat.slice(0, 150));
-
-      if (isEnglishSpoken) {
-        // Audio was spoken in English: English transcript MUST be the verbatim native transcript!
-        if (!eng || eng.length < 5) {
-          parsed.english_transcript = nat;
-        }
-      } else if (nat && (!eng || eng.length < 10 || eng === nat)) {
-        console.info("English translation was missing from initial pass. Running dedicated translation pass...");
-        const transPrompt = `You are a precise verbatim translator.
-Translate the following transcript into natural, accurate English.
-Translate ONLY what is written below.
-DO NOT summarize, add conversational filler, or add greetings like 'Hello, welcome'.
-If speaker labels exist (e.g. 'Speaker 1:', 'Speaker 2:'), preserve them. If there are NO speaker labels, do NOT add any.
-
-TEXT TO TRANSLATE:
-${nat}
-
-Output ONLY the exact translated English text:`;
-
-        try {
-          const transResult = await callGeminiTextTranslation(transPrompt, activeKey);
-          if (transResult && transResult.trim()) {
-            parsed.english_transcript = transResult.trim();
+          if (chunkResult.english_transcript && chunkResult.english_transcript.trim()) {
+            allEnglishParts.push(chunkResult.english_transcript.trim());
           }
-        } catch (err) {
-          console.warn("Secondary translation pass error:", err);
         }
+
+        return {
+          title: finalTitle,
+          detected_language: detectedLanguage,
+          is_multi_speaker: isMultiSpeaker,
+          native_transcript: allNativeParts.join("\n\n"),
+          english_transcript: allEnglishParts.join("\n\n"),
+          duration_seconds: Math.round(duration),
+          duration_formatted: `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`
+        };
       }
 
-      return parsed;
+      // Case 2: Audio decode was unsupported by browser, fall back to direct raw base64 if <= 15MB
+      if (file.size <= 15 * 1024 * 1024) {
+        if (onProgress) onProgress("Transcribing raw audio via Google Gemini Cloud AI...");
+        const base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const ext = file.name.split('.').pop().toLowerCase();
+        const mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : 'audio/mp3'));
+        const filePart = {
+          inline_data: {
+            mime_type: mimeType,
+            data: base64Data
+          }
+        };
+        const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
+        parsed.duration_seconds = 0;
+        parsed.duration_formatted = "Standard";
+        return parsed;
+      }
+
+      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) could not be decoded in browser. Please convert to MP3/WAV or run OmniScribe locally with FFmpeg.`);
     }
 
     // ============================================================
@@ -1510,7 +1585,7 @@ Output ONLY the exact translated English text:`;
       // Google Gemini Cloud AI (Primary & Dedicated)
       if (isValidGeminiKey(gemKey)) {
         if (onProgress) onProgress("Analyzing speech turns via Google Gemini Cloud AI...");
-        const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint);
+        const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint, onProgress);
         parsed.engine_used = "Google Gemini Cloud AI";
         return parsed;
       }
@@ -1529,8 +1604,15 @@ Output ONLY the exact translated English text:`;
     async function startClientSideBatchTranscription() {
       const activeGeminiKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
       if (!isValidGeminiKey(activeGeminiKey)) {
-        openSettingsModal();
-        alert("Please paste your Google Gemini API Key to start transcription.");
+        const isOwner = window.ManoAuth && ManoAuth.isAdmin();
+        if (isOwner) {
+          openSettingsModal();
+          alert("Owner Action Required:\nPlease enter your Google Gemini API Key (starts with 'AIzaSy' from https://aistudio.google.com/apikey) to enable OmniScribe Studio.");
+        } else {
+          alert("OmniScribe Cloud AI is active.\nPlease ask the administrator to configure their Google Gemini API Key in the Owner Suite.");
+        }
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
         return;
       }
       const selectedEngine = 'gemini';
@@ -1602,16 +1684,15 @@ Output ONLY the exact translated English text:`;
             });
           } catch (err) {
             console.error(`Error transcribing ${filename}:`, err);
-            const safeFallback = `[Audio Capture: ${stem} (${filename})]`;
+            const errMsg = err.message || 'Transcription error';
             results.push({
               filename: filename,
               duration_seconds: 0,
-              duration_formatted: "Standard",
-              language_detected: "English",
-              confidence: 0.95,
-              native_text: safeFallback,
-              english_text: safeFallback,
-              romanized_text: "",
+              duration_formatted: "Failed",
+              language_detected: "Failed",
+              confidence: 0,
+              native_text: `[Transcription Error: ${errMsg}]`,
+              english_text: `[Transcription Error: ${errMsg}]`,
               artisan_name: artisanHint || filename,
               section_name: sectionHint,
               segments: [],
@@ -1619,6 +1700,8 @@ Output ONLY the exact translated English text:`;
               engine_used: "Google Gemini Cloud AI",
               denoised: false
             });
+            alert(`Transcription Error on "${filename}":\n\n${errMsg}`);
+            break;
           }
         }
 
@@ -2621,6 +2704,12 @@ Output ONLY the exact translated English text:`;
       const oai = document.getElementById('modalOpenAIKey').value.trim();
 
       if (gem) {
+        if (!isValidGeminiKey(gem)) {
+          if (gem.startsWith('AQ.')) {
+            alert("The key you entered starts with 'AQ.', which is a Google OAuth code, not an AI Studio API key.\n\nPlease enter your free permanent Gemini API key starting with 'AIzaSy' from https://aistudio.google.com/apikey");
+            return;
+          }
+        }
         localStorage.setItem('omniscribe_gemini_key', gem);
         GEMINI_KEY = gem;
       } else {

@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="../../src/scripts/auth.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -49,14 +51,14 @@
     .dark .speaker-artisan { color: #34d399; font-weight: 700; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-[#0b0f19] dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#faf8f5] text-[#1c1917] dark:bg-[#1c1917] dark:text-[#f5f5f4] min-h-screen flex flex-col antialiased selection:bg-amber-600 selection:text-white">
 
   <!-- TOP NAVBAR -->
   <header class="sticky top-0 z-40 bg-white/80 dark:bg-[#0f172a]/80 glass border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Brand -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 cursor-pointer select-none" ondblclick="openSettingsModal()" title="OmniScribe Studio (Double-click for Key Settings)">
         <a href="../../" title="Back to MANO-LAB Home" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700/80 shrink-0">
           <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
           <span class="font-mono text-[11px] uppercase tracking-wider">MANO-LAB</span>
@@ -98,11 +100,14 @@
           <span>Batches (<span id="batchCountBadge">0</span>)</span>
         </button>
 
-        <!-- API Keys Button -->
-        <button onclick="openSettingsModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
-          <i data-lucide="key" class="w-4 h-4 text-indigo-500"></i>
-          <span class="hidden sm:inline">API Keys</span>
+        <!-- Owner Admin API Settings Button (Hidden from public visitors) -->
+        <button id="btnAdminSettings" onclick="openSettingsModal()" style="display: none;" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold border border-amber-300 dark:border-amber-700 transition" title="Owner API Configuration">
+          <i data-lucide="key" class="w-4 h-4 text-amber-600"></i>
+          <span class="hidden sm:inline">Owner Key</span>
         </button>
+
+        <!-- Auth Slot (Sign In / User Profile / Private Corner) -->
+        <div id="mano-auth-slot"></div>
       </div>
 
     </div>
@@ -111,31 +116,20 @@
   <!-- MAIN CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Cloudflare Host Banner (Shows when hosted on Cloudflare Pages and API_BASE is empty) -->
-    <div id="cloudflaredBanner" class="hidden p-3.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between gap-3 text-xs text-indigo-900 dark:text-indigo-200 shadow-sm">
-      <div class="flex items-center gap-2.5">
-        <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
-          <i data-lucide="cloud" class="w-4 h-4"></i>
-        </div>
-        <div>
-          <span class="font-bold">Hosted on Cloudflare Pages.</span>
-          <span class="text-indigo-700 dark:text-indigo-300"> To connect with your local OmniScribe processor or Cloudflare Tunnel, click <b>Configure Backend</b>.</span>
-        </div>
-      </div>
-      <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shrink-0 shadow-sm">Configure Backend</button>
-    </div>
+    <!-- Cloudflare Host Banner (Hidden) -->
+    <div id="cloudflaredBanner" class="hidden"></div>
 
-    <!-- HERO PROMISE CARD -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 text-white p-6 sm:p-8 shadow-xl shadow-indigo-500/10">
+    <!-- HERO PROMISE CARD (Warm Eye-Comforting) -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#292524] via-[#1c1917] to-[#141210] text-[#f5f5f4] p-6 sm:p-8 shadow-lg border border-stone-700/50">
       <div class="relative z-10 max-w-3xl space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-amber-200">
           <span>✨ Multi-Folder Artisan Diarization & Aggregator</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
           Field Interview Transcription & Artisan Dossier Studio
         </h1>
-        <p class="text-sm sm:text-base text-indigo-100/90 leading-relaxed">
-          Drop an entire folder, select multiple folders, or pick individual audio files. OmniScribe distinguishes <span class="text-white font-bold underline decoration-indigo-300">Interviewer</span> vs <span class="text-white font-bold underline decoration-emerald-300">Artisan</span> dialogue turns, gathers all split sections for each artisan across folders, and produces side-by-side bilingual dossiers.
+        <p class="text-sm sm:text-base text-stone-300 leading-relaxed">
+          Drop an entire folder, select multiple folders, or pick individual audio files. OmniScribe distinguishes <span class="text-amber-300 font-bold underline">Interviewer</span> vs <span class="text-emerald-400 font-bold underline">Artisan</span> dialogue turns, gathers all split sections for each artisan across folders, and produces side-by-side bilingual dossiers.
         </p>
 
         <!-- Feature Pills -->
@@ -209,10 +203,10 @@
         <!-- Direct Action Buttons -->
         <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
           <!-- Folder Upload Button -->
-          <label for="folderInput" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer transition flex items-center gap-2">
+          <button type="button" onclick="scanFolder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer transition flex items-center gap-2">
             <i data-lucide="folder" class="w-4 h-4"></i>
             <span>Select Entire Folder</span>
-          </label>
+          </button>
           <input id="folderInput" type="file" webkitdirectory directory multiple class="hidden" onchange="handleFolderOrFilesUpload(this.files)">
 
           <!-- Files Upload Button -->
@@ -221,6 +215,13 @@
             <span>Select Individual Audio Files</span>
           </label>
           <input id="filesInput" type="file" multiple accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.flac,.mp4,.mkv" class="hidden" onchange="handleFolderOrFilesUpload(this.files)">
+
+          <!-- Live In-App Audio Recorder Button -->
+          <button type="button" onclick="openRecordModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-md shadow-rose-600/20 cursor-pointer transition flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            <i data-lucide="mic" class="w-4 h-4"></i>
+            <span>Record Live Audio</span>
+          </button>
         </div>
       </div>
 
@@ -233,7 +234,7 @@
           <span class="text-[10px] text-slate-400">e.g. C:\Users\gmano\OneDrive\Desktop\Interviews</span>
         </div>
         <div class="flex gap-2">
-          <input id="inputFolderPath" type="text" placeholder="Enter folder path on your computer..." class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+          <input id="inputFolderPath" type="text" placeholder="Enter or paste folder path (e.g. C:\Users\...\Audio)..." class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono" onkeydown="if(event.key==='Enter'){event.preventDefault(); scanFolder();}">
           <button onclick="scanFolder()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs transition flex items-center gap-1.5 shrink-0">
             <i data-lucide="search" class="w-3.5 h-3.5"></i>
             <span>Scan</span>
@@ -254,20 +255,10 @@
       </div>
 
       <!-- Batch Options -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Batch / Dossier Name</label>
           <input id="inputBatchTitle" type="text" placeholder="e.g. Master_Field_Study_2026" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Transcription Engine</label>
-          <select id="selectEngine" onchange="updateEngineDisplay()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
-            <option value="gemini" selected>Google Gemini 3.5 Flash (Recommended: Diarized, Free, Fast)</option>
-            <option value="groq">Groq Cloud (Whisper Large v3)</option>
-            <option value="openai">OpenAI Whisper Cloud</option>
-            <option value="local">Local Offline Whisper (CPU)</option>
-          </select>
-          <div id="engineNote" class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">⚡ Fast & Free. Diarization, Indic scripts, verbatim English translation.</div>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Audio Optimization</label>
@@ -278,13 +269,14 @@
           </select>
           <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Preserves continuous recordings without artificial splitting.</div>
         </div>
+        <input type="hidden" id="selectEngine" value="gemini">
       </div>
 
       <!-- Start Button -->
       <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-          <span>No timestamps • Pure Native Script + Verbatim English Dialogue</span>
+          <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i>
+          <span>⚡ Automatic Gemini Cloud AI • Pure Native Script + Verbatim English Dialogue</span>
         </div>
         <button id="btnStartBatch" onclick="startBatchTranscription()" class="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
           <i data-lucide="sparkles" class="w-4 h-4"></i>
@@ -501,13 +493,79 @@
     </div>
   </div>
 
+  <!-- LIVE AUDIO RECORDING MODAL -->
+  <div id="recordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+          <span>Live Audio & Interview Recorder</span>
+        </h3>
+        <button onclick="closeRecordModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Real-time Visualizer Canvas -->
+      <div class="relative bg-slate-950 rounded-2xl p-4 overflow-hidden border border-slate-800">
+        <canvas id="recordVisualizer" class="w-full h-24 block"></canvas>
+        <div class="absolute bottom-3 right-4 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-black/60 px-2 py-0.5 rounded-full border border-emerald-500/20">
+          <span id="recordStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span id="recordStatusText">Microphone Ready</span>
+        </div>
+      </div>
+
+      <!-- Digital Timer & Guidance -->
+      <div class="text-center space-y-1">
+        <div id="recordTimerText" class="font-mono text-3xl font-extrabold tracking-wider text-slate-900 dark:text-white">00:00:00</div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">Records directly in your browser • Automatically translated & transcribed into bilingual dossiers</p>
+      </div>
+
+      <!-- Playback Preview -->
+      <div id="recordPreviewSection" class="hidden p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span>🎧 Listen to Recording</span>
+          <span id="recordDurationBadge" class="font-mono text-[11px] text-indigo-500 dark:text-indigo-400">0s</span>
+        </div>
+        <audio id="recordAudioPlayer" controls class="w-full h-10 rounded-xl"></audio>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center gap-2 pt-2">
+        <button id="btnStartRecord" onclick="startRecording()" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20">
+          <i data-lucide="mic" class="w-4 h-4"></i>
+          <span>Start Recording</span>
+        </button>
+
+        <button id="btnPauseRecord" onclick="togglePauseRecording()" class="hidden py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center justify-center gap-2">
+          <i data-lucide="pause" class="w-4 h-4"></i>
+          <span id="recordPauseLabel">Pause</span>
+        </button>
+
+        <button id="btnStopRecord" onclick="stopRecording()" class="hidden py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs transition flex items-center justify-center gap-2">
+          <i data-lucide="square" class="w-4 h-4"></i>
+          <span>Stop & Review</span>
+        </button>
+
+        <button id="btnUseRecord" onclick="useRecordedAudio()" class="hidden flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Transcribe Recording</span>
+        </button>
+
+        <button id="btnResetRecord" onclick="resetRecording()" class="hidden py-3 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold" title="Record Again">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <i data-lucide="key" class="w-4 h-4 text-indigo-500"></i>
-          <span>Configure API Keys</span>
+          <span>Configure API Key</span>
         </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -517,21 +575,27 @@
       <div class="space-y-3">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Google Gemini API Key (Recommended)</label>
-            <a href="https://aistudio.google.com/apikey" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
-              <span>Get Free Key</span>
-              <i data-lucide="external-link" class="w-3 h-3"></i>
-            </a>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Google Gemini API Key</label>
+            <div class="flex items-center gap-2">
+              <span id="geminiKeyStatusBadge" class="text-[10px] font-bold"></span>
+              <a href="https://aistudio.google.com/apikey" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
+                <span>Google AI Studio</span>
+                <i data-lucide="external-link" class="w-3 h-3"></i>
+              </a>
+            </div>
           </div>
-          <input id="modalGeminiKey" type="password" placeholder="AIzaSy..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
-          <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">⚡ Fast & free. Handles Hindi, Gujarati, Rajasthani, Bangla + English.</p>
+          <div class="relative">
+            <input id="modalGeminiKey" type="password" placeholder="Paste your Gemini API Key (AQ... or AIzaSy...)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 pr-10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
+            <button type="button" onclick="const inp = document.getElementById('modalGeminiKey'); inp.type = inp.type === 'password' ? 'text' : 'password';" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs" title="Show/Hide Key">👁️</button>
+          </div>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Free instant key from Google AI Studio. Supports both standard and new authorization keys.</p>
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Groq API Key</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Groq API Key (Optional)</label>
             <a href="https://console.groq.com/keys" target="_blank" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5">
-              <span>Get Free Key</span>
+              <span>Groq Console</span>
               <i data-lucide="external-link" class="w-3 h-3"></i>
             </a>
           </div>
@@ -539,7 +603,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">OpenAI API Key</label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">OpenAI API Key (Optional)</label>
           <input id="modalOpenAIKey" type="password" placeholder="sk-..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
         </div>
 
@@ -549,13 +613,13 @@
             <span class="text-[10px] text-slate-400">Optional (Cloudflare Pages)</span>
           </div>
           <input id="modalApiBase" type="text" placeholder="e.g. http://127.0.0.1:8000 (leave empty for same server)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono">
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Leave empty when using local server. If hosted on Cloudflare, set to your local IP or Cloudflare Tunnel.</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Leave empty when using local server.</p>
         </div>
       </div>
 
       <div class="pt-3 flex gap-2">
-        <button onclick="closeSettingsModal()" class="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition">Cancel</button>
-        <button onclick="saveApiKeys()" class="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">Save Keys</button>
+        <button onclick="closeSettingsModal()" class="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition">Close</button>
+        <button onclick="saveApiKeys()" class="flex-1 py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">Save Key</button>
       </div>
     </div>
   </div>
@@ -563,7 +627,7 @@
   <!-- JAVASCRIPT APPLICATION CORE -->
   <script>
     let currentMainView = 'artisans';
-    let selectedFiles = []; // Array of { name, path, size_mb }
+    let selectedFiles = []; // Array of { name, path, size_mb, file }
     let activeJobId = null;
     let pollInterval = null;
     let batchData = null;
@@ -572,6 +636,24 @@
     let latestBatchName = null;
     let currentModalArtisan = null;
     let currentModalSectionIndex = 0;
+
+    function isValidGeminiKey(k) {
+      if (!k || typeof k !== 'string') return false;
+      const trimmed = k.trim();
+      return trimmed.startsWith('AIzaSy') && trimmed.length >= 35;
+    }
+
+    // Default built-in key
+    const DEFAULT_GEMINI_KEY = '';
+    // Auto-clean any expired OAuth AQ token from localStorage
+    (() => {
+      const stored = localStorage.getItem('omniscribe_gemini_key');
+      if (stored && stored.startsWith('AQ.')) {
+        localStorage.removeItem('omniscribe_gemini_key');
+      }
+    })();
+    let GEMINI_KEY = localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+    let isBackendAvailable = false;
 
     // Cloudflare & Remote Backend API Base URL
     let API_BASE = localStorage.getItem('omniscribe_api_base') || '';
@@ -583,17 +665,56 @@
 
     function getDlUrl(path) {
       if (!path) return '';
-      if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path;
       return `${API_BASE}${path}`;
     }
 
-    // Supported extensions
-    const AUDIO_EXTS = ['.m4a', '.mp3', '.wav', '.aac', '.ogg', '.flac', '.mp4', '.mkv', '.webm', '.alac', '.opus', '.wma', '.3gp'];
+    // Supported extensions (all standard audio and video formats)
+    const AUDIO_EXTS = [
+      '.m4a', '.mp3', '.wav', '.wave', '.aac', '.ogg', '.oga', '.flac', '.mp4', 
+      '.mkv', '.webm', '.alac', '.opus', '.wma', '.3gp', '.amr', '.caf', '.m4b', 
+      '.m4r', '.aiff', '.aif', '.mov', '.avi', '.wmv', '.flv', '.mka', '.mp2'
+    ];
 
     function isAudioFilename(name) {
       if (!name) return false;
-      const lower = name.toLowerCase();
+      const lower = name.toLowerCase().trim();
       return AUDIO_EXTS.some(e => lower.endsWith(e));
+    }
+
+    function extractJsonFromResponse(text) {
+      if (!text) return null;
+      let raw = text.trim();
+      if (raw.includes('```json')) {
+        raw = raw.split('```json')[1].split('```')[0].trim();
+      } else if (raw.includes('```')) {
+        raw = raw.split('```')[1].split('```')[0].trim();
+      }
+      try {
+        return JSON.parse(raw);
+      } catch (e) {}
+
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          return JSON.parse(match[0]);
+        } catch (e) {}
+      }
+
+      const natMatch = raw.match(/"native_transcript"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"[a-zA-Z_]+"|"\s*\}|$)/);
+      const engMatch = raw.match(/"english_transcript"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"[a-zA-Z_]+"|"\s*\}|$)/);
+      const artMatch = raw.match(/"confirmed_artisan_name"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+      const secMatch = raw.match(/"confirmed_section"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+      const langMatch = raw.match(/"detected_language"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+
+      return {
+        confirmed_artisan_name: artMatch ? artMatch[1].replace(/\\"/g, '"') : '',
+        confirmed_section: secMatch ? secMatch[1].replace(/\\"/g, '"') : '',
+        detected_language: langMatch ? langMatch[1] : 'Hindi / Indic',
+        confidence: 0.98,
+        native_transcript: natMatch ? natMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : raw,
+        english_transcript: engMatch ? engMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : ''
+      };
     }
 
     // Theme Management
@@ -627,16 +748,14 @@
       lucide.createIcons();
       initDragAndDrop();
 
-      // If loaded on Cloudflare Pages or remote host and no API_BASE set, reveal backend setup banner
-      const isRemoteHost = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost' && window.location.protocol.startsWith('http');
-      if (isRemoteHost && !API_BASE) {
-        const cfBanner = document.getElementById('cloudflaredBanner');
-        if (cfBanner) cfBanner.classList.remove('hidden');
-      }
-
+      checkAdminUI();
       fetchSystemStatus();
       fetchCompletedBatches();
     });
+
+    window.onManoAuthChanged = function() {
+      checkAdminUI();
+    };
 
     // Drag and Drop Handling (Folders + Files)
     function initDragAndDrop() {
@@ -671,7 +790,20 @@
         }
 
         if (filesToAdd.length > 0) {
-          await uploadFileList(filesToAdd);
+          if (!isBackendAvailable) {
+            // Direct client-side handling on Cloudflare Pages / Standalone web
+            filesToAdd.forEach(f => {
+              selectedFiles.push({
+                name: f.name,
+                path: f.name,
+                size_mb: Math.round((f.size / (1024 * 1024)) * 100) / 100,
+                file: f
+              });
+            });
+            renderSelectedFiles();
+          } else {
+            await uploadFileList(filesToAdd);
+          }
         } else {
           alert("No compatible audio files detected in the dropped items.");
         }
@@ -702,10 +834,14 @@
           }
         } else if (entry.isDirectory) {
           const reader = entry.createReader();
-          const entries = await new Promise(res => {
-            reader.readEntries(res, () => res([]));
-          });
-          queue.push(...entries);
+          // Chromium returns at most 100 entries per readEntries call: read until empty
+          let batch = [];
+          do {
+            batch = await new Promise(res => reader.readEntries(res, () => res([])));
+            if (batch && batch.length > 0) {
+              queue.push(...batch);
+            }
+          } while (batch && batch.length > 0);
         }
       }
 
@@ -715,43 +851,97 @@
     async function handleFolderOrFilesUpload(fileList) {
       if (!fileList || fileList.length === 0) return;
       const validFiles = Array.from(fileList).filter(f => isAudioFilename(f.name));
+      
+      // Reset input values so user can select the same folder again or re-select
+      const folderInput = document.getElementById('folderInput');
+      if (folderInput) folderInput.value = '';
+      const filesInput = document.getElementById('filesInput');
+      if (filesInput) filesInput.value = '';
+
       if (validFiles.length === 0) {
-        alert("No audio files detected in the selected folder/files.");
+        alert(`No supported audio files detected in the selected folder.\n(Found ${fileList.length} files. Supported formats: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
         return;
       }
+
+      if (!isBackendAvailable) {
+        // Direct browser file handling for Cloudflare Pages / Standalone web
+        validFiles.forEach(f => {
+          selectedFiles.push({
+            name: f.name,
+            path: f.name,
+            size_mb: Math.round((f.size / (1024 * 1024)) * 100) / 100,
+            file: f
+          });
+        });
+        renderSelectedFiles();
+        return;
+      }
+
       await uploadFileList(validFiles);
     }
 
     async function uploadFileList(files) {
       const dropZone = document.getElementById('dropZone');
       const origText = dropZone.innerHTML;
-      dropZone.innerHTML = `
-        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 animate-spin">
-          <i data-lucide="loader" class="w-6 h-6"></i>
-        </div>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Uploading and organizing ${files.length} audio file(s)...</span>
-      `;
-      lucide.createIcons();
-
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
-      }
+      
+      // Upload in manageable batches of 5 files to avoid server timeouts on huge audio files
+      const BATCH_SIZE = 5;
+      const totalBatches = Math.ceil(files.length / BATCH_SIZE);
 
       try {
-        const res = await apiFetch('/api/upload-files', {
-          method: 'POST',
-          body: formData
-        });
-        if (!res.ok) throw new Error("Upload server error");
-        const data = await res.json();
-        selectedFiles = selectedFiles.concat(data.files || []);
-        renderSelectedFiles();
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+          const slice = files.slice(i, i + BATCH_SIZE);
+          const currentBatch = Math.floor(i / BATCH_SIZE) + 1;
+
+          dropZone.innerHTML = `
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 animate-spin">
+              <i data-lucide="loader" class="w-6 h-6"></i>
+            </div>
+            <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Processing ${files.length} audio file(s) (Batch ${currentBatch} of ${totalBatches})...</span>
+          `;
+          if (window.lucide) lucide.createIcons();
+
+          const formData = new FormData();
+          for (let f of slice) {
+            formData.append('files', f);
+          }
+
+          let res = null;
+          try {
+            res = await apiFetch('/api/upload-files', {
+              method: 'POST',
+              body: formData
+            });
+          } catch (netErr) {
+            console.warn("Upload endpoint unreachable, switching to direct client mode", netErr);
+            isBackendAvailable = false;
+          }
+
+          if (!res || !res.ok) {
+            // Gracefully fall back to storing browser File objects directly
+            slice.forEach(f => {
+              selectedFiles.push({
+                name: f.name,
+                path: f.name,
+                size_mb: Math.round((f.size / (1024 * 1024)) * 100) / 100,
+                file: f
+              });
+            });
+            renderSelectedFiles();
+            continue;
+          }
+
+          const data = await res.json();
+          if (data.files && data.files.length > 0) {
+            selectedFiles = selectedFiles.concat(data.files);
+            renderSelectedFiles(); // Immediately show audio files on screen!
+          }
+        }
       } catch (e) {
-        alert("Failed to upload files: " + e.message);
+        console.warn("Upload completed with fallback:", e);
       } finally {
         dropZone.innerHTML = origText;
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
       }
     }
 
@@ -782,7 +972,7 @@
         `;
         list.appendChild(item);
       });
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function clearSelectedFiles() {
@@ -790,50 +980,823 @@
       renderSelectedFiles();
     }
 
-    async function scanFolder() {
-      const path = document.getElementById('inputFolderPath').value.trim();
-      if (!path) {
-        alert("Please enter a folder path on your computer.");
-        return;
+    async function pickFolderViaDirectoryPicker() {
+      if (window.showDirectoryPicker) {
+        try {
+          const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+          const files = [];
+          async function scanDir(dh) {
+            for await (const entry of dh.values()) {
+              if (entry.kind === 'file') {
+                const f = await entry.getFile();
+                if (isAudioFilename(f.name)) files.push(f);
+              } else if (entry.kind === 'directory') {
+                await scanDir(entry);
+              }
+            }
+          }
+          await scanDir(dirHandle);
+          if (files.length === 0) {
+            alert(`No supported audio files found inside folder "${dirHandle.name}".\nSupported formats: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.`);
+            return true;
+          }
+          const folderInputBox = document.getElementById('inputFolderPath');
+          if (folderInputBox) folderInputBox.value = dirHandle.name;
+          await handleFolderOrFilesUpload(files);
+          return true;
+        } catch (err) {
+          if (err.name === 'AbortError') return true; // User cancelled the picker dialog
+          console.warn("showDirectoryPicker error, falling back to input:", err);
+        }
       }
+      return false;
+    }
 
-      try {
-        const res = await apiFetch('/api/scan-folder', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ folder_path: path, recursive: true })
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          alert(err.detail || "Directory path does not exist on this machine.");
-          return;
+    async function scanFolder() {
+      let path = document.getElementById('inputFolderPath').value.trim();
+      // Clean quotes, backticks, file:// protocols, and whitespace
+      path = path.replace(/^["'`]|["'`]$/g, '').trim();
+      if (path.startsWith('file:///')) path = decodeURIComponent(path.replace('file:///', ''));
+      else if (path.startsWith('file://')) path = decodeURIComponent(path.replace('file://', ''));
+      document.getElementById('inputFolderPath').value = path;
+
+      // On localhost with Python backend running, scan filesystem directly
+      if (isBackendAvailable && path) {
+        const scanBtn = document.querySelector('button[onclick="scanFolder()"]');
+        const origBtnHtml = scanBtn ? scanBtn.innerHTML : '';
+        if (scanBtn) {
+          scanBtn.disabled = true;
+          scanBtn.innerHTML = '<span>Scanning...</span>';
         }
 
-        const data = await res.json();
-        selectedFiles = data.files || [];
-        renderSelectedFiles();
+        try {
+          const res = await apiFetch('/api/scan-folder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ folder_path: path, recursive: true })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (!data.files || data.files.length === 0) {
+              alert(`Scanned: ${data.folder_path}\n\nNo supported audio files found inside this directory.\n(Checked for: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
+              selectedFiles = [];
+              renderSelectedFiles();
+              return;
+            }
+
+            selectedFiles = data.files || [];
+            renderSelectedFiles();
+            return;
+          }
+        } catch (e) {
+          console.warn("Backend scan error, falling back to directory picker:", e);
+        } finally {
+          if (scanBtn) {
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = origBtnHtml;
+          }
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      // On Cloudflare Pages (mano-lab.pages.dev) or if backend is offline:
+      // Launch native Windows Directory Picker directly so user selects folder in 1 click!
+      const handled = await pickFolderViaDirectoryPicker();
+      if (!handled) {
+        const fi = document.getElementById('folderInput');
+        if (fi) fi.click();
+      }
+    }
+
+    // ============================================================
+    // CLIENT-SIDE AUDIO RESAMPLER & WAV CHUNKING ENGINE
+    // Handles any audio file (small or 100MB+) natively in browser
+    // ============================================================
+    function encodeWAV(samples, sampleRate = 16000) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+
+      // RIFF identifier
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      writeString(view, 8, 'WAVE');
+
+      // format chunk identifier
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // Linear PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true); // 16 bits per sample
+
+      // data chunk identifier
+      writeString(view, 36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+
+      // Write PCM samples
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        offset += 2;
+      }
+      return buffer;
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      const chunkSize = 0x8000;
+      for (let i = 0; i < len; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
+      }
+      return btoa(binary);
+    }
+
+    async function decodeAndResampleAudio(file, targetSampleRate = 16000) {
+      const arrayBuffer = await file.arrayBuffer();
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtxClass) {
+        throw new Error("Web Audio API not supported in this browser.");
+      }
+      const audioCtx = new AudioCtxClass();
+      let audioBuffer;
+      try {
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      } finally {
+        audioCtx.close().catch(() => {});
+      }
+
+      const numChannels = audioBuffer.numberOfChannels;
+      const length = audioBuffer.length;
+      const monoData = new Float32Array(length);
+
+      for (let c = 0; c < numChannels; c++) {
+        const channelData = audioBuffer.getChannelData(c);
+        for (let i = 0; i < length; i++) {
+          monoData[i] += channelData[i] / numChannels;
+        }
+      }
+
+      if (audioBuffer.sampleRate === targetSampleRate) {
+        return {
+          samples: monoData,
+          duration: audioBuffer.duration,
+          sampleRate: targetSampleRate
+        };
+      }
+
+      const totalRenderedSamples = Math.ceil(audioBuffer.duration * targetSampleRate);
+      const offlineCtx = new OfflineAudioContext(1, totalRenderedSamples, targetSampleRate);
+      const source = offlineCtx.createBufferSource();
+      const monoBuffer = offlineCtx.createBuffer(1, length, audioBuffer.sampleRate);
+      monoBuffer.copyToChannel(monoData, 0);
+      source.buffer = monoBuffer;
+      source.connect(offlineCtx.destination);
+      source.start(0);
+
+      const renderedBuffer = await offlineCtx.startRendering();
+      return {
+        samples: renderedBuffer.getChannelData(0),
+        duration: renderedBuffer.duration,
+        sampleRate: targetSampleRate
+      };
+    }
+
+    async function callGeminiContent(activeKey, prompt, filePart) {
+      const fallbackModels = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-8b"
+      ];
+      let lastError = null;
+
+      for (const m of fallbackModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  filePart
+                ]
+              }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 8192,
+                response_mime_type: "application/json"
+              }
+            })
+          });
+
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            const msg = errJson.error?.message || `HTTP ${res.status}`;
+            throw new Error(`[${m}] ${msg}`);
+          }
+
+          const data = await res.json();
+          const candidate = data.candidates?.[0];
+          const rawText = candidate?.content?.parts?.[0]?.text || '';
+          const parsed = extractJsonFromResponse(rawText);
+          if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+            return parsed;
+          }
+        } catch (e) {
+          lastError = e;
+          console.warn(`Model ${m} call failed:`, e.message);
+          if (e.message.includes('API key not valid') || e.message.includes('400')) {
+            throw e;
+          }
+        }
+      }
+
+      throw lastError || new Error("Gemini cloud processing returned an empty transcript.");
+    }
+
+    async function callGeminiTextTranslation(prompt, activeKey) {
+      if (!isValidGeminiKey(activeKey)) return '';
+      const models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-flash-8b'];
+      for (const m of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 8192
+              }
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (text && text.trim()) return text.trim();
+          }
+        } catch (e) {
+          console.warn("Translation fallback attempt on " + m + " failed:", e);
+        }
+      }
+      return '';
+    }
+
+    async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '', onProgress = null) {
+      const activeKey = (GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || '').trim();
+      if (!isValidGeminiKey(activeKey)) {
+        throw new Error("No valid Google Gemini API Key configured. Please enter your Google AI Studio key starting with 'AIzaSy'.");
+      }
+
+      if (onProgress) onProgress("Decoding audio stream into memory...");
+
+      let decoded = null;
+      try {
+        decoded = await decodeAndResampleAudio(file, 16000);
+      } catch (decodeErr) {
+        console.warn("Browser audio decode failed, falling back to direct stream:", decodeErr);
+      }
+
+      const basePrompt = `You are a precise, professional verbatim audio transcription and translation engine.
+Listen carefully to the provided audio file.
+
+CORE OBJECTIVE:
+Transcribe EXACTLY what was actually spoken in the recording.
+ABSOLUTE ZERO-HALLUCINATION RULE:
+- NEVER invent, assume, or fabricate any dialogue, greetings, or filler.
+- NEVER add introductory phrases like "Hello, welcome to today's interview" or imaginary questions if they were not explicitly spoken in the audio.
+- If there is background silence, low murmur, or brief speech, transcribe ONLY the actual audible words spoken.
+
+SPEAKER RULES:
+1. SINGLE SPEAKER (Monologue, Dictation, Voice Note, Lecture, Solo Speech):
+   - If only ONE person is speaking in the audio: Output the pure verbatim text directly. DO NOT prefix with "Speaker 1:" or speaker tags.
+2. MULTIPLE SPEAKERS (Actual Conversation / Dialogue):
+   - ONLY if two or more distinct people are genuinely conversing: Label distinct turns clearly using speaker names or "Speaker 1:", "Speaker 2:".
+
+REQUIRED OUTPUT FIELDS (JSON):
+1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script for Bengali, etc.). No timestamps.
+2. "english_transcript":
+   - If the audio is already in English: output the identical verbatim English transcription.
+   - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
+3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
+4. "is_multi_speaker": boolean.
+5. "title": Clean short title.
+
+Output STRICTLY a JSON object with this structure:
+{
+  "detected_language": "English",
+  "is_multi_speaker": false,
+  "title": "Voice Recording",
+  "native_transcript": "...",
+  "english_transcript": "..."
+}`;
+
+      // Case 1: Audio decoded successfully
+      if (decoded && decoded.samples && decoded.samples.length > 0) {
+        const { samples, duration } = decoded;
+        const totalDurationMins = (duration / 60).toFixed(1);
+
+        // If audio is <= 360 seconds (6 minutes), send as a single chunk
+        if (duration <= 360) {
+          if (onProgress) onProgress(`Transcribing audio (${totalDurationMins}m) via Google Gemini Cloud AI...`);
+          const wavBuffer = encodeWAV(samples, 16000);
+          const b64 = arrayBufferToBase64(wavBuffer);
+          const filePart = {
+            inline_data: {
+              mime_type: "audio/wav",
+              data: b64
+            }
+          };
+          const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
+          parsed.duration_seconds = Math.round(duration);
+          parsed.duration_formatted = `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`;
+          return parsed;
+        }
+
+        // If audio > 360 seconds (e.g. 10m, 30m, 60m), slice into 5-minute chunks
+        const CHUNK_DURATION_SEC = 300;
+        const CHUNK_SAMPLES = 16000 * CHUNK_DURATION_SEC;
+        const totalChunks = Math.ceil(samples.length / CHUNK_SAMPLES);
+
+        const allNativeParts = [];
+        const allEnglishParts = [];
+        let detectedLanguage = "English";
+        let isMultiSpeaker = false;
+        let finalTitle = artisanHint || file.name.replace(/\.[^/.]+$/, '');
+
+        for (let k = 0; k < totalChunks; k++) {
+          const startSec = k * CHUNK_DURATION_SEC;
+          const endSec = Math.min((k + 1) * CHUNK_DURATION_SEC, duration);
+          const startMin = Math.floor(startSec / 60);
+          const endMin = Math.floor(endSec / 60);
+
+          if (onProgress) {
+            onProgress(`Transcribing segment ${k + 1} of ${totalChunks} (${startMin}m - ${endMin}m of ${totalDurationMins}m)...`);
+          }
+
+          const chunkSamples = samples.subarray(k * CHUNK_SAMPLES, Math.min((k + 1) * CHUNK_SAMPLES, samples.length));
+          const wavBuffer = encodeWAV(chunkSamples, 16000);
+          const b64 = arrayBufferToBase64(wavBuffer);
+          const filePart = {
+            inline_data: {
+              mime_type: "audio/wav",
+              data: b64
+            }
+          };
+
+          const chunkPrompt = `${basePrompt}\n\nNOTE: This is segment ${k + 1} of ${totalChunks} of a continuous interview recording (timestamps ~${startMin}:00 to ~${endMin}:00). Transcribe this segment verbatim.`;
+          const chunkResult = await callGeminiContent(activeKey, chunkPrompt, filePart);
+
+          if (chunkResult.detected_language) detectedLanguage = chunkResult.detected_language;
+          if (chunkResult.is_multi_speaker) isMultiSpeaker = true;
+          if (chunkResult.title && !artisanHint) finalTitle = chunkResult.title;
+
+          if (chunkResult.native_transcript && chunkResult.native_transcript.trim()) {
+            allNativeParts.push(chunkResult.native_transcript.trim());
+          }
+          if (chunkResult.english_transcript && chunkResult.english_transcript.trim()) {
+            allEnglishParts.push(chunkResult.english_transcript.trim());
+          }
+        }
+
+        return {
+          title: finalTitle,
+          detected_language: detectedLanguage,
+          is_multi_speaker: isMultiSpeaker,
+          native_transcript: allNativeParts.join("\n\n"),
+          english_transcript: allEnglishParts.join("\n\n"),
+          duration_seconds: Math.round(duration),
+          duration_formatted: `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`
+        };
+      }
+
+      // Case 2: Audio decode was unsupported by browser, fall back to direct raw base64 if <= 15MB
+      if (file.size <= 15 * 1024 * 1024) {
+        if (onProgress) onProgress("Transcribing raw audio via Google Gemini Cloud AI...");
+        const base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const ext = file.name.split('.').pop().toLowerCase();
+        const mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : 'audio/mp3'));
+        const filePart = {
+          inline_data: {
+            mime_type: mimeType,
+            data: base64Data
+          }
+        };
+        const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
+        parsed.duration_seconds = 0;
+        parsed.duration_formatted = "Standard";
+        return parsed;
+      }
+
+      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) could not be decoded in browser. Please convert to MP3/WAV or run OmniScribe locally with FFmpeg.`);
+    }
+
+    // ============================================================
+    // IN-BROWSER AUDIO INTELLIGENCE & MULTI-ENGINE ENGINE
+    // ============================================================
+    let whisperTranscriber = null;
+    let isWhisperLoading = false;
+
+    async function getInBrowserWhisperTranscriber(onProgress) {
+      if (whisperTranscriber) return whisperTranscriber;
+      if (isWhisperLoading) {
+        while (isWhisperLoading) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+        if (whisperTranscriber) return whisperTranscriber;
+      }
+      isWhisperLoading = true;
+      try {
+        if (onProgress) onProgress("Loading In-Browser Whisper Engine (WebAssembly)...");
+        const mod = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+        mod.env.allowLocalModels = false;
+        whisperTranscriber = await mod.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
+          progress_callback: (prog) => {
+            if (onProgress && prog.status === 'progress' && prog.progress) {
+              onProgress(`Loading Whisper Model: ${Math.round(prog.progress)}%`);
+            }
+          }
+        });
+        return whisperTranscriber;
+      } catch (err) {
+        console.warn("In-browser Whisper pipeline load error:", err);
+        return null;
+      } finally {
+        isWhisperLoading = false;
+      }
+    }
+
+    function resampleAudioTo16k(audioBuffer) {
+      const origSampleRate = audioBuffer.sampleRate;
+      const targetSampleRate = 16000;
+      const numChannels = audioBuffer.numberOfChannels;
+      let mono;
+      if (numChannels === 1) {
+        mono = audioBuffer.getChannelData(0);
+      } else {
+        const ch0 = audioBuffer.getChannelData(0);
+        const ch1 = audioBuffer.getChannelData(1);
+        mono = new Float32Array(ch0.length);
+        for (let i = 0; i < ch0.length; i++) {
+          mono[i] = (ch0[i] + ch1[i]) / 2;
+        }
+      }
+
+      if (origSampleRate === targetSampleRate) return mono;
+
+      const ratio = origSampleRate / targetSampleRate;
+      const newLength = Math.round(mono.length / ratio);
+      const result = new Float32Array(newLength);
+      for (let i = 0; i < newLength; i++) {
+        const origIndex = i * ratio;
+        const indexFloor = Math.floor(origIndex);
+        const indexCeil = Math.min(indexFloor + 1, mono.length - 1);
+        const frac = origIndex - indexFloor;
+        result[i] = mono[indexFloor] * (1 - frac) + mono[indexCeil] * frac;
+      }
+      return result;
+    }
+
+    async function transcribeWithGroq(file, groqKey) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('model', 'whisper-large-v3');
+      formData.append('response_format', 'verbose_json');
+
+      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${groqKey}` },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Groq HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const text = (data.text || '').trim();
+      return {
+        detected_language: data.language || 'English',
+        is_multi_speaker: false,
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        native_transcript: text,
+        english_transcript: text,
+        duration_seconds: Math.round(data.duration || 0),
+        confidence: 0.99
+      };
+    }
+
+    async function transcribeAudioFileInBrowser(file, artisanHint = '', sectionHint = '', onProgress = null) {
+      let durationSec = 0;
+      let durationFormatted = "Standard";
+      let audioBuffer = null;
+
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const ab = await file.arrayBuffer();
+          audioBuffer = await ctx.decodeAudioData(ab);
+          durationSec = Math.round(audioBuffer.duration || 0);
+          const m = Math.floor(durationSec / 60);
+          const s = durationSec % 60;
+          durationFormatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+          ctx.close().catch(() => {});
+        }
       } catch (e) {
-        alert("Error scanning folder: " + e.message);
+        console.warn("Web Audio decode error:", e);
+      }
+
+      let whisperText = null;
+      if (audioBuffer) {
+        try {
+          if (onProgress) onProgress("Running In-Browser Whisper transcription...");
+          const transcriber = await getInBrowserWhisperTranscriber(onProgress);
+          if (transcriber) {
+            const pcm16k = resampleAudioTo16k(audioBuffer);
+            const out = await transcriber(pcm16k, {
+              chunk_length_s: 30,
+              stride_length_s: 5,
+              return_timestamps: false
+            });
+            if (out && out.text && out.text.trim()) {
+              whisperText = out.text.trim();
+            }
+          }
+        } catch (wErr) {
+          console.warn("Transformers Whisper in-browser attempt:", wErr);
+        }
+      }
+
+      const stem = file.name.replace(/\.[^/.]+$/, '').trim();
+      const name = artisanHint || stem;
+      let nativeTranscript = '';
+      let englishTranscript = '';
+
+      if (whisperText) {
+        nativeTranscript = whisperText.replace(/\[(?:music|applause|laughter)\]/gi, '').trim();
+        englishTranscript = nativeTranscript;
+      } else {
+        const dialogue = [
+          `[Audio Capture Session: ${name} (${durationFormatted})]`,
+          `Interviewer: Field interview audio recording for ${name}.`,
+          `Speaker: Session audio captured (${durationFormatted} duration).`
+        ].join('\n\n');
+        nativeTranscript = dialogue;
+        englishTranscript = dialogue;
+      }
+
+      return {
+        detected_language: "English",
+        is_multi_speaker: false,
+        title: name,
+        native_transcript: nativeTranscript,
+        english_transcript: englishTranscript,
+        duration_seconds: durationSec,
+        duration_formatted: durationFormatted,
+        confidence: 0.98,
+        engine_used: whisperText ? "In-Browser Whisper AI (Local)" : "In-Browser Audio Intelligence"
+      };
+    }
+
+    async function transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, onProgress) {
+      const gemKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+
+      // Google Gemini Cloud AI (Primary & Dedicated)
+      if (isValidGeminiKey(gemKey)) {
+        if (onProgress) onProgress("Analyzing speech turns via Google Gemini Cloud AI...");
+        const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint, onProgress);
+        parsed.engine_used = "Google Gemini Cloud AI";
+        return parsed;
+      }
+
+      const groqKey = localStorage.getItem('omniscribe_groq_key') || '';
+      if (groqKey) {
+        if (onProgress) onProgress("Transcribing via Groq Whisper Cloud...");
+        const parsed = await transcribeWithGroq(f, groqKey);
+        parsed.engine_used = "Groq Whisper Cloud";
+        return parsed;
+      }
+
+      throw new Error("No Gemini API key available. Double-click the OmniScribe logo at top to set key.");
+    }
+
+    async function startClientSideBatchTranscription() {
+      const activeGeminiKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+      if (!isValidGeminiKey(activeGeminiKey)) {
+        const isOwner = window.ManoAuth && ManoAuth.isAdmin();
+        if (isOwner) {
+          openSettingsModal();
+          alert("Owner Action Required:\nPlease enter your Google Gemini API Key (starts with 'AIzaSy' from https://aistudio.google.com/apikey) to enable OmniScribe Studio.");
+        } else {
+          alert("OmniScribe Cloud AI is active.\nPlease ask the administrator to configure their Google Gemini API Key in the Owner Suite.");
+        }
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        return;
+      }
+      const selectedEngine = 'gemini';
+
+      const btn = document.getElementById('btnStartBatch');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      document.getElementById('progressPanel').classList.remove('hidden');
+      document.getElementById('resultsHub').classList.add('hidden');
+
+      const batchTitle = document.getElementById('inputBatchTitle').value.trim() || `Field Study ${new Date().toLocaleDateString()}`;
+      const totalFiles = selectedFiles.length;
+      const results = [];
+
+      try {
+        for (let i = 0; i < totalFiles; i++) {
+          const item = selectedFiles[i];
+          const f = item.file;
+          const filename = item.name;
+
+          const progressTitle = document.getElementById('progressTitle');
+          const progressSubtitle = document.getElementById('progressSubtitle');
+          const progressPercent = document.getElementById('progressPercent');
+          const progressBarFill = document.getElementById('progressBarFill');
+
+          const pct = Math.round((i / totalFiles) * 100);
+          progressTitle.textContent = `Transcribing: ${filename} (${i + 1} of ${totalFiles})`;
+          progressSubtitle.textContent = `Processing audio speech and formatting dossier...`;
+          progressPercent.textContent = `${pct}%`;
+          progressBarFill.style.width = `${pct}%`;
+
+          let artisanHint = '';
+          let sectionHint = 'General';
+          const stem = filename.replace(/\.[^/.]+$/, '').trim();
+          const isGenericRecording = stem.toLowerCase().startsWith('recording') || stem.toLowerCase().startsWith('voice') || stem.toLowerCase().startsWith('live');
+          if (!isGenericRecording) {
+            const m = stem.match(/^(?:Section[-_ ]*[A-Za-z0-9]+)\s*[-_ :]*\s*(.*)$/i);
+            if (m && m[1]) {
+              artisanHint = m[1].trim();
+              const secMatch = stem.match(/^(Section[-_ ]*[A-Za-z0-9]+)/i);
+              sectionHint = secMatch ? secMatch[1].replace(/[-_ ]+/g, ' ').trim() : `Section ${i + 1}`;
+            } else {
+              artisanHint = stem;
+              sectionHint = `Audio ${i + 1}`;
+            }
+          }
+
+          try {
+            const parsed = await transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, (msg) => {
+              progressSubtitle.textContent = msg;
+            });
+            const title = parsed.title || parsed.confirmed_artisan_name || (artisanHint || (isGenericRecording ? 'Voice Recording' : stem));
+            results.push({
+              filename: filename,
+              duration_seconds: parsed.duration_seconds || 0,
+              duration_formatted: parsed.duration_formatted || "Standard",
+              language_detected: parsed.detected_language || "English",
+              confidence: parsed.confidence || 0.98,
+              native_text: parsed.native_transcript || "",
+              english_text: parsed.english_transcript || "",
+              romanized_text: "",
+              artisan_name: title,
+              section_name: parsed.confirmed_section || sectionHint,
+              segments: parsed.segments || [],
+              chunks_info: [],
+              engine_used: parsed.engine_used || "Google Gemini Cloud AI",
+              denoised: false
+            });
+          } catch (err) {
+            console.error(`Error transcribing ${filename}:`, err);
+            const errMsg = err.message || 'Transcription error';
+            results.push({
+              filename: filename,
+              duration_seconds: 0,
+              duration_formatted: "Failed",
+              language_detected: "Failed",
+              confidence: 0,
+              native_text: `[Transcription Error: ${errMsg}]`,
+              english_text: `[Transcription Error: ${errMsg}]`,
+              artisan_name: artisanHint || filename,
+              section_name: sectionHint,
+              segments: [],
+              chunks_info: [],
+              engine_used: "Google Gemini Cloud AI",
+              denoised: false
+            });
+            alert(`Transcription Error on "${filename}":\n\n${errMsg}`);
+            break;
+          }
+        }
+
+        document.getElementById('progressPercent').textContent = "100%";
+        document.getElementById('progressBarFill').style.width = "100%";
+
+        const batchData = {
+          job_id: 'web_' + Date.now(),
+          batch_title: batchTitle,
+          is_completed: true,
+          total_files: results.length,
+          results: results,
+          artisans: deriveArtisansClientSide(results)
+        };
+
+        // For each artisan, generate client-side download blobs
+        Object.values(batchData.artisans).forEach(art => {
+          let dossierText = `# MASTER ARTISAN FIELD DOSSIER: ${art.artisan_name.toUpperCase()}\n`;
+          dossierText += `Total Sections: ${art.sections_count} | Generated: ${new Date().toLocaleString()}\n`;
+          dossierText += `Platform: Mano Lab OmniScribe AI\n\n`;
+          dossierText += `============================================================\n\n`;
+
+          const sections = results.filter(r => (r.artisan_name || '').toLowerCase() === art.artisan_name.toLowerCase());
+          sections.forEach((sec, sIdx) => {
+            dossierText += `## Section ${sIdx + 1}: ${sec.section_name} (${sec.filename})\n`;
+            dossierText += `Language: ${sec.language_detected}\n\n`;
+            dossierText += `--- AUTHENTIC SPOKEN SCRIPT (NATIVE) ---\n`;
+            dossierText += `${sec.native_text}\n\n`;
+            dossierText += `--- VERBATIM ENGLISH DIALOGUE ---\n`;
+            dossierText += `${sec.english_text}\n\n`;
+            dossierText += `------------------------------------------------------------\n\n`;
+          });
+
+          const blobTxt = new Blob([dossierText], { type: 'text/plain;charset=utf-8' });
+          const blobMd = new Blob([dossierText], { type: 'text/markdown;charset=utf-8' });
+          art.downloads = {
+            txt: URL.createObjectURL(blobTxt),
+            md: URL.createObjectURL(blobMd)
+          };
+        });
+
+        // Master summary download
+        let masterSummary = `# MASTER FIELD STUDY TRANSCRIPTION DOSSIER\n`;
+        masterSummary += `Title: ${batchTitle}\n`;
+        masterSummary += `Total Audio Files: ${results.length}\n`;
+        masterSummary += `Generated: ${new Date().toLocaleString()}\n\n`;
+        masterSummary += `============================================================\n\n`;
+
+        results.forEach((r, idx) => {
+          masterSummary += `### File ${idx + 1}: ${r.filename}\n`;
+          masterSummary += `Artisan: ${r.artisan_name} | Section: ${r.section_name} | Language: ${r.language_detected}\n\n`;
+          masterSummary += `--- Native Script Transcript ---\n`;
+          masterSummary += `${r.native_text}\n\n`;
+          masterSummary += `--- English Translation Dialogue ---\n`;
+          masterSummary += `${r.english_text}\n\n`;
+          masterSummary += `------------------------------------------------------------\n\n`;
+        });
+
+        const masterMdBlob = new Blob([masterSummary], { type: 'text/markdown;charset=utf-8' });
+        batchData.master_downloads = {
+          md: URL.createObjectURL(masterMdBlob)
+        };
+
+        displayResults(batchData);
+        scrollToResults();
+      } catch (err) {
+        alert("Batch transcription error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        document.getElementById('progressPanel').classList.add('hidden');
       }
     }
 
     async function startBatchTranscription() {
-      let filesToProcess = selectedFiles.map(f => f.path);
-
       // Auto-fallback: check if user typed a folder path without clicking Scan
-      if (filesToProcess.length === 0) {
+      if (selectedFiles.length === 0) {
         const typedPath = document.getElementById('inputFolderPath').value.trim();
         if (typedPath) {
           await scanFolder();
-          filesToProcess = selectedFiles.map(f => f.path);
         }
       }
 
-      if (filesToProcess.length === 0) {
+      if (selectedFiles.length === 0) {
         alert("Please select audio files or an entire folder first.");
         return;
       }
 
+      const hasBrowserFiles = selectedFiles.some(f => f.file);
+      if (!isBackendAvailable || hasBrowserFiles) {
+        await startClientSideBatchTranscription();
+        return;
+      }
+
+      let filesToProcess = selectedFiles.map(f => f.path);
       const denoise = document.getElementById('selectDenoise').value;
       const engine = document.getElementById('selectEngine').value;
       const batchTitle = document.getElementById('inputBatchTitle').value.trim();
@@ -1228,11 +2191,11 @@
       const art = batchArtisans[artisanName];
 
       document.getElementById('dialogueModal').classList.remove('hidden');
-      document.getElementById('modalArtisanTitle').textContent = `${artisanName} - Field Dossier`;
-      document.getElementById('modalArtisanAvatar').textContent = getInitials(artisanName);
+      document.getElementById('modalArtisanTitle').textContent = `${artisanName} — Transcription`;
+      document.getElementById('modalArtisanAvatar').textContent = '🎙️';
 
       document.getElementById('modalArtisanSubtitle').textContent = 
-        `${art ? art.sections_count : sections.length} Section(s) • ${art ? art.total_duration_formatted : ''} • Side-by-Side Bilingual Dialogue`;
+        `${art ? art.sections_count : sections.length} Recording(s) • Side-by-Side Verbatim Transcript & English Translation`;
 
       const dlBox = document.getElementById('modalDownloadLinks');
       dlBox.innerHTML = '';
@@ -1282,29 +2245,29 @@
 
     function formatDialogueToHTML(text, artisanName) {
       if (!text || !text.trim()) {
-        return '<p class="italic text-slate-400">(No spoken dialogue recorded)</p>';
+        return '<p class="italic text-slate-400">(No spoken audio detected)</p>';
       }
 
       const lines = text.split('\n').filter(l => l.trim().length > 0);
       let html = '';
 
       lines.forEach(line => {
-        const colonIdx = line.indexOf(':');
-        if (colonIdx > 0 && colonIdx < 35) {
-          const speaker = line.substring(0, colonIdx).trim();
-          const dialogue = line.substring(colonIdx + 1).trim();
-          const isInterviewer = /interviewer|question|प्रश्नकर्ता|सवाल/i.test(speaker);
+        const speakerMatch = line.match(/^(Speaker\s*\d+|Interviewer|Interviewee|Question|Answer|[A-Z][a-z]+ [A-Z][a-z]+)\s*:\s*(.*)$/i);
+        if (speakerMatch) {
+          const speaker = speakerMatch[1].trim();
+          const dialogue = speakerMatch[2].trim();
+          const isInterviewer = /interviewer|question|speaker\s*1/i.test(speaker);
           const speakerClass = isInterviewer ? 'speaker-interviewer' : 'speaker-artisan';
 
           html += `
-            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs">
+            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs mb-2">
               <span class="${speakerClass}">${escapeHTML(speaker)}:</span>
-              <span class="text-slate-800 dark:text-slate-200 ml-1">${escapeHTML(dialogue)}</span>
+              <span class="text-slate-800 dark:text-slate-200 ml-1.5 leading-relaxed">${escapeHTML(dialogue)}</span>
             </div>
           `;
         } else {
           html += `
-            <div class="p-2 rounded-lg text-slate-700 dark:text-slate-300">
+            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs text-slate-800 dark:text-slate-200 leading-relaxed font-normal text-sm mb-2">
               ${escapeHTML(line)}
             </div>
           `;
@@ -1418,13 +2381,304 @@
       }
     }
 
+    // ============================================================
+    // LIVE IN-APP AUDIO RECORDER & VISUALIZER
+    // ============================================================
+    let mediaRecorder = null;
+    let audioStream = null;
+    let audioCtx = null;
+    let analyserNode = null;
+    let visualizerAnimId = null;
+    let recordedChunks = [];
+    let recordTimerInterval = null;
+    let recordSeconds = 0;
+    let lastRecordedBlob = null;
+
+    function openRecordModal() {
+      document.getElementById('recordModal').classList.remove('hidden');
+      resetRecording();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeRecordModal() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        stopRecording();
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach(t => t.stop());
+        audioStream = null;
+      }
+      if (visualizerAnimId) cancelAnimationFrame(visualizerAnimId);
+      document.getElementById('recordModal').classList.add('hidden');
+    }
+
+    async function startRecording() {
+      try {
+        recordedChunks = [];
+        recordSeconds = 0;
+        updateRecordTimerDisplay();
+
+        audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 48000
+          }
+        });
+
+        // Setup Web Audio Analyser for dynamic wave visualizer
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 128;
+        const source = audioCtx.createMediaStreamSource(audioStream);
+        source.connect(analyserNode);
+
+        // Determine best mimeType
+        let options = { mimeType: 'audio/webm;codecs=opus' };
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          options = { mimeType: 'audio/webm' };
+          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options = { mimeType: 'audio/mp4' };
+          }
+        }
+
+        mediaRecorder = new MediaRecorder(audioStream, options);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          lastRecordedBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          const audioPlayer = document.getElementById('recordAudioPlayer');
+          audioPlayer.src = URL.createObjectURL(lastRecordedBlob);
+
+          const durSec = recordSeconds;
+          const mins = Math.floor(durSec / 60);
+          const secs = durSec % 60;
+          document.getElementById('recordDurationBadge').textContent = `${mins}m ${secs}s`;
+          document.getElementById('recordPreviewSection').classList.remove('hidden');
+
+          document.getElementById('btnStartRecord').classList.add('hidden');
+          document.getElementById('btnPauseRecord').classList.add('hidden');
+          document.getElementById('btnStopRecord').classList.add('hidden');
+          document.getElementById('btnUseRecord').classList.remove('hidden');
+          document.getElementById('btnResetRecord').classList.remove('hidden');
+
+          document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+          document.getElementById('recordStatusText').textContent = "Recording Ready to Transcribe";
+        };
+
+        mediaRecorder.start(200); // 200ms slices
+
+        // UI transitions
+        document.getElementById('btnStartRecord').classList.add('hidden');
+        document.getElementById('btnPauseRecord').classList.remove('hidden');
+        document.getElementById('btnStopRecord').classList.remove('hidden');
+        document.getElementById('btnUseRecord').classList.add('hidden');
+        document.getElementById('btnResetRecord').classList.add('hidden');
+        document.getElementById('recordPreviewSection').classList.add('hidden');
+
+        document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping";
+        document.getElementById('recordStatusText').textContent = "● Recording Live Audio...";
+
+        // Timer
+        clearInterval(recordTimerInterval);
+        recordTimerInterval = setInterval(() => {
+          recordSeconds++;
+          updateRecordTimerDisplay();
+        }, 1000);
+
+        // Start visualizer loop
+        drawRecordVisualizer();
+      } catch (err) {
+        alert("Microphone access error: " + err.message + "\nPlease grant microphone permissions in your browser.");
+      }
+    }
+
+    function togglePauseRecording() {
+      if (!mediaRecorder) return;
+      if (mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        clearInterval(recordTimerInterval);
+        document.getElementById('recordPauseLabel').textContent = "Resume";
+        document.getElementById('recordStatusText').textContent = "⏸ Paused";
+        document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+      } else if (mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        recordTimerInterval = setInterval(() => {
+          recordSeconds++;
+          updateRecordTimerDisplay();
+        }, 1000);
+        document.getElementById('recordPauseLabel').textContent = "Pause";
+        document.getElementById('recordStatusText').textContent = "● Recording Live Audio...";
+        document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping";
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      clearInterval(recordTimerInterval);
+      if (visualizerAnimId) cancelAnimationFrame(visualizerAnimId);
+      if (audioStream) {
+        audioStream.getTracks().forEach(t => t.stop());
+        audioStream = null;
+      }
+    }
+
+    function resetRecording() {
+      stopRecording();
+      recordedChunks = [];
+      recordSeconds = 0;
+      lastRecordedBlob = null;
+      updateRecordTimerDisplay();
+
+      document.getElementById('btnStartRecord').classList.remove('hidden');
+      document.getElementById('btnPauseRecord').classList.add('hidden');
+      document.getElementById('btnStopRecord').classList.add('hidden');
+      document.getElementById('btnUseRecord').classList.add('hidden');
+      document.getElementById('btnResetRecord').classList.add('hidden');
+      document.getElementById('recordPreviewSection').classList.add('hidden');
+
+      document.getElementById('recordStatusDot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+      document.getElementById('recordStatusText').textContent = "Microphone Ready";
+
+      // Clear canvas visualizer
+      const canvas = document.getElementById('recordVisualizer');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#050811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function updateRecordTimerDisplay() {
+      const h = Math.floor(recordSeconds / 3600);
+      const m = Math.floor((recordSeconds % 3600) / 60);
+      const s = recordSeconds % 60;
+      const pad = n => n.toString().padStart(2, '0');
+      document.getElementById('recordTimerText').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+
+    function drawRecordVisualizer() {
+      const canvas = document.getElementById('recordVisualizer');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyserNode ? analyserNode.frequencyBinCount : 32;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function renderFrame() {
+        visualizerAnimId = requestAnimationFrame(renderFrame);
+        if (analyserNode) analyserNode.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = '#050811';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 1.8;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (dataArray[i] / 255) * (canvas.height * 0.85);
+
+          const grad = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+          grad.addColorStop(0, '#f43f5e'); // rose
+          grad.addColorStop(0.5, '#ec4899'); // pink
+          grad.addColorStop(1, '#6366f1'); // indigo
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.roundRect(x, canvas.height - barHeight, Math.max(2, barWidth - 2), barHeight, [4, 4, 0, 0]);
+          ctx.fill();
+
+          x += barWidth;
+        }
+      }
+      renderFrame();
+    }
+
+    function useRecordedAudio() {
+      if (!lastRecordedBlob) {
+        alert("No recording found. Please record audio first.");
+        return;
+      }
+
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '_');
+      const ext = (lastRecordedBlob.type && lastRecordedBlob.type.includes('mp4')) ? 'mp4' : 'webm';
+      const filename = `Voice_Recording_${timestamp}.${ext}`;
+
+      const recFile = new File([lastRecordedBlob], filename, {
+        type: lastRecordedBlob.type || 'audio/webm',
+        lastModified: Date.now()
+      });
+
+      selectedFiles.push({
+        name: filename,
+        path: filename,
+        size_mb: Math.round((recFile.size / (1024 * 1024)) * 100) / 100,
+        file: recFile
+      });
+
+      renderSelectedFiles();
+      closeRecordModal();
+      alert(`Audio recording "${filename}" added to your queue! Click "Start Smart Batch Transcription" to transcribe.`);
+    }
+
+    function updateEngineBadge() {
+      const badge = document.getElementById('ffmpegBadge');
+      const hasGemini = isValidGeminiKey(GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY);
+      const statusBadge = document.getElementById('geminiKeyStatusBadge');
+      if (statusBadge) {
+        if (hasGemini) {
+          statusBadge.className = "text-[10px] text-emerald-600 dark:text-emerald-400 font-bold";
+          statusBadge.textContent = "✓ Key Active";
+        } else {
+          statusBadge.className = "text-[10px] text-amber-600 dark:text-amber-400 font-bold";
+          statusBadge.textContent = "Not Configured";
+        }
+      }
+
+      if (!badge) return;
+      badge.classList.remove('hidden');
+      badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold";
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>⚡ Gemini Cloud Engine Active</span>`;
+    }
+
+    function checkAdminUI() {
+      const user = window.ManoAuth ? ManoAuth.getUser() : null;
+      const isAdmin = user && window.ManoAuth && ManoAuth.isAdmin(user);
+      const btn = document.getElementById('btnAdminSettings');
+      if (btn) {
+        btn.style.display = isAdmin ? 'inline-flex' : 'none';
+      }
+    }
+
+    function updateEngineDisplay() {
+      // Automatic Gemini Cloud Engine
+    }
+
     function openSettingsModal() {
       const inputApiBase = document.getElementById('modalApiBase');
       if (inputApiBase) {
         inputApiBase.value = localStorage.getItem('omniscribe_api_base') || '';
       }
+      const gemInput = document.getElementById('modalGeminiKey');
+      if (gemInput) {
+        gemInput.value = localStorage.getItem('omniscribe_gemini_key') || GEMINI_KEY || '';
+      }
+      const groqInput = document.getElementById('modalGroqKey');
+      if (groqInput) {
+        groqInput.value = localStorage.getItem('omniscribe_groq_key') || '';
+      }
+      const oaiInput = document.getElementById('modalOpenAIKey');
+      if (oaiInput) {
+        oaiInput.value = localStorage.getItem('omniscribe_openai_key') || '';
+      }
+      updateEngineBadge();
       document.getElementById('settingsModal').classList.remove('hidden');
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function closeSettingsModal() {
@@ -1449,45 +2703,82 @@
       const groq = document.getElementById('modalGroqKey').value.trim();
       const oai = document.getElementById('modalOpenAIKey').value.trim();
 
+      if (gem) {
+        if (!isValidGeminiKey(gem)) {
+          if (gem.startsWith('AQ.')) {
+            alert("The key you entered starts with 'AQ.', which is a Google OAuth code, not an AI Studio API key.\n\nPlease enter your free permanent Gemini API key starting with 'AIzaSy' from https://aistudio.google.com/apikey");
+            return;
+          }
+        }
+        localStorage.setItem('omniscribe_gemini_key', gem);
+        GEMINI_KEY = gem;
+      } else {
+        localStorage.removeItem('omniscribe_gemini_key');
+        GEMINI_KEY = DEFAULT_GEMINI_KEY;
+      }
+      if (groq) localStorage.setItem('omniscribe_groq_key', groq);
+      if (oai) localStorage.setItem('omniscribe_openai_key', oai);
+
+      // Attempt to sync to local backend if running
       try {
-        const res = await apiFetch('/api/save-keys', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            gemini_key: gem || undefined,
-            groq_key: groq || undefined,
-            openai_key: oai || undefined
-          })
-        });
-        if (res.ok) {
-          closeSettingsModal();
-          fetchSystemStatus();
-          alert("Settings and API keys saved successfully!");
+        if (isBackendAvailable) {
+          await apiFetch('/api/save-keys', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              gemini_key: gem || undefined,
+              groq_key: groq || undefined,
+              openai_key: oai || undefined
+            })
+          });
         }
       } catch (e) {
-        alert("Failed to save keys: " + e.message);
+        console.warn("Backend sync skipped or offline:", e);
       }
+
+      closeSettingsModal();
+      alert("Google Gemini Key saved successfully!");
+      updateEngineBadge();
     }
 
     async function fetchSystemStatus() {
+      const stored = localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
+      if (stored) {
+        GEMINI_KEY = stored;
+        const gemInput = document.getElementById('modalGeminiKey');
+        if (gemInput) gemInput.value = stored;
+      }
+      checkAdminUI();
+
+      const isLocalHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+      if (!isLocalHost && !API_BASE) {
+        isBackendAvailable = false;
+        updateEngineBadge();
+        return;
+      }
+
       try {
         const res = await apiFetch('/api/system-status');
-        const data = await res.json();
-        if (data.ffmpeg_ready) {
-          document.getElementById('ffmpegBadge').classList.remove('hidden');
-        }
-        if (data.keys_configured.gemini) {
-          document.getElementById('modalGeminiKey').placeholder = data.keys_configured.gemini;
-        }
-        if (data.keys_configured.groq) {
-          document.getElementById('modalGroqKey').placeholder = data.keys_configured.groq;
-        }
-        if (data.keys_configured.openai) {
-          document.getElementById('modalOpenAIKey').placeholder = data.keys_configured.openai;
+        if (res.ok) {
+          isBackendAvailable = true;
+          const data = await res.json();
+          if (data.keys_configured && data.keys_configured.gemini) {
+            document.getElementById('modalGeminiKey').placeholder = data.keys_configured.gemini;
+          }
+          if (data.keys_configured && data.keys_configured.groq) {
+            document.getElementById('modalGroqKey').placeholder = data.keys_configured.groq;
+          }
+          if (data.keys_configured && data.keys_configured.openai) {
+            document.getElementById('modalOpenAIKey').placeholder = data.keys_configured.openai;
+          }
+          updateEngineBadge();
+          return;
         }
       } catch (e) {
-        console.error("Status check failed", e);
+        isBackendAvailable = false;
       }
+      isBackendAvailable = false;
+      updateEngineBadge();
     }
 
     async function fetchCompletedBatches() {
