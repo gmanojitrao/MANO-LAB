@@ -35,20 +35,6 @@ const ALL_MANO_APPS = [
     badge: "Encrypted P2P"
   },
   {
-    id: "slide-deck",
-    name: "SlideCraft: Markdown Slide Studio",
-    tagline: "Instant 16:9 widescreen presentation slide decks directly from Markdown",
-    description: "Craft dynamic, presentation-ready slide decks directly from Markdown. Features 16:9 widescreen canvas, 6 designer color themes, presentation mode with speaker notes, column layouts, and self-contained HTML export.",
-    category: "Creative & Art",
-    route: "apps/slide-deck/",
-    status: "Available",
-    featured: true,
-    emoji: "📽️",
-    accentColor: "#b45309",
-    tags: ["Markdown Decks", "16:9 Presentation", "6 Themes", "HTML Export"],
-    badge: "Slide Studio"
-  },
-  {
     id: "dossier-reader",
     name: "DocLens: Local PDF & Dossier Reader",
     tagline: "Client-side PDF & text reader with dossier intelligence and narration",
@@ -76,15 +62,32 @@ const ALL_MANO_APPS = [
     tags: ["Living Art", "Light Weaving", "Generative", "4K Export"],
     badge: "Original Art Form"
   },
+  // Private Corner / Owner Apps (Preserved in codebase):
+  {
+    id: "slide-deck",
+    name: "SlideCraft Studio",
+    tagline: "WYSIWYG 16:9 presentation studio with Google Slides & PowerPoint tools",
+    description: "Private slide deck editor with real-time canvas editing, multiple themes, and offline presentation.",
+    category: "Private",
+    route: "apps/slide-deck/",
+    status: "Private Dev",
+    featured: false,
+    hidden: true,
+    private: true,
+    emoji: "📽️",
+    accentColor: "#b45309"
+  },
   {
     id: "visual-story-generator",
-    name: "Visual Story Generator",
+    name: "Visual Story Studio",
     tagline: "2.5D rigged character animation, real-time lip-sync & studio voice mastering",
     description: "Turn stories into cinematic animated 9:16 vertical shorts. Features sculpted rigged character archetypes with procedural breathing, eye blinking, dynamic audio-driven mouth lip-sync, in-browser studio microphone recording with warm mastering DSP, and 60 FPS video export.",
-    category: "Creative & Art",
+    category: "Private",
     route: "apps/visual-story-generator/",
-    status: "Available",
-    featured: true,
+    status: "Private Dev",
+    featured: false,
+    hidden: true,
+    private: true,
     emoji: "🎬",
     accentColor: "#b45309",
     tags: ["Rigged Characters", "Real Lip-Sync", "Studio Voice", "9:16 Video Export"],
@@ -192,8 +195,11 @@ const ALL_MANO_APPS = [
   }
 ];
 
-// Active visible applications only (Transcription, Aether-Weave, Visual Story Generator)
+// Active visible applications for the public homepage
 const MANO_APPS = ALL_MANO_APPS.filter(app => !app.hidden);
+
+// Private Corner / Owner Apps Suite
+const PRIVATE_APPS = ALL_MANO_APPS.filter(app => app.hidden || app.private);
 
 const MANO_CATEGORIES = [
   { id: "all", label: "All Creations" },
@@ -203,9 +209,10 @@ const MANO_CATEGORIES = [
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { MANO_APPS, MANO_CATEGORIES, ALL_MANO_APPS };
+  module.exports = { MANO_APPS, PRIVATE_APPS, MANO_CATEGORIES, ALL_MANO_APPS };
 } else {
   window.MANO_APPS = MANO_APPS;
+  window.PRIVATE_APPS = PRIVATE_APPS;
   window.MANO_CATEGORIES = MANO_CATEGORIES;
   window.ALL_MANO_APPS = ALL_MANO_APPS;
 }

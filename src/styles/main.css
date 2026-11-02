@@ -136,6 +136,47 @@ a {
 }
 
 /* ==========================================================================
+   PRIVATE CORNER HEADER PORTAL
+   ========================================================================== */
+.btn-private-corner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  padding: 0.42rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  user-select: none;
+}
+
+.btn-private-corner:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  color: var(--accent-warm);
+}
+
+.btn-private-corner.owner-active {
+  background: rgba(194, 94, 56, 0.08);
+  border-color: rgba(194, 94, 56, 0.35);
+  color: var(--accent-warm);
+}
+
+.private-corner-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  display: inline-block;
+}
+
+/* ==========================================================================
    MINIMALIST HERO
    ========================================================================== */
 .hero-section {

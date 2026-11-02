@@ -32,13 +32,16 @@
       <nav class="header-nav">
         <a href="apps/audio-transcription/" class="nav-link">Audio Transcription</a>
         <a href="apps/p2p-transfer/" class="nav-link">P2P Transfer</a>
-        <a href="apps/slide-deck/" class="nav-link">Slide Decks</a>
         <a href="apps/dossier-reader/" class="nav-link">DocLens</a>
         <a href="apps/aether-weave/" class="nav-link">Aether-Weave</a>
-        <a href="apps/visual-story-generator/" class="nav-link" data-owner-only="true" style="display: none;">Story Studio (Private)</a>
       </nav>
 
       <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button id="btnPrivateCorner" onclick="ManoAuth.openPrivateCorner()" class="btn-private-corner" title="Owner Private Corner & Archived Suite">
+          <span style="font-size: 0.95rem;">🔒</span>
+          <span>Private Corner</span>
+          <span class="private-corner-dot" id="privateCornerDot" style="display: none;"></span>
+        </button>
         <div id="mano-auth-btn-slot"></div>
       </div>
     </div>
@@ -103,24 +106,7 @@
             </a>
           </div>
 
-          <!-- 3. SlideCraft: Markdown Slide Studio -->
-          <div class="app-card">
-            <div class="app-card-header">
-              <div class="app-card-icon" style="background: rgba(180, 83, 9, 0.1); color: #b45309;">
-                <i data-lucide="presentation" style="width: 22px; height: 22px;"></i>
-              </div>
-              <div class="app-card-title-group">
-                <h2 class="app-card-title">SlideCraft</h2>
-                <span class="app-card-tag">Document to Slides</span>
-              </div>
-            </div>
-            <a href="apps/slide-deck/" class="btn-card-launch">
-              <span>Open SlideCraft</span>
-              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
-            </a>
-          </div>
-
-          <!-- 4. DocLens: Dossier Reader -->
+          <!-- 3. DocLens: Dossier Reader -->
           <div class="app-card">
             <div class="app-card-header">
               <div class="app-card-icon" style="background: rgba(46, 125, 91, 0.1); color: #2e7d5b;">
@@ -137,7 +123,7 @@
             </a>
           </div>
 
-          <!-- 5. Aether-Weave -->
+          <!-- 4. Aether-Weave -->
           <div class="app-card">
             <div class="app-card-header">
               <div class="app-card-icon" style="background: rgba(194, 94, 56, 0.1); color: #c25e38;">
@@ -150,23 +136,6 @@
             </div>
             <a href="apps/aether-weave/" class="btn-card-launch">
               <span>Enter Canvas</span>
-              <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
-            </a>
-          </div>
-
-          <!-- 6. Visual Story Studio (Owner Only) -->
-          <div class="app-card" data-owner-only="true" style="display: none;">
-            <div class="app-card-header">
-              <div class="app-card-icon" style="background: rgba(180, 83, 9, 0.1); color: #b45309;">
-                <i data-lucide="clapperboard" style="width: 22px; height: 22px;"></i>
-              </div>
-              <div class="app-card-title-group">
-                <h2 class="app-card-title">Visual Story Studio</h2>
-                <span class="app-card-tag">Private Dev</span>
-              </div>
-            </div>
-            <a href="apps/visual-story-generator/" class="btn-card-launch">
-              <span>Launch Studio</span>
               <i data-lucide="arrow-up-right" style="width: 15px; height: 15px;"></i>
             </a>
           </div>

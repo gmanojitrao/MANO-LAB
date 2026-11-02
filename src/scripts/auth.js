@@ -15,6 +15,13 @@
 
   // Available Protected Sections in Mano Lab
   const SECTIONS = {
+    slide_craft: {
+      key: 'slide_craft',
+      label: 'SlideCraft Studio (Private)',
+      description: 'Private 16:9 presentation studio with Google Slides & PowerPoint tools',
+      url: '/apps/slide-deck/',
+      icon: '📽️'
+    },
     private_lounge: {
       key: 'private_lounge',
       label: 'Private Secret Lounge',
@@ -27,7 +34,7 @@
       label: 'Visual Story Studio (Private Dev)',
       description: 'Owner-only private development workspace for character animation',
       url: '/apps/visual-story-generator/',
-      icon: '🔒'
+      icon: '🎬'
     },
     audio_intelligence: {
       key: 'audio_intelligence',
@@ -110,8 +117,8 @@
     if (permission === 'secret_room') permKey = 'private_lounge';
     if (permission === 'extra_features') permKey = 'story_studio_pro';
 
-    // Visual Story Studio Pro is strictly restricted to Owner only during development!
-    if (permKey === 'story_studio_pro') return false;
+    // SlideCraft and Visual Story Studio Pro are strictly restricted to Owner only during development!
+    if (permKey === 'story_studio_pro' || permKey === 'slide_craft') return false;
 
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
@@ -125,8 +132,9 @@
     if (!u || !u.email) return {};
     if (isAdmin(u)) {
       return {
-        private_lounge: true,
+        slide_craft: true,
         story_studio_pro: true,
+        private_lounge: true,
         audio_intelligence: true,
         aether_weave: true
       };
@@ -134,9 +142,10 @@
     const reg = getRegistry();
     const entry = reg[u.email.toLowerCase()];
     const perms = entry && entry.permissions ? { ...entry.permissions } : {};
-    // Ensure story_studio_pro is strictly private to owner
+    // Ensure story_studio_pro and slide_craft are strictly private to owner
     delete perms.story_studio_pro;
     delete perms.extra_features;
+    delete perms.slide_craft;
     return perms;
   }
 
@@ -490,6 +499,134 @@
       .mano-btn-revoke:hover {
         background: rgba(239, 68, 68, 0.15);
       }
+
+      /* Private Corner Vault Styles */
+      .mano-private-corner-card {
+        max-width: 880px !important;
+        width: 95% !important;
+      }
+      .mano-private-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      @media (min-width: 600px) {
+        .mano-private-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 860px) {
+        .mano-private-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .mano-private-app-card {
+        background: #faf8f5;
+        border: 1px solid #e7e2d9;
+        border-radius: 0.85rem;
+        padding: 0.95rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 0.75rem;
+        transition: all 0.15s ease;
+      }
+      .mano-private-app-card:hover {
+        background: #ffffff;
+        border-color: #c25e38;
+        box-shadow: 0 4px 14px rgba(60, 50, 40, 0.08);
+        transform: translateY(-1px);
+      }
+      .mano-private-card-top {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+      }
+      .mano-private-icon {
+        font-size: 1.45rem;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid #e7e2d9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .mano-private-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1c1917;
+        line-height: 1.2;
+      }
+      .mano-private-tag {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #78716c;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .mano-private-desc {
+        font-size: 0.76rem;
+        color: #57534e;
+        line-height: 1.35;
+      }
+      .mano-btn-private-launch {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.75rem;
+        background: #ffffff;
+        border: 1px solid #e7e2d9;
+        border-radius: 0.5rem;
+        color: #1c1917;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.15s ease;
+      }
+      .mano-btn-private-launch:hover {
+        background: #1c1917;
+        color: #ffffff;
+        border-color: #1c1917;
+      }
+      .btn-private-corner {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #ffffff;
+        color: #1c1917;
+        border: 1px solid #e7e2d9;
+        padding: 0.42rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        user-select: none;
+      }
+      .btn-private-corner:hover {
+        background: #f5f2ea;
+        border-color: #d8d0c2;
+        color: #c25e38;
+      }
+      .btn-private-corner.owner-active {
+        background: rgba(194, 94, 56, 0.08);
+        border-color: rgba(194, 94, 56, 0.35);
+        color: #c25e38;
+      }
+      .private-corner-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+        display: inline-block;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -585,6 +722,19 @@
       el.style.display = userIsAdmin ? '' : 'none';
     });
 
+    // Update Private Corner portal button indicator in header
+    const btnPrivateCorner = document.getElementById('btnPrivateCorner');
+    const privateCornerDot = document.getElementById('privateCornerDot');
+    if (btnPrivateCorner) {
+      if (userIsAdmin) {
+        btnPrivateCorner.classList.add('owner-active');
+        if (privateCornerDot) privateCornerDot.style.display = 'inline-block';
+      } else {
+        btnPrivateCorner.classList.remove('owner-active');
+        if (privateCornerDot) privateCornerDot.style.display = 'none';
+      }
+    }
+
     const slot = document.getElementById('mano-auth-btn-slot');
     if (!slot) return;
 
@@ -603,11 +753,13 @@
         </div>
       `;
     } else {
-      const userIsAdmin = isAdmin(user);
       const perms = getUserPermissions(user);
       
       // Determine what sections to display in the menu
       const allowedSections = [];
+      if (userIsAdmin || perms.slide_craft) {
+        allowedSections.push(SECTIONS.slide_craft);
+      }
       if (userIsAdmin || perms.private_lounge || perms.secret_room) {
         allowedSections.push(SECTIONS.private_lounge);
       }
@@ -641,6 +793,14 @@
               <div class="mano-dropdown-user-email">${user.email}</div>
               ${roleBadge}
             </div>
+
+            ${userIsAdmin ? `
+              <div class="mano-dropdown-section-title">Owner Suite</div>
+              <button onclick="ManoAuth.openPrivateCorner(); ManoAuth.toggleUserDropdown();" class="mano-menu-item" style="color: #c25e38; font-weight: 700;">
+                <span>🔒</span>
+                <span>Open Private Corner (11 Apps)</span>
+              </button>
+            ` : ''}
 
             ${allowedSections.length > 0 ? `
               <div class="mano-dropdown-section-title">Your Authorized Workspaces</div>
@@ -1033,17 +1193,296 @@
     }
   }
 
+  // --- OWNER PRIVATE CORNER SUITE (11 PRESERVED & PRIVATE APPS) ---
+  const OWNER_PRIVATE_APPS = [
+    {
+      id: "slide-deck",
+      name: "SlideCraft Studio",
+      category: "Private Suite",
+      emoji: "📽️",
+      tagline: "WYSIWYG 16:9 Presentation Studio",
+      description: "AI document-to-slide synthesis, PowerPoint & Google Slides tools, real-time styling, and offline presentation mode.",
+      url: "/apps/slide-deck/",
+      badge: "Owner Suite"
+    },
+    {
+      id: "visual-story-generator",
+      name: "Visual Story Studio",
+      category: "Private Dev",
+      emoji: "🎬",
+      tagline: "Rigged Character Animation Engine",
+      description: "2.5D rigged character procedural animation, dynamic audio-driven mouth lip-sync, voice mastering DSP, and 9:16 export.",
+      url: "/apps/visual-story-generator/",
+      badge: "In Active Dev"
+    },
+    {
+      id: "lounge",
+      name: "Private Room & Secret Lounge",
+      category: "Encrypted Room",
+      emoji: "🔒",
+      tagline: "P2P WebRTC Chat & Racing",
+      description: "Private room with real-time end-to-end encrypted chat and live multiplayer Turbo Typist racing.",
+      url: "/apps/lounge/",
+      badge: "Encrypted"
+    },
+    {
+      id: "unborn-realm",
+      name: "THE UNBORN REALM",
+      category: "Virtual Cosmos",
+      emoji: "🌌",
+      tagline: "Synthetic Universe (ORIGIN-001)",
+      description: "Persistent autonomous synthetic universe simulation evolving across five dimensions.",
+      url: "/apps/unborn-realm/",
+      badge: "ORIGIN-001"
+    },
+    {
+      id: "axioma",
+      name: "AXIOMA",
+      category: "Simulation",
+      emoji: "🏛️",
+      tagline: "Autonomous Virtual Civilization",
+      description: "Non-biological universe simulation of civilization emergence, autonomous agents, and social dynamics.",
+      url: "/apps/axioma/",
+      badge: "Civilization"
+    },
+    {
+      id: "focus-ambient",
+      name: "Focus Ambient",
+      category: "Productivity",
+      emoji: "🎧",
+      tagline: "Generative Soundscapes & Pomodoro",
+      description: "Procedural ambient acoustic environments paired with a deep-focus Pomodoro timer.",
+      url: "/apps/focus-ambient/",
+      badge: "Acoustics"
+    },
+    {
+      id: "turbo-typist",
+      name: "Turbo Typist",
+      category: "Arcade Speedway",
+      emoji: "🏎️",
+      tagline: "Speed Typing Competition",
+      description: "High-speed typing challenge with live WPM tracking, accuracy feedback, and speedway racing.",
+      url: "/apps/turbo-typist/",
+      badge: "Speedway"
+    },
+    {
+      id: "snake",
+      name: "Classic Snake",
+      category: "Arcade",
+      emoji: "🐍",
+      tagline: "Retro Grid Arcade",
+      description: "Smooth retro snake game with precise responsive controls and high-score saving.",
+      url: "/apps/snake/",
+      badge: "Classic"
+    },
+    {
+      id: "breakout",
+      name: "Brick Breaker",
+      category: "Arcade",
+      emoji: "🧱",
+      tagline: "Paddle-and-Ball Demolition",
+      description: "High-frame-rate arcade brick demolition game with dynamic ball physics.",
+      url: "/apps/breakout/",
+      badge: "Classic"
+    },
+    {
+      id: "game-2048",
+      name: "Classic 2048",
+      category: "Puzzle",
+      emoji: "🔢",
+      tagline: "Number Sliding Puzzle",
+      description: "Fluid 4x4 mathematical sliding tile puzzle with animated merges and undo.",
+      url: "/apps/game-2048/",
+      badge: "Puzzle"
+    },
+    {
+      id: "flappy-bird",
+      name: "Flappy Bird",
+      category: "Arcade",
+      emoji: "🐦",
+      tagline: "One-Tap Obstacle Flight",
+      description: "Crisp retro one-tap physics flight game with obstacle navigation.",
+      url: "/apps/flappy-bird/",
+      badge: "Classic"
+    }
+  ];
+
+  function openPrivateCorner() {
+    const user = getUser();
+    if (!user) {
+      openPrivateCornerGate();
+      return;
+    }
+    if (!isAdmin(user)) {
+      openPrivateCornerDenied(user.email);
+      return;
+    }
+    openPrivateCornerModal();
+  }
+
+  function openPrivateCornerGate() {
+    let modal = document.getElementById('mano-private-corner-gate-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mano-private-corner-gate-modal';
+      modal.className = 'mano-modal-backdrop';
+      modal.innerHTML = `
+        <div class="mano-modal-card" style="max-width: 440px; text-align: center; padding: 1.5rem;">
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(194, 94, 56, 0.1); color: #c25e38; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 1rem;">
+            🔒
+          </div>
+          <div class="mano-modal-title" style="margin-bottom: 0.5rem;">
+            Private Corner
+          </div>
+          <p style="font-size: 0.85rem; color: #78716c; line-height: 1.5; margin-bottom: 1.5rem;">
+            This corner houses owner-restricted tools, prototypes, and archived applications. Sign in with your owner Google Account (<strong style="color: #1c1917;">${ADMIN_EMAIL}</strong>) to access.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button onclick="ManoAuth.closePrivateCornerGate(); ManoAuth.openSignInModal();" class="mano-btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/></svg>
+              <span>Sign In to Unlock</span>
+            </button>
+            <button onclick="ManoAuth.closePrivateCornerGate()" class="mano-btn-secondary" style="width: 100%; padding: 0.65rem; border: 1px solid #e7e2d9; background: #faf8f5; border-radius: 0.6rem; font-weight: 600; cursor: pointer;">
+              Return to Workbench
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    modal.classList.remove('hidden');
+  }
+
+  function closePrivateCornerGate() {
+    const modal = document.getElementById('mano-private-corner-gate-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function openPrivateCornerDenied(email) {
+    let modal = document.getElementById('mano-private-corner-denied-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mano-private-corner-denied-modal';
+      modal.className = 'mano-modal-backdrop';
+      modal.innerHTML = `
+        <div class="mano-modal-card" style="max-width: 440px; text-align: center; padding: 1.5rem;">
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 1rem;">
+            ⛔
+          </div>
+          <div class="mano-modal-title" style="margin-bottom: 0.5rem;">
+            Owner Access Required
+          </div>
+          <p style="font-size: 0.85rem; color: #78716c; line-height: 1.5; margin-bottom: 1.25rem;">
+            Signed in as <strong style="color: #1c1917; font-family: monospace;" id="mano-denied-email">${email || ''}</strong>.<br>
+            The Private Corner is reserved exclusively for the owner (<strong style="color: #1c1917;">${ADMIN_EMAIL}</strong>).
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button onclick="ManoAuth.signOut(); ManoAuth.closePrivateCornerDenied(); ManoAuth.openSignInModal();" class="mano-btn-primary" style="width: 100%;">
+              Switch to Owner Account
+            </button>
+            <button onclick="ManoAuth.closePrivateCornerDenied()" class="mano-btn-secondary" style="width: 100%; padding: 0.65rem; border: 1px solid #e7e2d9; background: #faf8f5; border-radius: 0.6rem; font-weight: 600; cursor: pointer;">
+              Continue with Public Tools
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    } else {
+      const emailEl = document.getElementById('mano-denied-email');
+      if (emailEl) emailEl.textContent = email || '';
+    }
+    modal.classList.remove('hidden');
+  }
+
+  function closePrivateCornerDenied() {
+    const modal = document.getElementById('mano-private-corner-denied-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function openPrivateCornerModal() {
+    let modal = document.getElementById('mano-private-corner-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mano-private-corner-modal';
+      modal.className = 'mano-modal-backdrop';
+      modal.innerHTML = `
+        <div class="mano-modal-card mano-private-corner-card">
+          <div class="mano-modal-header">
+            <div>
+              <div class="mano-modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                <span>🔒</span>
+                <span>Owner Private Corner</span>
+                <span class="mano-dropdown-role-badge admin" style="margin-top: 0;">OWNER VAULT</span>
+              </div>
+              <div style="font-size: 0.78rem; color: #78716c; margin-top: 0.2rem;">
+                All private tools, active development studios, and preserved creations.
+              </div>
+            </div>
+            <button onclick="ManoAuth.closePrivateCorner()" class="mano-modal-close">&times;</button>
+          </div>
+
+          <div class="mano-modal-body" style="padding: 1.25rem 1.5rem; max-height: 75vh; overflow-y: auto;">
+            <div class="mano-private-grid">
+              ${OWNER_PRIVATE_APPS.map(app => `
+                <div class="mano-private-app-card">
+                  <div>
+                    <div class="mano-private-card-top">
+                      <div class="mano-private-icon">${app.emoji}</div>
+                      <div style="overflow: hidden;">
+                        <div class="mano-private-name">${app.name}</div>
+                        <div class="mano-private-tag">${app.tagline}</div>
+                      </div>
+                    </div>
+                    <p class="mano-private-desc" style="margin-top: 0.6rem;">${app.description}</p>
+                  </div>
+                  <a href="${app.url}" class="mano-btn-private-launch">
+                    <span>Launch</span>
+                    <span>&rarr;</span>
+                  </a>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="padding: 0.85rem 1.5rem; border-top: 1px solid #ede8df; display: flex; justify-content: space-between; align-items: center; background: #faf8f5;">
+            <button onclick="ManoAuth.closePrivateCorner(); ManoAuth.openAccessManager();" style="background: none; border: 1px solid #e7e2d9; color: #44403c; padding: 0.45rem 0.85rem; border-radius: 0.5rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <span>🛡️</span>
+              <span>Manage User Access (RBAC)</span>
+            </button>
+            <button onclick="ManoAuth.closePrivateCorner()" class="mano-btn-primary" style="padding: 0.45rem 1.1rem; font-size: 0.82rem;">
+              Close Vault
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    modal.classList.remove('hidden');
+  }
+
+  function closePrivateCorner() {
+    const modal = document.getElementById('mano-private-corner-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
   // --- INIT ---
-  document.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      injectStyles();
+      loadGoogleGIS();
+      renderAuthSlot();
+    });
+  } else {
     injectStyles();
     loadGoogleGIS();
     renderAuthSlot();
-  });
+  }
 
   // Export to window
   window.ManoAuth = {
     ADMIN_EMAIL,
     SECTIONS,
+    OWNER_PRIVATE_APPS,
     getUser,
     isAdmin,
     hasAccess,
@@ -1062,7 +1501,13 @@
     exportRegistryJSON,
     importRegistryJSON,
     renderAuthSlot,
-    renderGoogleButton
+    renderGoogleButton,
+    openPrivateCorner,
+    closePrivateCorner,
+    openPrivateCornerGate,
+    closePrivateCornerGate,
+    openPrivateCornerDenied,
+    closePrivateCornerDenied
   };
 
 })();
