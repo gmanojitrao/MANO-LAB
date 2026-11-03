@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="../../src/scripts/auth.js"></script>
   <script>
@@ -334,28 +336,32 @@
             </p>
           </div>
 
-          <!-- Master Download Buttons -->
+          <!-- Master Download Buttons (Client-Side Real-Time Generators) -->
           <div class="flex flex-wrap items-center gap-2.5">
-            <a id="btnAllArtisansZip" href="#" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition">
+            <button type="button" id="btnAllArtisansZip" onclick="downloadAllArtisansZip(event)" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition cursor-pointer">
               <i data-lucide="users" class="w-4 h-4"></i>
               <span>Download All Artisans (ZIP)</span>
-            </a>
-            <a id="btnMasterZip" href="#" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-600/20 transition">
+            </button>
+            <button type="button" id="btnMasterZip" onclick="downloadMasterZip(event)" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-600/20 transition cursor-pointer">
               <i data-lucide="archive" class="w-4 h-4"></i>
               <span>Full Batch ZIP</span>
-            </a>
-            <a id="btnMasterDocx" href="#" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+            </button>
+            <button type="button" id="btnMasterDocx" onclick="downloadMasterDocx(event)" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
               <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-500"></i>
               <span>Master DOCX</span>
-            </a>
-            <a id="btnMasterPdf" href="#" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+            </button>
+            <button type="button" id="btnMasterPdf" onclick="downloadMasterPdf(event)" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
               <i data-lucide="file-check" class="w-3.5 h-3.5 text-rose-500"></i>
               <span>Master PDF</span>
-            </a>
-            <a id="btnMasterMd" href="#" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+            </button>
+            <button type="button" id="btnMasterMd" onclick="downloadMasterMd(event)" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
               <i data-lucide="code" class="w-3.5 h-3.5 text-amber-500"></i>
               <span>Master MD</span>
-            </a>
+            </button>
+            <button type="button" onclick="clearCurrentBatchResults(event)" class="px-3 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 text-xs font-medium border border-slate-200 dark:border-slate-700 transition cursor-pointer ml-auto" title="Clear current view and start a new batch">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>New Batch</span>
+            </button>
           </div>
         </div>
 
@@ -477,19 +483,24 @@
     </div>
   </div>
 
-  <!-- BATCHES MODAL -->
+  <!-- BATCHES & TRANSCRIPTION BACKUPS MODAL -->
   <div id="batchesModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+    <div class="bg-white dark:bg-slate-900 max-w-xl w-full rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <i data-lucide="archive" class="w-4 h-4 text-emerald-500"></i>
-          <span>Completed Audio Batches</span>
-        </h3>
-        <button onclick="closeBatchesModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="archive" class="w-4 h-4 text-emerald-500"></i>
+            <span>Transcription Backups & History</span>
+          </h3>
+          <p id="batchesModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Personal backups saved on this platform
+          </p>
+        </div>
+        <button onclick="closeBatchesModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div id="batchesListContainer" class="space-y-2 max-h-[360px] overflow-y-auto custom-scrollbar"></div>
+      <div id="batchesListContainer" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar"></div>
     </div>
   </div>
 
@@ -783,11 +794,26 @@
 
       checkAdminUI();
       fetchSystemStatus();
-      fetchCompletedBatches();
+      updateBatchesCountBadge();
+
+      // Auto-restore active batch so refreshing or pressing Back never wipes user work!
+      const cachedBatch = localStorage.getItem('omniscribe_active_batch');
+      if (cachedBatch) {
+        try {
+          const data = JSON.parse(cachedBatch);
+          if (data && data.results && data.results.length > 0) {
+            displayResults(data);
+          }
+        } catch (e) {
+          console.warn("Could not restore cached batch:", e);
+        }
+      }
     });
 
     window.onManoAuthChanged = function() {
       checkAdminUI();
+      updateBatchesCountBadge();
+      renderBatchesList();
     };
 
     // Drag and Drop Handling (Folders + Files)
@@ -1399,7 +1425,7 @@ Output STRICTLY a JSON object with this structure:
 
         // If audio is <= 360 seconds (6 minutes), send as a single chunk
         if (duration <= 360) {
-          if (onProgress) onProgress(`Transcribing audio (${totalDurationMins}m) via Google Gemini Cloud AI...`);
+          if (onProgress) onProgress(`Transcribing audio (${totalDurationMins}m) via Google Gemini Cloud AI...`, 0.25);
           const wavBuffer = encodeWAV(samples, 16000);
           const b64 = arrayBufferToBase64(wavBuffer);
           const filePart = {
@@ -1408,9 +1434,25 @@ Output STRICTLY a JSON object with this structure:
               data: b64
             }
           };
+          if (onProgress) onProgress(`Synthesizing verbatim turns via Google Gemini...`, 0.65);
           const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
           parsed.duration_seconds = Math.round(duration);
           parsed.duration_formatted = `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`;
+
+          // If Indic audio has native transcript but English is missing, automatically translate
+          if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim())) {
+            if (onProgress) onProgress(`Translating verbatim dialogue to English...`, 0.85);
+            try {
+              parsed.english_transcript = await callGeminiTextTranslation(
+                `Translate the following interview dialogue verbatim into clear English without omitting any turns:\n\n${parsed.native_transcript}`,
+                activeKey
+              );
+            } catch (trErr) {
+              parsed.english_transcript = parsed.native_transcript;
+            }
+          }
+
+          if (onProgress) onProgress(`Verbatim transcript generated successfully`, 1.0);
           return parsed;
         }
 
@@ -1432,7 +1474,7 @@ Output STRICTLY a JSON object with this structure:
           const endMin = Math.floor(endSec / 60);
 
           if (onProgress) {
-            onProgress(`Transcribing segment ${k + 1} of ${totalChunks} (${startMin}m - ${endMin}m of ${totalDurationMins}m)...`);
+            onProgress(`Transcribing segment ${k + 1} of ${totalChunks} (${startMin}m - ${endMin}m of ${totalDurationMins}m)...`, (k) / totalChunks);
           }
 
           const chunkSamples = samples.subarray(k * CHUNK_SAMPLES, Math.min((k + 1) * CHUNK_SAMPLES, samples.length));
@@ -1458,6 +1500,21 @@ Output STRICTLY a JSON object with this structure:
           if (chunkResult.english_transcript && chunkResult.english_transcript.trim()) {
             allEnglishParts.push(chunkResult.english_transcript.trim());
           }
+
+          if (onProgress) {
+            onProgress(`Segment ${k + 1} of ${totalChunks} complete`, (k + 1) / totalChunks);
+          }
+        }
+
+        let combinedEnglish = allEnglishParts.join("\n\n");
+        if (allNativeParts.length > 0 && !combinedEnglish.trim()) {
+          if (onProgress) onProgress(`Translating full dialogue to English...`, 0.95);
+          try {
+            combinedEnglish = await callGeminiTextTranslation(
+              `Translate the following interview dialogue verbatim into clear English without omitting any turns:\n\n${allNativeParts.join("\n\n")}`,
+              activeKey
+            );
+          } catch (trErr) {}
         }
 
         return {
@@ -1465,7 +1522,7 @@ Output STRICTLY a JSON object with this structure:
           detected_language: detectedLanguage,
           is_multi_speaker: isMultiSpeaker,
           native_transcript: allNativeParts.join("\n\n"),
-          english_transcript: allEnglishParts.join("\n\n"),
+          english_transcript: combinedEnglish,
           duration_seconds: Math.round(duration),
           duration_formatted: `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`
         };
@@ -1714,6 +1771,7 @@ Output STRICTLY a JSON object with this structure:
       const batchTitle = document.getElementById('inputBatchTitle').value.trim() || `Field Study ${new Date().toLocaleDateString()}`;
       const totalFiles = selectedFiles.length;
       const results = [];
+      let hadErrors = false;
 
       try {
         for (let i = 0; i < totalFiles; i++) {
@@ -1726,11 +1784,16 @@ Output STRICTLY a JSON object with this structure:
           const progressPercent = document.getElementById('progressPercent');
           const progressBarFill = document.getElementById('progressBarFill');
 
-          const pct = Math.round((i / totalFiles) * 100);
-          progressTitle.textContent = `Transcribing: ${filename} (${i + 1} of ${totalFiles})`;
-          progressSubtitle.textContent = `Processing audio speech and formatting dossier...`;
-          progressPercent.textContent = `${pct}%`;
-          progressBarFill.style.width = `${pct}%`;
+          const updateProgress = (msg, fileFraction = 0) => {
+            const clampedFrac = Math.max(0, Math.min(1, fileFraction));
+            const exactPercent = Math.min(99, Math.round(((i + clampedFrac) / totalFiles) * 100));
+            progressTitle.textContent = `Transcribing: ${filename} (${i + 1} of ${totalFiles})`;
+            progressSubtitle.textContent = msg;
+            progressPercent.textContent = `${exactPercent}%`;
+            progressBarFill.style.width = `${exactPercent}%`;
+          };
+
+          updateProgress(`Initializing speech analysis...`, 0.05);
 
           let artisanHint = '';
           let sectionHint = 'General';
@@ -1749,8 +1812,8 @@ Output STRICTLY a JSON object with this structure:
           }
 
           try {
-            const parsed = await transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, (msg) => {
-              progressSubtitle.textContent = msg;
+            const parsed = await transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, (msg, frac) => {
+              updateProgress(msg, frac);
             });
             const title = parsed.title || parsed.confirmed_artisan_name || (artisanHint || (isGenericRecording ? 'Voice Recording' : stem));
             results.push({
@@ -1769,17 +1832,19 @@ Output STRICTLY a JSON object with this structure:
               engine_used: parsed.engine_used || "Google Gemini Cloud AI",
               denoised: false
             });
+            updateProgress(`File ${i + 1} completed`, 1.0);
           } catch (err) {
+            hadErrors = true;
             console.error(`Error transcribing ${filename}:`, err);
             const errMsg = err.message || 'Transcription error';
             results.push({
               filename: filename,
               duration_seconds: 0,
-              duration_formatted: "Failed",
+              duration_formatted: "Error",
               language_detected: "Failed",
               confidence: 0,
-              native_text: `[Transcription Error: ${errMsg}]`,
-              english_text: `[Transcription Error: ${errMsg}]`,
+              native_text: `[Transcription Error on ${filename}: ${errMsg}]`,
+              english_text: `[Transcription Error on ${filename}: ${errMsg}]`,
               artisan_name: artisanHint || filename,
               section_name: sectionHint,
               segments: [],
@@ -1787,13 +1852,13 @@ Output STRICTLY a JSON object with this structure:
               engine_used: "Google Gemini Cloud AI",
               denoised: false
             });
-            alert(`Transcription Error on "${filename}":\n\n${errMsg}`);
-            break;
+            // Continue processing remaining files so the user gets all possible files transcribed
           }
         }
 
         document.getElementById('progressPercent').textContent = "100%";
         document.getElementById('progressBarFill').style.width = "100%";
+        document.getElementById('progressSubtitle').textContent = "Consolidating bilingual dossiers and saving backup...";
 
         const batchData = {
           job_id: 'web_' + Date.now(),
@@ -1804,56 +1869,17 @@ Output STRICTLY a JSON object with this structure:
           artisans: deriveArtisansClientSide(results)
         };
 
-        // For each artisan, generate client-side download blobs
-        Object.values(batchData.artisans).forEach(art => {
-          let dossierText = `# MASTER ARTISAN FIELD DOSSIER: ${art.artisan_name.toUpperCase()}\n`;
-          dossierText += `Total Sections: ${art.sections_count} | Generated: ${new Date().toLocaleString()}\n`;
-          dossierText += `Platform: Mano Lab OmniScribe AI\n\n`;
-          dossierText += `============================================================\n\n`;
-
-          const sections = results.filter(r => (r.artisan_name || '').toLowerCase() === art.artisan_name.toLowerCase());
-          sections.forEach((sec, sIdx) => {
-            dossierText += `## Section ${sIdx + 1}: ${sec.section_name} (${sec.filename})\n`;
-            dossierText += `Language: ${sec.language_detected}\n\n`;
-            dossierText += `--- AUTHENTIC SPOKEN SCRIPT (NATIVE) ---\n`;
-            dossierText += `${sec.native_text}\n\n`;
-            dossierText += `--- VERBATIM ENGLISH DIALOGUE ---\n`;
-            dossierText += `${sec.english_text}\n\n`;
-            dossierText += `------------------------------------------------------------\n\n`;
-          });
-
-          const blobTxt = new Blob([dossierText], { type: 'text/plain;charset=utf-8' });
-          const blobMd = new Blob([dossierText], { type: 'text/markdown;charset=utf-8' });
-          art.downloads = {
-            txt: URL.createObjectURL(blobTxt),
-            md: URL.createObjectURL(blobMd)
-          };
-        });
-
-        // Master summary download
-        let masterSummary = `# MASTER FIELD STUDY TRANSCRIPTION DOSSIER\n`;
-        masterSummary += `Title: ${batchTitle}\n`;
-        masterSummary += `Total Audio Files: ${results.length}\n`;
-        masterSummary += `Generated: ${new Date().toLocaleString()}\n\n`;
-        masterSummary += `============================================================\n\n`;
-
-        results.forEach((r, idx) => {
-          masterSummary += `### File ${idx + 1}: ${r.filename}\n`;
-          masterSummary += `Artisan: ${r.artisan_name} | Section: ${r.section_name} | Language: ${r.language_detected}\n\n`;
-          masterSummary += `--- Native Script Transcript ---\n`;
-          masterSummary += `${r.native_text}\n\n`;
-          masterSummary += `--- English Translation Dialogue ---\n`;
-          masterSummary += `${r.english_text}\n\n`;
-          masterSummary += `------------------------------------------------------------\n\n`;
-        });
-
-        const masterMdBlob = new Blob([masterSummary], { type: 'text/markdown;charset=utf-8' });
-        batchData.master_downloads = {
-          md: URL.createObjectURL(masterMdBlob)
-        };
+        // Automatically persist backup linked to current user
+        saveBatchToStorage(batchData);
 
         displayResults(batchData);
         scrollToResults();
+
+        if (hadErrors) {
+          setTimeout(() => {
+            alert("Batch transcription completed with some errors. The successful recordings have been fully transcribed and backed up.");
+          }, 300);
+        }
       } catch (err) {
         alert("Batch transcription error: " + err.message);
       } finally {
@@ -2042,12 +2068,12 @@ Output STRICTLY a JSON object with this structure:
       if (hub) hub.classList.remove('hidden');
 
       const nameEl = document.getElementById('hubBatchName');
-      if (nameEl) nameEl.textContent = data.batch_name || "Batch Results";
+      if (nameEl) nameEl.textContent = data.batch_title || data.batch_name || 'Batch Results';
       
       const totalArtisans = Object.keys(batchArtisans).length;
       const metricsEl = document.getElementById('hubBatchMetrics');
       if (metricsEl) {
-        metricsEl.textContent = `${batchResults.length} Audio Files • ${totalArtisans} Artisans Aggregated • Ready for Download`;
+        metricsEl.textContent = `${batchResults.length} Audio Files • ${totalArtisans} Artisans Aggregated • Dossiers Ready`;
       }
 
       const countArtEl = document.getElementById('tabCountArtisans');
@@ -2057,30 +2083,9 @@ Output STRICTLY a JSON object with this structure:
       const allFilesBadge = document.getElementById('allFilesCountBadge');
       if (allFilesBadge) allFilesBadge.textContent = `${batchResults.length} files`;
 
-      // Master Downloads
-      const md = data.master_downloads || {};
-      const btnAllArt = document.getElementById('btnAllArtisansZip');
-      if (btnAllArt) {
-        if (md.artisans_zip) {
-          btnAllArt.href = getDlUrl(md.artisans_zip);
-          btnAllArt.classList.remove('hidden');
-        } else {
-          btnAllArt.classList.add('hidden');
-        }
-      }
-
-      const bZip = document.getElementById('btnMasterZip');
-      if (bZip && md.zip) bZip.href = getDlUrl(md.zip);
-      const bDocx = document.getElementById('btnMasterDocx');
-      if (bDocx && md.docx) bDocx.href = getDlUrl(md.docx);
-      const bPdf = document.getElementById('btnMasterPdf');
-      if (bPdf && md.pdf) bPdf.href = getDlUrl(md.pdf);
-      const bMd = document.getElementById('btnMasterMd');
-      if (bMd && md.md) bMd.href = getDlUrl(md.md);
-
       renderArtisanCards();
       renderAllFilesList();
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function scrollToResults() {
@@ -2112,7 +2117,7 @@ Output STRICTLY a JSON object with this structure:
     }
 
     function getInitials(name) {
-      if (!name) return "AR";
+      if (!name) return 'AR';
       const parts = name.trim().split(/\s+/);
       if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -2126,6 +2131,11 @@ Output STRICTLY a JSON object with this structure:
       'from-rose-500 to-pink-600',
       'from-purple-500 to-indigo-600'
     ];
+
+    function escapeQuotes(str) {
+      if (!str) return '';
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
 
     function renderArtisanCards() {
       const container = document.getElementById('artisanCardsContainer');
@@ -2159,8 +2169,8 @@ Output STRICTLY a JSON object with this structure:
                 ${initials}
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="text-base font-extrabold text-slate-900 dark:text-white truncate" title="${artisanName}">
-                  ${artisanName}
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white truncate" title="${escapeQuotes(artisanName)}">
+                  ${escapeQuotes(artisanName)}
                 </h3>
                 <div class="flex flex-wrap items-center gap-1.5 mt-1">
                   <span class="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-500/20">
@@ -2175,38 +2185,34 @@ Output STRICTLY a JSON object with this structure:
 
             <!-- Sections Included Pill Box -->
             <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Sections Found Across Folders</span>
-              <div class="text-slate-700 dark:text-slate-300 font-semibold truncate" title="${sectionsList}">
-                ${sectionsList || 'General Interview'}
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Sections Included</span>
+              <div class="text-slate-700 dark:text-slate-300 font-semibold truncate" title="${escapeQuotes(sectionsList)}">
+                ${escapeQuotes(sectionsList || 'General Interview')}
               </div>
             </div>
           </div>
 
-          <!-- Bottom Actions: 1-Click Dossier Downloads & View Button -->
+          <!-- Bottom Actions: View Side-by-Side & 1-Click Instant Downloads -->
           <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button onclick="openDialogueModalForArtisan('${artisanName.replace(/'/g, "\\'")}')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-2 border border-indigo-200 dark:border-indigo-500/20">
+            <button type="button" onclick="openDialogueModalForArtisan('${escapeQuotes(artisanName)}')" class="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-2 border border-indigo-200 dark:border-indigo-500/20 cursor-pointer">
               <i data-lucide="split" class="w-3.5 h-3.5"></i>
               <span>Read Side-by-Side Dialogue</span>
             </button>
 
-            <!-- 1-Click Dossier Downloads -->
+            <!-- 1-Click Dossier Downloads (Client-Side Instant Export) -->
             <div class="grid grid-cols-4 gap-1.5 text-center">
-              ${art.downloads && art.downloads.docx ? `
-                <a href="${getDlUrl(art.downloads.docx)}" title="Download Complete Word Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
-                  <i data-lucide="file-text" class="w-3 h-3"></i> DOCX
-                </a>` : ''}
-              ${art.downloads && art.downloads.pdf ? `
-                <a href="${getDlUrl(art.downloads.pdf)}" title="Download Complete PDF Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-rose-600 dark:text-rose-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
-                  <i data-lucide="file-check" class="w-3 h-3"></i> PDF
-                </a>` : ''}
-              ${art.downloads && art.downloads.md ? `
-                <a href="${getDlUrl(art.downloads.md)}" title="Download Markdown Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
-                  <i data-lucide="code" class="w-3 h-3"></i> MD
-                </a>` : ''}
-              ${art.downloads && art.downloads.txt ? `
-                <a href="${getDlUrl(art.downloads.txt)}" title="Download Plain Text Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1">
-                  <i data-lucide="file" class="w-3 h-3"></i> TXT
-                </a>` : ''}
+              <button type="button" onclick="downloadArtisanDocx('${escapeQuotes(artisanName)}', event)" title="Download Word Document" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer">
+                <i data-lucide="file-text" class="w-3 h-3"></i> DOCX
+              </button>
+              <button type="button" onclick="downloadArtisanPdf('${escapeQuotes(artisanName)}', event)" title="Download PDF Document" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-rose-600 dark:text-rose-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer">
+                <i data-lucide="file-check" class="w-3 h-3"></i> PDF
+              </button>
+              <button type="button" onclick="downloadArtisanMd('${escapeQuotes(artisanName)}', event)" title="Download Markdown Dossier" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer">
+                <i data-lucide="code" class="w-3 h-3"></i> MD
+              </button>
+              <button type="button" onclick="downloadArtisanTxt('${escapeQuotes(artisanName)}', event)" title="Download Plain Text Transcript" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer">
+                <i data-lucide="file" class="w-3 h-3"></i> TXT
+              </button>
             </div>
           </div>
         `;
@@ -2233,33 +2239,29 @@ Output STRICTLY a JSON object with this structure:
 
       batchResults.forEach((track, idx) => {
         const row = document.createElement('div');
-        row.className = 'py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+        row.className = 'py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 last:border-0';
         row.innerHTML = `
           <div class="flex items-center gap-3">
             <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs font-mono font-bold shrink-0">
               ${idx + 1}
             </span>
             <div>
-              <div class="text-xs font-bold text-slate-900 dark:text-white">${track.filename}</div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white">${escapeQuotes(track.filename)}</div>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
-                <span>👤 ${track.artisan_name || 'Artisan'}</span>
+                <span>👤 ${escapeQuotes(track.artisan_name || 'Artisan')}</span>
                 <span>•</span>
-                <span>📌 ${track.section_name || 'Section'}</span>
+                <span>📌 ${escapeQuotes(track.section_name || 'Section')}</span>
                 <span>•</span>
                 <span class="font-mono">${track.duration_formatted}</span>
               </div>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
-            ${track.downloads && track.downloads.docx ? `
-              <a href="${getDlUrl(track.downloads.docx)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">DOCX</a>` : ''}
-            ${track.downloads && track.downloads.pdf ? `
-              <a href="${getDlUrl(track.downloads.pdf)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">PDF</a>` : ''}
-            ${track.downloads && track.downloads.native_txt ? `
-              <a href="${getDlUrl(track.downloads.native_txt)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Native TXT</a>` : ''}
-            ${track.downloads && track.downloads.english_txt ? `
-              <a href="${getDlUrl(track.downloads.english_txt)}" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">English TXT</a>` : ''}
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="downloadFileDocx(${idx}, event)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer" title="Download DOCX">DOCX</button>
+            <button type="button" onclick="downloadFilePdf(${idx}, event)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer" title="Download PDF">PDF</button>
+            <button type="button" onclick="downloadFileNativeTxt(${idx}, event)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer" title="Download Native Script">Native</button>
+            <button type="button" onclick="downloadFileEnglishTxt(${idx}, event)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer" title="Download English Translation">English</button>
           </div>
         `;
         container.appendChild(row);
@@ -2273,7 +2275,6 @@ Output STRICTLY a JSON object with this structure:
       currentModalArtisan = artisanName;
       currentModalSectionIndex = 0;
 
-      // Find all result sections for this artisan
       const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
       const art = batchArtisans[artisanName];
 
@@ -2285,19 +2286,16 @@ Output STRICTLY a JSON object with this structure:
         `${art ? art.sections_count : sections.length} Recording(s) • Side-by-Side Verbatim Transcript & English Translation`;
 
       const dlBox = document.getElementById('modalDownloadLinks');
-      dlBox.innerHTML = '';
-      if (art && art.downloads) {
-        if (art.downloads.docx) {
-          dlBox.innerHTML += `<a href="${getDlUrl(art.downloads.docx)}" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> DOCX</a>`;
-        }
-        if (art.downloads.pdf) {
-          dlBox.innerHTML += `<a href="${getDlUrl(art.downloads.pdf)}" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i data-lucide="file-check" class="w-3.5 h-3.5"></i> PDF</a>`;
-        }
-      }
+      dlBox.innerHTML = `
+        <button type="button" onclick="downloadArtisanDocx('${escapeQuotes(artisanName)}', event)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> DOCX</button>
+        <button type="button" onclick="downloadArtisanPdf('${escapeQuotes(artisanName)}', event)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"><i data-lucide="file-check" class="w-3.5 h-3.5"></i> PDF</button>
+        <button type="button" onclick="downloadArtisanMd('${escapeQuotes(artisanName)}', event)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"><i data-lucide="code" class="w-3.5 h-3.5"></i> MD</button>
+        <button type="button" onclick="printCurrentDialogue(event)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer" title="Print / Save as PDF"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Print</button>
+      `;
 
       renderModalSectionTabs(sections);
       loadModalSection(sections, 0);
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function renderModalSectionTabs(sections) {
@@ -2314,15 +2312,15 @@ Output STRICTLY a JSON object with this structure:
         const btn = document.createElement('button');
         btn.id = `modalSecTab_${idx}`;
         btn.className = idx === 0 
-          ? 'py-1 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0'
-          : 'py-1 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0';
+          ? 'py-1 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0 cursor-pointer'
+          : 'py-1 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 cursor-pointer';
         btn.textContent = `${sec.section_name || `Section ${idx + 1}`} (${sec.duration_formatted})`;
         btn.onclick = () => {
           sections.forEach((_, i) => {
             const b = document.getElementById(`modalSecTab_${i}`);
             if (b) b.className = i === idx 
-              ? 'py-1 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0'
-              : 'py-1 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0';
+              ? 'py-1 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0 cursor-pointer'
+              : 'py-1 px-3 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 cursor-pointer';
           });
           loadModalSection(sections, idx);
         };
@@ -2365,7 +2363,8 @@ Output STRICTLY a JSON object with this structure:
     }
 
     function escapeHTML(str) {
-      return str
+      if (!str) return '';
+      return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -2396,16 +2395,150 @@ Output STRICTLY a JSON object with this structure:
         ? document.getElementById('copyNativeBtnText')
         : document.getElementById('copyEnglishBtnText');
 
+      if (!el) return;
       navigator.clipboard.writeText(el.innerText).then(() => {
-        const orig = btn.textContent;
-        btn.textContent = "Copied!";
-        setTimeout(() => { btn.textContent = orig; }, 2000);
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        }
       });
     }
 
+    function printCurrentDialogue(e) {
+      if (e) e.preventDefault();
+      const nativeHtml = document.getElementById('modalNativeContent')?.innerHTML || '';
+      const englishHtml = document.getElementById('modalEnglishContent')?.innerHTML || '';
+      const artisan = currentModalArtisan || 'Artisan_Interview';
+
+      const printHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHTML(artisan)} - Dialogue Dossier</title>
+  <style>
+    @page { size: A4 portrait; margin: 15mm; }
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; font-size: 10.5pt; color: #1e293b; padding: 20px; }
+    h1 { font-size: 18pt; color: #312e81; border-bottom: 2px solid #4f46e5; padding-bottom: 6px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .table th, .table td { border: 1px solid #cbd5e1; padding: 8px 12px; vertical-align: top; width: 50%; }
+    .table th { background: #eef2ff; color: #3730a3; font-weight: bold; }
+    .speaker-interviewer { color: #2563eb; font-weight: bold; }
+    .speaker-artisan { color: #059669; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHTML(artisan)} — Verbatim Field Dialogue</h1>
+  <table class="table">
+    <tr>
+      <th>Authentic Spoken Transcript (Native Script)</th>
+      <th>Verbatim English Dialogue</th>
+    </tr>
+    <tr>
+      <td>${nativeHtml}</td>
+      <td>${englishHtml}</td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      openPrintWindow(printHtml, artisan);
+    }
+
     // ============================================================
-    // BATCHES & SETTINGS MODALS
+    // MULTI-TENANT STORAGE & BACKUP ENGINE (LOGIN ISOLATION)
     // ============================================================
+    const STORAGE_KEY_SAVED_BATCHES = 'omniscribe_saved_batches_v2';
+
+    function getOrCreateDeviceId() {
+      let devId = localStorage.getItem('omniscribe_device_id');
+      if (!devId) {
+        devId = 'dev_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        localStorage.setItem('omniscribe_device_id', devId);
+      }
+      return devId;
+    }
+
+    function getCurrentUserIdentity() {
+      const user = window.ManoAuth ? ManoAuth.getUser() : null;
+      const isOwner = user && window.ManoAuth && ManoAuth.isAdmin(user);
+      if (user && user.email) {
+        return {
+          email: user.email.trim().toLowerCase(),
+          name: user.name || user.email.split('@')[0],
+          isLoggedIn: true,
+          isOwner: !!isOwner
+        };
+      }
+      return {
+        email: 'guest_' + getOrCreateDeviceId(),
+        name: 'Guest (Local Session)',
+        isLoggedIn: false,
+        isOwner: false
+      };
+    }
+
+    function getSavedBatches() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_SAVED_BATCHES) || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveBatchToStorage(data) {
+      try {
+        const ident = getCurrentUserIdentity();
+        const batches = getSavedBatches();
+        const item = {
+          id: data.job_id || ('batch_' + Date.now()),
+          batch_title: data.batch_title || 'Audio Transcription Batch',
+          created_at: new Date().toISOString(),
+          created_by_email: ident.email,
+          created_by_name: ident.name,
+          is_owner_batch: ident.isOwner,
+          total_files: (data.results || []).length,
+          artisans_count: Object.keys(data.artisans || {}).length,
+          batchData: data
+        };
+
+        const existingIdx = batches.findIndex(b => b.id === item.id);
+        if (existingIdx >= 0) {
+          batches[existingIdx] = item;
+        } else {
+          batches.unshift(item);
+        }
+
+        if (batches.length > 60) batches.length = 60;
+        localStorage.setItem(STORAGE_KEY_SAVED_BATCHES, JSON.stringify(batches));
+        localStorage.setItem('omniscribe_active_batch', JSON.stringify(data));
+        updateBatchesCountBadge();
+      } catch (e) {
+        console.warn('Storage save failed:', e);
+      }
+    }
+
+    function getVisibleBatches() {
+      const all = getSavedBatches();
+      const ident = getCurrentUserIdentity();
+
+      if (ident.isOwner) {
+        // Owner sees all platform backups
+        return all;
+      }
+
+      // Regular logged-in users only see their own backups!
+      return all.filter(b => (b.created_by_email || '').toLowerCase() === ident.email.toLowerCase());
+    }
+
+    function updateBatchesCountBadge() {
+      const badge = document.getElementById('batchCountBadge');
+      if (badge) {
+        const list = getVisibleBatches();
+        badge.textContent = list.length;
+      }
+    }
+
     function openBatchesModal() {
       document.getElementById('batchesModal').classList.remove('hidden');
       renderBatchesList();
@@ -2415,57 +2548,633 @@ Output STRICTLY a JSON object with this structure:
       document.getElementById('batchesModal').classList.add('hidden');
     }
 
-    async function loadCompletedBatch(batchName) {
-      try {
-        const res = await apiFetch(`/api/load-batch/${batchName}`);
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          alert("Error loading batch: " + (err.detail || "Failed to load batch"));
-          return;
+    function renderBatchesList() {
+      const container = document.getElementById('batchesListContainer');
+      const modalSub = document.getElementById('batchesModalSubtitle');
+      const ident = getCurrentUserIdentity();
+
+      if (modalSub) {
+        if (ident.isOwner) {
+          modalSub.innerHTML = '<span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">🔒 Owner Mode:</span> Viewing all system transcription backups';
+        } else if (ident.isLoggedIn) {
+          modalSub.innerHTML = `Viewing personal backups for <strong class="text-slate-800 dark:text-slate-200">${escapeHTML(ident.email)}</strong>`;
+        } else {
+          modalSub.innerHTML = 'Viewing local guest session backups. <button type="button" onclick="closeBatchesModal(); if (window.ManoAuth) ManoAuth.openSignInModal();" class="text-indigo-600 dark:text-indigo-400 font-semibold underline cursor-pointer">Sign In</button> to link to your account.';
         }
-        const data = await res.json();
-        displayResults(data);
-        closeBatchesModal();
-        scrollToResults();
-      } catch (e) {
-        alert("Error loading batch: " + e.message);
+      }
+
+      const list = getVisibleBatches();
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="py-8 text-center space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+              <i data-lucide="archive" class="w-6 h-6"></i>
+            </div>
+            <div class="text-xs font-semibold text-slate-700 dark:text-slate-300">No Saved Transcription Backups Yet</div>
+            <p class="text-[11px] text-slate-400 max-w-xs mx-auto">
+              Every transcription you run is automatically backed up here so you can download PDF, DOCX, or MD anytime.
+            </p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = list.map((item) => {
+        const d = new Date(item.created_at);
+        const dateFormatted = isNaN(d.getTime()) ? 'Recently' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>${escapeHTML(item.batch_title)}</span>
+                  ${ident.isOwner && item.created_by_email !== ident.email ? `<span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[9px] font-mono">${escapeHTML(item.created_by_email)}</span>` : ''}
+                </div>
+                <div class="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                  <span>${dateFormatted}</span>
+                  <span>•</span>
+                  <span>${item.total_files} recording${item.total_files !== 1 ? 's' : ''}</span>
+                  <span>•</span>
+                  <span>${item.artisans_count} artisan${item.artisans_count !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <button type="button" onclick="deleteSavedBatch('${item.id}', event)" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" title="Delete Backup">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/80">
+              <button type="button" onclick="loadSavedBackup('${item.id}')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="eye" class="w-3 h-3"></i>
+                <span>Load & View</span>
+              </button>
+              
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="downloadBackupDocx('${item.id}', event)" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 text-[11px] font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 transition cursor-pointer" title="Download Word DOCX">DOCX</button>
+                <button type="button" onclick="downloadBackupPdf('${item.id}', event)" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 text-[11px] font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 transition cursor-pointer" title="Download PDF">PDF</button>
+                <button type="button" onclick="downloadBackupMd('${item.id}', event)" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 transition cursor-pointer" title="Download Markdown">MD</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function loadSavedBackup(id) {
+      const list = getSavedBatches();
+      const found = list.find(b => b.id === id);
+      if (!found || !found.batchData) {
+        alert('Backup data could not be found.');
+        return;
+      }
+      displayResults(found.batchData);
+      localStorage.setItem('omniscribe_active_batch', JSON.stringify(found.batchData));
+      closeBatchesModal();
+      scrollToResults();
+    }
+
+    function deleteSavedBatch(id, e) {
+      if (e) e.stopPropagation();
+      if (!confirm('Are you sure you want to delete this transcription backup?')) return;
+      const list = getSavedBatches();
+      const filtered = list.filter(b => b.id !== id);
+      localStorage.setItem(STORAGE_KEY_SAVED_BATCHES, JSON.stringify(filtered));
+      renderBatchesList();
+      updateBatchesCountBadge();
+    }
+
+    function downloadBackupDocx(id, e) {
+      if (e) e.stopPropagation();
+      const found = getSavedBatches().find(b => b.id === id);
+      if (found && found.batchData) {
+        const doc = generateWordHtmlDocument(found.batchData, found.batchData.results || [], found.batchData.artisans || {});
+        saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(found.batch_title)}.doc`);
       }
     }
 
-    async function renderBatchesList() {
-      const container = document.getElementById('batchesListContainer');
-      container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">Loading batches...</div>';
-      try {
-        const res = await apiFetch('/api/completed-batches');
-        const data = await res.json();
-        const batches = data.batches || [];
-        if (batches.length === 0) {
-          container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">No completed batches found yet.</div>';
+    function downloadBackupPdf(id, e) {
+      if (e) e.stopPropagation();
+      const found = getSavedBatches().find(b => b.id === id);
+      if (found && found.batchData) {
+        exportToPDF(found.batchData, found.batchData.results || [], found.batchData.artisans || {});
+      }
+    }
+
+    function downloadBackupMd(id, e) {
+      if (e) e.stopPropagation();
+      const found = getSavedBatches().find(b => b.id === id);
+      if (found && found.batchData) {
+        const md = generateMasterMarkdown(found.batchData, found.batchData.results || [], found.batchData.artisans || {});
+        saveBlobAs(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(found.batch_title)}.md`);
+      }
+    }
+
+    // ============================================================
+    // UNIVERSAL CLIENT-SIDE EXPORT & DOWNLOAD ENGINE (PDF, DOCX, MD, ZIP)
+    // ============================================================
+    function cleanFilename(str) {
+      return (str || 'dossier').trim().replace(/[/\\?%*:|"<>]/g, '_').substring(0, 60);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatTextToHtml(text) {
+      if (!text) return '<p class="italic text-slate-400">(No spoken audio detected)</p>';
+      return text.split('\n\n').map(para => {
+        return `<p style="margin-bottom: 8pt; line-height: 1.6;">${para.split('\n').map(l => escapeHtml(l)).join('<br/>')}</p>`;
+      }).join('');
+    }
+
+    function saveBlobAs(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 150);
+    }
+
+    function generateMasterMarkdown(batch, results, artisans) {
+      const title = batch.batch_title || 'OmniScribe Master Field Study';
+      const totalArtisans = Object.keys(artisans || {}).length;
+      let md = `# MASTER FIELD STUDY TRANSCRIPTION DOSSIER\n\n`;
+      md += `**Batch Title:** ${title}  \n`;
+      md += `**Total Recordings:** ${results.length}  \n`;
+      md += `**Artisans / Speakers Identified:** ${totalArtisans}  \n`;
+      md += `**Generated At:** ${new Date().toLocaleString()}  \n`;
+      md += `**Platform:** Mano Lab OmniScribe AI  \n\n`;
+      md += `---\n\n`;
+
+      if (totalArtisans > 0) {
+        md += `## 👥 Artisan Summary Table\n\n`;
+        md += `| Artisan Name | Sections Count | Total Duration |\n`;
+        md += `| :--- | :---: | :---: |\n`;
+        Object.values(artisans).forEach(art => {
+          md += `| **${art.artisan_name}** | ${art.sections_count} | ${art.total_duration_formatted} |\n`;
+        });
+        md += `\n---\n\n`;
+      }
+
+      md += `## 🎙️ Verbatim Transcriptions & Dialogue Comparisons\n\n`;
+      results.forEach((r, idx) => {
+        md += `### Recording ${idx + 1}: ${r.filename}\n\n`;
+        md += `- **Artisan / Entity:** ${r.artisan_name || 'General'}\n`;
+        md += `- **Section:** ${r.section_name || 'General'}\n`;
+        md += `- **Language Detected:** ${r.language_detected || 'English'}\n`;
+        md += `- **Duration:** ${r.duration_formatted || 'Standard'}\n\n`;
+
+        md += `#### 🗣️ Authentic Spoken Transcript (Native Script)\n\n`;
+        md += `${r.native_text || '[No native dialogue recorded]'}\n\n`;
+
+        md += `#### 🌐 Verbatim English Dialogue\n\n`;
+        md += `${r.english_text || '[No English translation recorded]'}\n\n`;
+
+        md += `---\n\n`;
+      });
+
+      return md;
+    }
+
+    function generateWordHtmlDocument(batch, results, artisans) {
+      const title = batch.batch_title || 'OmniScribe Master Field Study';
+      const totalArtisans = Object.keys(artisans || {}).length;
+
+      let html = `<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset='utf-8'>
+  <title>${escapeHtml(title)}</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1e293b; margin: 30pt; }
+    h1 { font-size: 20pt; color: #312e81; border-bottom: 2pt solid #4f46e5; padding-bottom: 6pt; margin-top: 0; }
+    h2 { font-size: 14pt; color: #4338ca; margin-top: 20pt; border-bottom: 1pt solid #cbd5e1; padding-bottom: 4pt; }
+    h3 { font-size: 12pt; color: #1e293b; margin-top: 14pt; }
+    .badge-box { background: #f8fafc; border: 1pt solid #cbd5e1; padding: 10pt; border-radius: 6pt; margin-bottom: 18pt; }
+    .badge-box p { margin: 2pt 0; font-size: 10pt; color: #475569; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; margin-bottom: 16pt; font-size: 10pt; }
+    th, td { border: 1pt solid #cbd5e1; padding: 6pt 8pt; text-align: left; vertical-align: top; }
+    th { background-color: #eef2ff; color: #3730a3; font-weight: bold; }
+    .two-col-table td { width: 50%; }
+    .native-col { font-family: 'Nirmala UI', 'Arial Unicode MS', 'Calibri', sans-serif; background-color: #fafaf9; }
+    .english-col { background-color: #f8fafc; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <div class="badge-box">
+    <p><strong>Total Recordings:</strong> ${results.length}</p>
+    <p><strong>Artisans / Speakers:</strong> ${totalArtisans}</p>
+    <p><strong>Export Date:</strong> ${new Date().toLocaleString()}</p>
+    <p><strong>Platform:</strong> Mano Lab OmniScribe AI</p>
+  </div>
+`;
+
+      if (totalArtisans > 0) {
+        html += '<h2>Artisan Summary</h2>';
+        html += `<table>
+          <tr>
+            <th>Artisan Name</th>
+            <th>Sections Count</th>
+            <th>Total Duration</th>
+          </tr>`;
+        Object.values(artisans).forEach(art => {
+          html += `<tr>
+            <td><strong>${escapeHtml(art.artisan_name)}</strong></td>
+            <td>${art.sections_count}</td>
+            <td>${escapeHtml(art.total_duration_formatted)}</td>
+          </tr>`;
+        });
+        html += '</table>';
+      }
+
+      html += '<h2>Verbatim Transcriptions & Dialogue Comparisons</h2>';
+      results.forEach((r, idx) => {
+        html += `<h3>Recording ${idx + 1}: ${escapeHtml(r.filename)}</h3>`;
+        html += `<p style="font-size: 9.5pt; color: #64748b; margin-bottom: 6pt;">
+          Artisan: <strong>${escapeHtml(r.artisan_name || 'General')}</strong> | 
+          Section: <strong>${escapeHtml(r.section_name || 'General')}</strong> | 
+          Language: <strong>${escapeHtml(r.language_detected || 'English')}</strong> | 
+          Duration: <strong>${escapeHtml(r.duration_formatted || 'Standard')}</strong>
+        </p>`;
+
+        html += `<table class="two-col-table">
+          <tr>
+            <th style="background: #ecfdf5; color: #065f46;">Authentic Spoken Transcript (Native Script)</th>
+            <th style="background: #eff6ff; color: #1e40af;">Verbatim English Dialogue</th>
+          </tr>
+          <tr>
+            <td class="native-col">${formatTextToHtml(r.native_text)}</td>
+            <td class="english-col">${formatTextToHtml(r.english_text)}</td>
+          </tr>
+        </table>`;
+      });
+
+      html += '</body></html>';
+      return html;
+    }
+
+    function generatePrintableHtml(batch, results, artisans) {
+      const title = batch.batch_title || 'OmniScribe Master Field Study';
+      const totalArtisans = Object.keys(artisans || {}).length;
+
+      let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>${escapeHtml(title)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 15mm; }
+    body { font-family: 'Segoe UI', -apple-system, Arial, sans-serif; font-size: 10pt; line-height: 1.5; color: #1e293b; background: #fff; margin: 0; padding: 20px; }
+    h1 { font-size: 18pt; color: #1e1b4b; border-bottom: 2px solid #4f46e5; padding-bottom: 6px; margin: 0 0 10px 0; }
+    h2 { font-size: 13pt; color: #312e81; margin: 20px 0 8px 0; page-break-after: avoid; }
+    h3 { font-size: 11pt; color: #4338ca; margin: 15px 0 5px 0; page-break-after: avoid; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 9pt; }
+    .meta-box p { margin: 3px 0; color: #475569; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 16px; font-size: 9.5pt; page-break-inside: avoid; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 10px; vertical-align: top; }
+    th { background: #eef2ff; color: #3730a3; font-weight: bold; }
+    .col-native { width: 50%; background: #fafaf9; }
+    .col-english { width: 50%; background: #f8fafc; }
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none !important; }
+      table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <div class="meta-box">
+    <p><strong>Total Recordings:</strong> ${results.length} | <strong>Artisans:</strong> ${totalArtisans} | <strong>Date:</strong> ${new Date().toLocaleString()}</p>
+    <p><strong>Platform:</strong> Mano Lab OmniScribe AI</p>
+  </div>
+`;
+
+      if (totalArtisans > 0) {
+        html += '<h2>Artisan Summary</h2>';
+        html += `<table>
+          <tr>
+            <th>Artisan Name</th>
+            <th>Sections Count</th>
+            <th>Total Duration</th>
+          </tr>`;
+        Object.values(artisans).forEach(art => {
+          html += `<tr>
+            <td><strong>${escapeHtml(art.artisan_name)}</strong></td>
+            <td>${art.sections_count}</td>
+            <td>${escapeHtml(art.total_duration_formatted)}</td>
+          </tr>`;
+        });
+        html += '</table>';
+      }
+
+      html += '<h2>Verbatim Transcriptions & Dialogue Comparisons</h2>';
+      results.forEach((r, idx) => {
+        html += `<h3>Recording ${idx + 1}: ${escapeHtml(r.filename)}</h3>`;
+        html += `<p style="font-size: 9pt; color: #64748b; margin-bottom: 6pt;">
+          Artisan: <strong>${escapeHtml(r.artisan_name || 'General')}</strong> | 
+          Section: <strong>${escapeHtml(r.section_name || 'General')}</strong> | 
+          Language: <strong>${escapeHtml(r.language_detected || 'English')}</strong> | 
+          Duration: <strong>${escapeHtml(r.duration_formatted || 'Standard')}</strong>
+        </p>`;
+
+        html += `<table>
+          <tr>
+            <th style="background: #ecfdf5; color: #065f46;">Authentic Spoken Transcript (Native Script)</th>
+            <th style="background: #eff6ff; color: #1e40af;">Verbatim English Dialogue</th>
+          </tr>
+          <tr>
+            <td class="col-native">${formatTextToHtml(r.native_text)}</td>
+            <td class="col-english">${formatTextToHtml(r.english_text)}</td>
+          </tr>
+        </table>`;
+      });
+
+      html += '</body></html>';
+      return html;
+    }
+
+    function exportToPDF(batch, results, artisans) {
+      const title = batch.batch_title || 'OmniScribe_Field_Transcription';
+      const cleanTitle = cleanFilename(title);
+      const printableHtml = generatePrintableHtml(batch, results, artisans);
+
+      if (window.html2pdf) {
+        const el = document.createElement('div');
+        el.innerHTML = printableHtml;
+        el.style.padding = '15px';
+        el.style.backgroundColor = '#ffffff';
+        document.body.appendChild(el);
+
+        const opt = {
+          margin: [10, 10, 10, 10],
+          filename: `${cleanTitle}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(el).save().then(() => {
+          document.body.removeChild(el);
+        }).catch(err => {
+          console.warn('html2pdf failed, falling back to print:', err);
+          document.body.removeChild(el);
+          openPrintWindow(printableHtml, cleanTitle);
+        });
+      } else {
+        openPrintWindow(printableHtml, cleanTitle);
+      }
+    }
+
+    function openPrintWindow(htmlContent, title) {
+      const printWin = window.open('', '_blank', 'width=900,height=800');
+      if (!printWin) {
+        alert('Please allow popups for PDF print export.');
+        return;
+      }
+      printWin.document.open();
+      printWin.document.write(htmlContent);
+      printWin.document.close();
+      printWin.onload = function() {
+        printWin.focus();
+        setTimeout(() => { printWin.print(); }, 400);
+      };
+    }
+
+    function generateArtisanMarkdown(art, sections) {
+      let md = `# MASTER ARTISAN FIELD DOSSIER: ${art.artisan_name.toUpperCase()}\n\n`;
+      md += `**Artisan Name:** ${art.artisan_name}  \n`;
+      md += `**Total Sections:** ${art.sections_count}  \n`;
+      md += `**Total Spoken Duration:** ${art.total_duration_formatted}  \n`;
+      md += `**Generated:** ${new Date().toLocaleString()}  \n`;
+      md += `**Platform:** Mano Lab OmniScribe AI  \n\n`;
+      md += `---\n\n`;
+
+      sections.forEach((sec, idx) => {
+        md += `## Section ${idx + 1}: ${sec.section_name || 'Recording'} (${sec.filename})\n\n`;
+        md += `- **Duration:** ${sec.duration_formatted}\n`;
+        md += `- **Language:** ${sec.language_detected}\n\n`;
+
+        md += `### 🗣️ Authentic Spoken Transcript (Native Script)\n\n`;
+        md += `${sec.native_text || '[No native dialogue recorded]'}\n\n`;
+
+        md += `### 🌐 Verbatim English Dialogue\n\n`;
+        md += `${sec.english_text || '[No English translation recorded]'}\n\n`;
+
+        md += `---\n\n`;
+      });
+      return md;
+    }
+
+    function generateArtisanWordDoc(art, sections) {
+      return generateWordHtmlDocument({ batch_title: `${art.artisan_name} - Artisan Field Dossier` }, sections, { [art.artisan_name]: art });
+    }
+
+    // Top Master Download Triggers
+    function downloadMasterMd(e) {
+      if (e) e.preventDefault();
+      if (!batchResults || batchResults.length === 0) {
+        alert('No transcription results to export.');
+        return;
+      }
+      const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_Master';
+      const md = generateMasterMarkdown(batchData || {}, batchResults, batchArtisans);
+      saveBlobAs(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(title)}_Master_Dossier.md`);
+    }
+
+    function downloadMasterDocx(e) {
+      if (e) e.preventDefault();
+      if (!batchResults || batchResults.length === 0) {
+        alert('No transcription results to export.');
+        return;
+      }
+      const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_Master';
+      const doc = generateWordHtmlDocument(batchData || {}, batchResults, batchArtisans);
+      saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(title)}_Master_Dossier.doc`);
+    }
+
+    function downloadMasterPdf(e) {
+      if (e) e.preventDefault();
+      if (!batchResults || batchResults.length === 0) {
+        alert('No transcription results to export.');
+        return;
+      }
+      exportToPDF(batchData || {}, batchResults, batchArtisans);
+    }
+
+    async function downloadMasterZip(e) {
+      if (e) e.preventDefault();
+      if (!batchResults || batchResults.length === 0) {
+        alert('No transcription results to export.');
+        return;
+      }
+      if (!window.JSZip) {
+        downloadMasterMd(e);
+        return;
+      }
+      const zip = new JSZip();
+      const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_Full_Batch';
+      const cleanTitle = cleanFilename(title);
+
+      zip.file(`${cleanTitle}_Master_Dossier.md`, generateMasterMarkdown(batchData || {}, batchResults, batchArtisans));
+      zip.file(`${cleanTitle}_Master_Dossier.doc`, generateWordHtmlDocument(batchData || {}, batchResults, batchArtisans));
+
+      const artFolder = zip.folder('Artisans');
+      Object.values(batchArtisans).forEach(art => {
+        const artNameClean = cleanFilename(art.artisan_name);
+        const sub = artFolder.folder(artNameClean);
+        const artSections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === art.artisan_name.toLowerCase());
+        sub.file(`${artNameClean}_Dossier.md`, generateArtisanMarkdown(art, artSections));
+        sub.file(`${artNameClean}_Dossier.doc`, generateArtisanWordDoc(art, artSections));
+      });
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      saveBlobAs(blob, `${cleanTitle}_Full_Dossier_Archive.zip`);
+    }
+
+    async function downloadAllArtisansZip(e) {
+      if (e) e.preventDefault();
+      if (!batchResults || batchResults.length === 0) {
+        alert('No transcription results to export.');
+        return;
+      }
+      if (!window.JSZip) {
+        downloadMasterMd(e);
+        return;
+      }
+      const zip = new JSZip();
+      const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_All_Artisans';
+      const cleanTitle = cleanFilename(title);
+
+      Object.values(batchArtisans).forEach(art => {
+        const artNameClean = cleanFilename(art.artisan_name);
+        const sub = zip.folder(artNameClean);
+        const artSections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === art.artisan_name.toLowerCase());
+        sub.file(`${artNameClean}_Dossier.md`, generateArtisanMarkdown(art, artSections));
+        sub.file(`${artNameClean}_Dossier.doc`, generateArtisanWordDoc(art, artSections));
+      });
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      saveBlobAs(blob, `${cleanTitle}_All_Artisans.zip`);
+    }
+
+    // Individual Artisan Download Triggers
+    function downloadArtisanDocx(artisanName, e) {
+      if (e) e.preventDefault();
+      const art = batchArtisans[artisanName];
+      if (!art) return;
+      const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
+      const doc = generateArtisanWordDoc(art, sections);
+      saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dossier.doc`);
+    }
+
+    function downloadArtisanPdf(artisanName, e) {
+      if (e) e.preventDefault();
+      const art = batchArtisans[artisanName];
+      if (!art) return;
+      const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
+      exportToPDF({ batch_title: `${artisanName} - Artisan Dossier` }, sections, { [artisanName]: art });
+    }
+
+    function downloadArtisanMd(artisanName, e) {
+      if (e) e.preventDefault();
+      const art = batchArtisans[artisanName];
+      if (!art) return;
+      const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
+      const md = generateArtisanMarkdown(art, sections);
+      saveBlobAs(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dossier.md`);
+    }
+
+    function downloadArtisanTxt(artisanName, e) {
+      if (e) e.preventDefault();
+      const art = batchArtisans[artisanName];
+      if (!art) return;
+      const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
+      let txt = '============================================================\n';
+      txt += `ARTISAN DOSSIER: ${artisanName.toUpperCase()}\n`;
+      txt += `Generated: ${new Date().toLocaleString()}\n`;
+      txt += '============================================================\n\n';
+      sections.forEach((s, idx) => {
+        txt += `--- Section ${idx + 1}: ${s.section_name} (${s.filename}) ---\n`;
+        txt += `[AUTHENTIC SPOKEN SCRIPT (NATIVE)]:\n${s.native_text}\n\n`;
+        txt += `[VERBATIM ENGLISH DIALOGUE]:\n${s.english_text}\n\n`;
+      });
+      saveBlobAs(new Blob([txt], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dialogue.txt`);
+    }
+
+    // Individual File Download Triggers
+    function downloadFileDocx(idx, e) {
+      if (e) e.preventDefault();
+      const r = batchResults[idx];
+      if (!r) return;
+      const doc = generateWordHtmlDocument({ batch_title: r.filename }, [r], {});
+      saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(r.filename)}.doc`);
+    }
+
+    function downloadFilePdf(idx, e) {
+      if (e) e.preventDefault();
+      const r = batchResults[idx];
+      if (!r) return;
+      exportToPDF({ batch_title: r.filename }, [r], {});
+    }
+
+    function downloadFileNativeTxt(idx, e) {
+      if (e) e.preventDefault();
+      const r = batchResults[idx];
+      if (!r) return;
+      saveBlobAs(new Blob([r.native_text || ''], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(r.filename)}_Native.txt`);
+    }
+
+    function downloadFileEnglishTxt(idx, e) {
+      if (e) e.preventDefault();
+      const r = batchResults[idx];
+      if (!r) return;
+      saveBlobAs(new Blob([r.english_text || ''], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(r.filename)}_English.txt`);
+    }
+
+    function clearCurrentBatchResults(e) {
+      if (e) e.preventDefault();
+      if (batchResults.length > 0) {
+        if (!confirm('Start a new batch? Your current transcriptions are securely backed up in your Batches drawer.')) {
           return;
         }
-        container.innerHTML = '';
-        batches.forEach(b => {
-          const item = document.createElement('div');
-          item.className = 'p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between gap-3';
-          item.innerHTML = `
-            <div>
-              <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <i data-lucide="folder" class="w-3.5 h-3.5 text-indigo-500"></i>
-                <span>${b.batch_name}</span>
-              </div>
-              <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">${b.files_count} audio files • Dossiers Available</div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              ${b.downloads.zip ? `<a href="${getDlUrl(b.downloads.zip)}" title="Download ZIP" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-xs"><i data-lucide="archive" class="w-3.5 h-3.5"></i></a>` : ''}
-              <button onclick="loadCompletedBatch('${b.batch_name}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">Open</button>
-            </div>
-          `;
-          container.appendChild(item);
-        });
-        lucide.createIcons();
-      } catch (e) {
-        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Failed to load: ${e.message}</div>`;
       }
+      batchData = null;
+      batchResults = [];
+      batchArtisans = {};
+      selectedFiles = [];
+      localStorage.removeItem('omniscribe_active_batch');
+      renderSelectedFiles();
+      const hub = document.getElementById('resultsHub');
+      if (hub) hub.classList.add('hidden');
+      const banner = document.getElementById('completedBatchBanner');
+      if (banner) banner.classList.add('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ============================================================
