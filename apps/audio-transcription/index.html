@@ -668,17 +668,37 @@
       return `${API_BASE}${path}`;
     }
 
-    // Supported extensions (all standard audio and video formats)
+    function getAllConfiguredGeminiKeys() {
+      const stored = localStorage.getItem('omniscribe_gemini_key') || '';
+      const pool = [];
+      if (stored) {
+        const tokens = stored.split(/[\s,;]+/).map(t => t.trim()).filter(t => isValidGeminiKey(t));
+        pool.push(...tokens);
+      }
+      if (DEFAULT_GEMINI_KEY && isValidGeminiKey(DEFAULT_GEMINI_KEY) && !pool.includes(DEFAULT_GEMINI_KEY)) {
+        pool.push(DEFAULT_GEMINI_KEY);
+      }
+      return pool;
+    }
+
+    // Supported extensions (all standard audio and video formats + voice notes)
     const AUDIO_EXTS = [
       '.m4a', '.mp3', '.wav', '.wave', '.aac', '.ogg', '.oga', '.flac', '.mp4', 
       '.mkv', '.webm', '.alac', '.opus', '.wma', '.3gp', '.amr', '.caf', '.m4b', 
-      '.m4r', '.aiff', '.aif', '.mov', '.avi', '.wmv', '.flv', '.mka', '.mp2'
+      '.m4r', '.aiff', '.aif', '.mov', '.avi', '.wmv', '.flv', '.mka', '.mp2',
+      '.ac3', '.eac3', '.dts', '.voc', '.au', '.snd', '.pcm', '.ra', '.rm', '.ts'
     ];
 
     function isAudioFilename(name) {
       if (!name) return false;
       const lower = name.toLowerCase().trim();
       return AUDIO_EXTS.some(e => lower.endsWith(e));
+    }
+
+    function isAudioFile(f) {
+      if (!f) return false;
+      if (f.type && (f.type.startsWith('audio/') || f.type.startsWith('video/'))) return true;
+      return isAudioFilename(f.name);
     }
 
     function extractJsonFromResponse(text) {
@@ -785,7 +805,7 @@
         if (dt.items && dt.items.length > 0) {
           filesToAdd = await extractFilesFromDataTransfer(dt.items);
         } else if (dt.files && dt.files.length > 0) {
-          filesToAdd = Array.from(dt.files).filter(f => isAudioFilename(f.name));
+          filesToAdd = Array.from(dt.files).filter(f => isAudioFile(f));
         }
 
         if (filesToAdd.length > 0) {
@@ -820,7 +840,7 @@
           if (entry) queue.push(entry);
         } else if (item.kind === 'file') {
           const f = item.getAsFile();
-          if (f && isAudioFilename(f.name)) resultFiles.push(f);
+          if (f && isAudioFile(f)) resultFiles.push(f);
         }
       }
 
@@ -849,7 +869,7 @@
 
     async function handleFolderOrFilesUpload(fileList) {
       if (!fileList || fileList.length === 0) return;
-      const validFiles = Array.from(fileList).filter(f => isAudioFilename(f.name));
+      const validFiles = Array.from(fileList).filter(f => isAudioFile(f));
       
       // Reset input values so user can select the same folder again or re-select
       const folderInput = document.getElementById('folderInput');
@@ -988,7 +1008,7 @@
             for await (const entry of dh.values()) {
               if (entry.kind === 'file') {
                 const f = await entry.getFile();
-                if (isAudioFilename(f.name)) files.push(f);
+                if (isAudioFile(f)) files.push(f);
               } else if (entry.kind === 'directory') {
                 await scanDir(entry);
               }
@@ -1172,7 +1192,15 @@
     }
 
     async function callGeminiContent(activeKey, prompt, filePart) {
-      // High-capacity models first: 1,500 requests/day on Google Free Tier
+      const keys = getAllConfiguredGeminiKeys();
+      if (activeKey && isValidGeminiKey(activeKey) && !keys.includes(activeKey)) {
+        keys.unshift(activeKey);
+      }
+      if (keys.length === 0) {
+        keys.push(activeKey);
+      }
+
+      // High-capacity models first: 1,500 requests/day each on Google Free Tier
       const fallbackModels = [
         "gemini-flash-lite-latest",
         "gemini-3.5-flash-lite",
@@ -1182,50 +1210,52 @@
         "gemini-3-flash-preview",
         "gemini-flash-latest"
       ];
+
       let lastError = null;
 
-      for (const m of fallbackModels) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${activeKey}`;
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  filePart
-                ]
-              }],
-              generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 8192,
-                response_mime_type: "application/json"
-              }
-            })
-          });
+      for (const k of keys) {
+        for (const m of fallbackModels) {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`;
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: prompt },
+                    filePart
+                  ]
+                }],
+                generationConfig: {
+                  temperature: 0.1,
+                  maxOutputTokens: 8192,
+                  response_mime_type: "application/json"
+                }
+              })
+            });
 
-          if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            const msg = errJson.error?.message || `HTTP ${res.status}`;
-            throw new Error(`[${m}] ${msg}`);
-          }
+            if (!res.ok) {
+              const errJson = await res.json().catch(() => ({}));
+              const msg = errJson.error?.message || `HTTP ${res.status}`;
+              throw new Error(`[${m}] ${msg}`);
+            }
 
-          const data = await res.json();
-          const candidate = data.candidates?.[0];
-          const rawText = candidate?.content?.parts?.[0]?.text || '';
-          const parsed = extractJsonFromResponse(rawText);
-          if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
-            return parsed;
+            const data = await res.json();
+            const candidate = data.candidates?.[0];
+            const rawText = candidate?.content?.parts?.[0]?.text || '';
+            const parsed = extractJsonFromResponse(rawText);
+            if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+              return parsed;
+            }
+          } catch (e) {
+            lastError = e;
+            console.warn(`Model ${m} with key ${k.slice(0, 6)}... failed:`, e.message);
+            // If quota (429) or model deprecated (404), seamlessly continue to next model/key
+            if (e.message.includes('API key not valid') || (e.message.includes('400') && !e.message.includes('response modalities'))) {
+              break; // Try next key in pool
+            }
           }
-        } catch (e) {
-          lastError = e;
-          console.warn(`Model ${m} call failed:`, e.message);
-          // If error is invalid API key, don't keep hammering subsequent models
-          if (e.message.includes('API key not valid') || (e.message.includes('400') && !e.message.includes('response modalities'))) {
-            throw e;
-          }
-          // If model reached quota (429) or was retired (404), seamlessly roll over to the next high-capacity model
         }
       }
 
