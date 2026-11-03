@@ -941,7 +941,7 @@
   function openAccessManager() {
     const user = getUser();
     if (!isAdmin(user)) {
-      alert('Access restricted to Owner (gmanojitr@gmail.com).');
+      alert('Access restricted to Owner.');
       return;
     }
 
