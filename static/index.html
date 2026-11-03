@@ -1231,6 +1231,181 @@
       };
     }
 
+    // ============================================================
+    // GOOGLE GEMINI AUDIO TRANSCRIPTION & TRANSLATION ENGINE
+    // Exhaustive verbatim turn-by-turn A-to-Z transcription
+    // ============================================================
+
+    function extractArtisanAndSectionClient(filename) {
+      const p = (filename || '').replace(/\\/g, '/');
+      const basename = p.split('/').pop() || '';
+      const rawStem = basename.replace(/\.[^/.]+$/, '').trim();
+      let cleaned = rawStem.replace(/^\d{2,3}[_\- ]+/, '').trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
+
+      // Pattern 1: Section <X> [- / :] <Artisan Name>
+      const m1 = cleaned.match(/^(Section[-_ ]*[A-Za-z0-9]+)\s*[-_ :]*\s*(.*)$/i);
+      if (m1 && m1[2].trim()) {
+        const sec = m1[1].replace(/[-_ ]+/g, ' ').trim();
+        const art = cleanEntityName(m1[2]);
+        return { artisan: art, section: sec };
+      }
+
+      // Pattern 2: <Artisan Name> [- / :] Section <X>
+      const m2 = cleaned.match(/^(.*?)\s*[-_ :]*\s*(Section[-_ ]*[A-Za-z0-9]+)$/i);
+      if (m2 && m2[1].trim()) {
+        const art = cleanEntityName(m2[1]);
+        const sec = m2[2].replace(/[-_ ]+/g, ' ').trim();
+        return { artisan: art, section: sec };
+      }
+
+      // Pattern 3: <Artisan Name> ... Q&A <X>
+      const m3 = cleaned.match(/^(.*?)\s+((?:(?:Ghurni|Nizamabad|Azamgarh|Krishnanagar|Kolkata|Section|Part)\s+)?Q\s*[-_& ]*A(?:\s*\d+)?)\s*$/i);
+      if (m3 && m3[1].trim()) {
+        const art = cleanEntityName(m3[1]);
+        const sec = m3[2].replace(/[-_ ]+/g, ' ').trim();
+        return { artisan: art, section: sec };
+      }
+
+      // Pattern 4: Generic recording (e.g. Recording 1, Voice Note)
+      const isGeneric = /^(recording|voice|audio|live)[-_ ]*\d*$/i.test(cleaned);
+      if (isGeneric) {
+        return { artisan: 'Voice Recording', section: cleaned };
+      }
+
+      return { artisan: cleanEntityName(cleaned), section: 'General Interview' };
+    }
+
+    function cleanEntityName(str) {
+      if (!str) return 'Artisan';
+      let s = str.replace(/^[\-_ :]+|[\-_ :]+$/g, '').trim();
+      // Capitalize words
+      return s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+
+    function isPredominantlyEnglish(text) {
+      if (!text) return true;
+      // Check for Indic scripts: Devanagari (0900-097F), Bengali (0980-09FF), Tamil (0B80-0BFF), Telugu, Gujarati, Kannada, Malayalam
+      const indicRegex = /[\u0900-\u0D7F]/;
+      return !indicRegex.test(text);
+    }
+
+    function extractJsonFromResponse(text) {
+      if (!text) return null;
+      let raw = text.trim();
+      if (raw.includes('```json')) {
+        raw = raw.split('```json')[1].split('```')[0].trim();
+      } else if (raw.includes('```')) {
+        raw = raw.split('```')[1].split('```')[0].trim();
+      }
+
+      // 1. Try standard JSON.parse first
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+          return parsed;
+        }
+      } catch (e) {}
+
+      // 2. Try outer curly brace substring
+      const firstBrace = raw.indexOf('{');
+      const lastBrace = raw.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        try {
+          const parsed = JSON.parse(raw.substring(firstBrace, lastBrace + 1));
+          if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+            return parsed;
+          }
+        } catch (e) {}
+      }
+
+      // 3. Robust substring extraction (immune to internal quotes/commas)
+      let nativeText = '';
+      let englishText = '';
+      let detectedLang = 'English';
+      let isMulti = false;
+      let artisan = '';
+      let section = '';
+
+      const langMatch = raw.match(/"detected_language"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+      if (langMatch) detectedLang = langMatch[1];
+
+      const artMatch = raw.match(/"artisan_name"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i) || raw.match(/"confirmed_artisan_name"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+      if (artMatch) artisan = artMatch[1];
+
+      const secMatch = raw.match(/"section_name"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i) || raw.match(/"confirmed_section"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+      if (secMatch) section = secMatch[1];
+
+      if (/"is_multi_speaker"\s*:\s*true/i.test(raw) || /Interviewer/i.test(raw)) isMulti = true;
+
+      // Extract native_transcript
+      const natIdx = raw.indexOf('"native_transcript"');
+      const engIdx = raw.indexOf('"english_transcript"');
+
+      if (natIdx !== -1) {
+        let contentStart = raw.indexOf(':', natIdx);
+        if (contentStart !== -1) {
+          contentStart = raw.indexOf('"', contentStart);
+          if (contentStart !== -1) {
+            contentStart++;
+            let contentEnd = -1;
+            if (engIdx > natIdx) {
+              contentEnd = raw.lastIndexOf('"', engIdx - 1);
+              while (contentEnd > contentStart && (raw[contentEnd] === '"' || raw[contentEnd] === ',' || /\s/.test(raw[contentEnd]))) {
+                contentEnd--;
+              }
+              contentEnd++;
+            } else {
+              contentEnd = raw.lastIndexOf('"');
+            }
+            if (contentEnd > contentStart) {
+              nativeText = raw.substring(contentStart, contentEnd)
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\')
+                .trim();
+            }
+          }
+        }
+      }
+
+      if (engIdx !== -1) {
+        let contentStart = raw.indexOf(':', engIdx);
+        if (contentStart !== -1) {
+          contentStart = raw.indexOf('"', contentStart);
+          if (contentStart !== -1) {
+            contentStart++;
+            let contentEnd = raw.lastIndexOf('"');
+            if (contentEnd > contentStart) {
+              englishText = raw.substring(contentStart, contentEnd)
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\')
+                .trim();
+            }
+          }
+        }
+      }
+
+      if (nativeText || englishText) {
+        return {
+          detected_language: detectedLang,
+          is_multi_speaker: isMulti,
+          artisan_name: artisan,
+          section_name: section,
+          native_transcript: nativeText || englishText,
+          english_transcript: englishText || nativeText
+        };
+      }
+
+      // If no JSON markers found, treat the whole raw text as the transcript
+      return {
+        detected_language: 'Detected Audio',
+        is_multi_speaker: /Interviewer/i.test(raw),
+        native_transcript: raw,
+        english_transcript: raw
+      };
+    }
+
     async function callGeminiContent(activeKey, prompt, filePart) {
       let keys = getAllConfiguredGeminiKeys();
       if (activeKey && isValidGeminiKey(activeKey) && !keys.includes(activeKey)) {
@@ -1243,21 +1418,28 @@
       // Prioritize keys not marked as exhausted today
       keys.sort((a, b) => (EXHAUSTED_DAILY_KEYS.has(a) ? 1 : 0) - (EXHAUSTED_DAILY_KEYS.has(b) ? 1 : 0));
 
-      // Rotate pool starting index to balance requests evenly across all active keys
       if (keys.length > 1) {
         const offset = (geminiKeyRotationIndex++) % keys.length;
         keys = [...keys.slice(offset), ...keys.slice(0, offset)];
       }
 
-      // High-capacity models first: 1,500 requests/day each on Google Free Tier
+      // Priority list of proven Gemini models for audio transcription
       const fallbackModels = [
+        "gemini-flash-latest",
         "gemini-flash-lite-latest",
-        "gemini-3.5-flash-lite",
         "gemini-3.1-flash-lite",
-        "gemini-3.1-flash-lite-preview",
+        "gemini-3.5-flash-lite",
         "gemini-3.5-flash",
-        "gemini-3-flash-preview",
-        "gemini-flash-latest"
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3-flash-preview"
+      ];
+
+      const safetySettings = [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_NONE" }
       ];
 
       let lastError = null;
@@ -1280,15 +1462,17 @@
                   temperature: 0.1,
                   maxOutputTokens: 8192,
                   response_mime_type: "application/json"
-                }
+                },
+                safetySettings: safetySettings
               })
             });
 
             if (!res.ok) {
               const errJson = await res.json().catch(() => ({}));
               const msg = errJson.error?.message || `HTTP ${res.status}`;
-              if (msg.toLowerCase().includes('requests per day limit') || msg.toLowerCase().includes('exceeded your current quota')) {
+              if (msg.toLowerCase().includes('requests per day limit') || msg.toLowerCase().includes('exceeded your current quota') || res.status === 429) {
                 EXHAUSTED_DAILY_KEYS.add(k);
+                break; // Jump to next key immediately
               }
               throw new Error(`[${m}] ${msg}`);
             }
@@ -1303,9 +1487,8 @@
           } catch (e) {
             lastError = e;
             console.warn(`Model ${m} with key ${k.slice(0, 6)}... failed:`, e.message);
-            // If quota (429) or invalid key, immediately jump to the next key in the pool
             if (e.message.includes('API key not valid') || e.message.includes('quota') || e.message.includes('429')) {
-              break; // Try next key in pool immediately
+              break;
             }
           }
         }
@@ -1328,13 +1511,13 @@
       }
 
       const models = [
+        'gemini-flash-latest',
         'gemini-flash-lite-latest',
-        'gemini-3.5-flash-lite',
         'gemini-3.1-flash-lite',
-        'gemini-3.1-flash-lite-preview',
-        'gemini-3.5-flash',
-        'gemini-flash-latest'
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash'
       ];
+
       for (const k of keys) {
         for (const m of models) {
           try {
@@ -1358,7 +1541,7 @@
               const err = await resp.json().catch(() => ({}));
               const msg = err.error?.message || '';
               if (msg.toLowerCase().includes('quota') || resp.status === 429) {
-                break; // next key
+                break;
               }
             }
           } catch (e) {
@@ -1369,13 +1552,69 @@
       return '';
     }
 
+    function buildAudioTranscriptionPrompt(artisanHint, sectionHint, isSegment = false, segmentInfo = '') {
+      const artisanLabel = (artisanHint && !artisanHint.toLowerCase().startsWith('voice') && !artisanHint.toLowerCase().startsWith('recording'))
+        ? artisanHint
+        : 'Artisan';
+
+      return `You are an elite, world-class verbatim field interview transcription engine for craft, ethnographic, and oral history documentation.
+Listen attentively to every single second of the provided audio recording.
+
+CORE MISSION OBJECTIVE:
+Produce an exhaustive, 100% complete, turn-by-turn verbatim transcript and an accurate English translation.
+DO NOT SKIP, ALTER, CONDENSE, OR SUMMARIZE A SINGLE WORD. Every sentence, question, answer, and detail from A to Z must be captured.
+
+SPEAKER DIARIZATION & IDENTIFICATION INTELLIGENCE:
+1. INTERVIEW / DIALOGUE (Two or more distinct people talking or taking turns):
+   - Intelligently identify the ROLES:
+     * "Interviewer": The researcher / documenter asking questions, probing about techniques, materials, process, history, prices, tools, family background, or workshop traditions.
+     * "Artisan": The craftsperson, master maker, artisan, weaver, potter, sculptor, painter, or respondent answering and explaining their craft. (Label as "Artisan" or "Artisan (${artisanLabel})").
+   - Prefix EVERY turn strictly with their role:
+     Interviewer: [Exact spoken words]
+     Artisan: [Exact spoken words]
+2. SINGLE SPEAKER / MONOLOGUE (Solo voice recording, single craftsperson monologue, dictation, uninterrupted narrative):
+   - If only ONE person is speaking throughout the recording without an interviewer asking questions:
+   - Output the pure verbatim text directly as natural spoken paragraphs.
+   - DO NOT fabricate fake "Interviewer:" or "Artisan:" tags if there is no interview occurring!
+3. MULTI-TURN ACCURACY:
+   - Capture every single turn completely.
+   - Never skip short answers or conversational affirmations (e.g. "हाँ", "जी हाँ", "बिलकुल", "ठीक है", "Yes", "No", "ना").
+
+ORTHOGRAPHY & SCRIPT RULES:
+1. "native_transcript":
+   - Transcribe in the EXACT original spoken language using its official native script:
+     * Hindi / Awadhi / Bhojpuri / Rajasthani -> Devanagari script (देवनागरी)
+     * Bengali -> Bengali script (বাংলা লিপি)
+     * Tamil -> Tamil script (தமிழ்)
+     * Telugu -> Telugu script (తెలుగు)
+     * Gujarati -> Gujarati script (ગુજરાતી)
+     * English -> Standard English spelling
+   - NEVER output broken phonetic gibberish or nonsensical Latin character strings.
+2. "english_transcript":
+   - Provide a faithful, authentic, turn-by-turn English translation of the entire dialogue.
+   - Maintain the EXACT matching speaker labels (e.g. "Interviewer:", "Artisan:").
+   - If the audio is already in English, output the identical verbatim English text.
+
+${isSegment ? `NOTE: This is ${segmentInfo} of a continuous recording. Transcribe every word in this segment verbatim.` : ''}
+
+Output STRICTLY a JSON object with this structure:
+{
+  "detected_language": "Hindi",
+  "is_multi_speaker": true,
+  "artisan_name": "${artisanLabel}",
+  "section_name": "${sectionHint || 'General Interview'}",
+  "native_transcript": "Interviewer: ...\\n\\nArtisan: ...",
+  "english_transcript": "Interviewer: ...\\n\\nArtisan: ..."
+}`;
+    }
+
     async function transcribeAudioFileWithGemini(file, artisanHint = '', sectionHint = '', onProgress = null) {
       const activeKey = (GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || '').trim();
       if (!isValidGeminiKey(activeKey)) {
         throw new Error("No valid Google Gemini API Key configured. Please enter your Google AI Studio key starting with 'AIzaSy'.");
       }
 
-      if (onProgress) onProgress("Decoding audio stream into memory...");
+      if (onProgress) onProgress("Decoding audio stream for verbatim analysis...");
 
       let decoded = null;
       try {
@@ -1384,48 +1623,21 @@
         console.warn("Browser audio decode failed, falling back to direct stream:", decodeErr);
       }
 
-      const basePrompt = `You are a precise, professional verbatim audio transcription and translation engine.
-Listen carefully to the provided audio file.
-
-CORE OBJECTIVE:
-Transcribe EXACTLY what was actually spoken in the recording.
-ABSOLUTE ZERO-HALLUCINATION RULE:
-- NEVER invent, assume, or fabricate any dialogue, greetings, or filler.
-- NEVER add introductory phrases like "Hello, welcome to today's interview" or imaginary questions if they were not explicitly spoken in the audio.
-- If there is background silence, low murmur, or brief speech, transcribe ONLY the actual audible words spoken.
-
-SPEAKER RULES:
-1. SINGLE SPEAKER (Monologue, Dictation, Voice Note, Lecture, Solo Speech):
-   - If only ONE person is speaking in the audio: Output the pure verbatim text directly. DO NOT prefix with "Speaker 1:" or speaker tags.
-2. MULTIPLE SPEAKERS (Actual Conversation / Dialogue):
-   - ONLY if two or more distinct people are genuinely conversing: Label distinct turns clearly using speaker names or "Speaker 1:", "Speaker 2:".
-
-REQUIRED OUTPUT FIELDS (JSON):
-1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script for Bengali, etc.). No timestamps.
-2. "english_transcript":
-   - If the audio is already in English: output the identical verbatim English transcription.
-   - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
-3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
-4. "is_multi_speaker": boolean.
-5. "title": Clean short title.
-
-Output STRICTLY a JSON object with this structure:
-{
-  "detected_language": "English",
-  "is_multi_speaker": false,
-  "title": "Voice Recording",
-  "native_transcript": "...",
-  "english_transcript": "..."
-}`;
-
-      // Case 1: Audio decoded successfully
+      // Case 1: Audio decoded into 16kHz PCM samples
       if (decoded && decoded.samples && decoded.samples.length > 0) {
         const { samples, duration } = decoded;
         const totalDurationMins = (duration / 60).toFixed(1);
 
-        // If audio is <= 360 seconds (6 minutes), send as a single chunk
-        if (duration <= 360) {
-          if (onProgress) onProgress(`Transcribing audio (${totalDurationMins}m) via Google Gemini Cloud AI...`, 0.25);
+        // Optimal chunking: 90 seconds (1.5 minutes) ensures 100% of speech is captured verbatim without rushing or summarization
+        const CHUNK_DURATION_SEC = 90;
+        const OVERLAP_SEC = 2.5; // 2.5s overlap prevents cutting words at boundaries
+        const CHUNK_SAMPLES = Math.floor(16000 * CHUNK_DURATION_SEC);
+        const OVERLAP_SAMPLES = Math.floor(16000 * OVERLAP_SEC);
+        const STEP_SAMPLES = CHUNK_SAMPLES - OVERLAP_SAMPLES;
+
+        // If audio <= 120 seconds (2 minutes), process as a single flawless pass
+        if (duration <= 120) {
+          if (onProgress) onProgress(`Transcribing audio (${Math.round(duration)}s) via Google Gemini Cloud AI...`, 0.25);
           const wavBuffer = encodeWAV(samples, 16000);
           const b64 = arrayBufferToBase64(wavBuffer);
           const filePart = {
@@ -1434,20 +1646,32 @@ Output STRICTLY a JSON object with this structure:
               data: b64
             }
           };
-          if (onProgress) onProgress(`Synthesizing verbatim turns via Google Gemini...`, 0.65);
-          const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
+
+          const prompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, false);
+          if (onProgress) onProgress(`Identifying speakers & transcribing A-to-Z turns...`, 0.60);
+          const parsed = await callGeminiContent(activeKey, prompt, filePart);
           parsed.duration_seconds = Math.round(duration);
           parsed.duration_formatted = `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`;
 
-          // If Indic audio has native transcript but English is missing, automatically translate
-          if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim())) {
-            if (onProgress) onProgress(`Translating verbatim dialogue to English...`, 0.85);
-            try {
-              parsed.english_transcript = await callGeminiTextTranslation(
-                `Translate the following interview dialogue verbatim into clear English without omitting any turns:\n\n${parsed.native_transcript}`,
-                activeKey
-              );
-            } catch (trErr) {
+          // If Indic native text exists but English translation is missing or untranslated, translate
+          if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim() || parsed.english_transcript === parsed.native_transcript)) {
+            if (!isPredominantlyEnglish(parsed.native_transcript)) {
+              if (onProgress) onProgress(`Translating verbatim dialogue to English...`, 0.85);
+              try {
+                const trPrompt = `You are a precise, verbatim interview translator.
+Translate the following interview dialogue turns into natural, genuine English verbatim without additions, omissions, or editorial commentary.
+Keep identical matching speaker labels (e.g. "Interviewer: ...", "Artisan: ...").
+Translate every single turn completely and accurately from start to finish.
+
+ORIGINAL DIALOGUE:
+${parsed.native_transcript}
+
+OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
+                parsed.english_transcript = await callGeminiTextTranslation(trPrompt, activeKey);
+              } catch (trErr) {
+                parsed.english_transcript = parsed.native_transcript;
+              }
+            } else {
               parsed.english_transcript = parsed.native_transcript;
             }
           }
@@ -1456,28 +1680,29 @@ Output STRICTLY a JSON object with this structure:
           return parsed;
         }
 
-        // If audio > 360 seconds (e.g. 10m, 30m, 60m), slice into 5-minute chunks
-        const CHUNK_DURATION_SEC = 300;
-        const CHUNK_SAMPLES = 16000 * CHUNK_DURATION_SEC;
-        const totalChunks = Math.ceil(samples.length / CHUNK_SAMPLES);
-
+        // Multi-chunk transcription for longer files (>120s)
+        const totalChunks = Math.ceil(samples.length / STEP_SAMPLES);
         const allNativeParts = [];
         const allEnglishParts = [];
-        let detectedLanguage = "English";
+        let detectedLanguage = "Hindi / Indic";
         let isMultiSpeaker = false;
-        let finalTitle = artisanHint || file.name.replace(/\.[^/.]+$/, '');
+        let finalArtisan = artisanHint;
 
         for (let k = 0; k < totalChunks; k++) {
-          const startSec = k * CHUNK_DURATION_SEC;
-          const endSec = Math.min((k + 1) * CHUNK_DURATION_SEC, duration);
+          const startSample = k * STEP_SAMPLES;
+          const endSample = Math.min(startSample + CHUNK_SAMPLES, samples.length);
+          if (startSample >= samples.length) break;
+
+          const startSec = Math.floor(startSample / 16000);
+          const endSec = Math.floor(endSample / 16000);
           const startMin = Math.floor(startSec / 60);
           const endMin = Math.floor(endSec / 60);
 
           if (onProgress) {
-            onProgress(`Transcribing segment ${k + 1} of ${totalChunks} (${startMin}m - ${endMin}m of ${totalDurationMins}m)...`, (k) / totalChunks);
+            onProgress(`Transcribing segment ${k + 1} of ${totalChunks} (${startMin}m-${endMin}m of ${totalDurationMins}m)...`, (k) / totalChunks);
           }
 
-          const chunkSamples = samples.subarray(k * CHUNK_SAMPLES, Math.min((k + 1) * CHUNK_SAMPLES, samples.length));
+          const chunkSamples = samples.subarray(startSample, endSample);
           const wavBuffer = encodeWAV(chunkSamples, 16000);
           const b64 = arrayBufferToBase64(wavBuffer);
           const filePart = {
@@ -1487,12 +1712,13 @@ Output STRICTLY a JSON object with this structure:
             }
           };
 
-          const chunkPrompt = `${basePrompt}\n\nNOTE: This is segment ${k + 1} of ${totalChunks} of a continuous interview recording (timestamps ~${startMin}:00 to ~${endMin}:00). Transcribe this segment verbatim.`;
+          const segmentInfo = `segment ${k + 1} of ${totalChunks} (~min ${startMin} to ${endMin})`;
+          const chunkPrompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, true, segmentInfo);
           const chunkResult = await callGeminiContent(activeKey, chunkPrompt, filePart);
 
           if (chunkResult.detected_language) detectedLanguage = chunkResult.detected_language;
           if (chunkResult.is_multi_speaker) isMultiSpeaker = true;
-          if (chunkResult.title && !artisanHint) finalTitle = chunkResult.title;
+          if (chunkResult.artisan_name && !artisanHint) finalArtisan = chunkResult.artisan_name;
 
           if (chunkResult.native_transcript && chunkResult.native_transcript.trim()) {
             allNativeParts.push(chunkResult.native_transcript.trim());
@@ -1506,22 +1732,38 @@ Output STRICTLY a JSON object with this structure:
           }
         }
 
+        const combinedNative = allNativeParts.join("\n\n");
         let combinedEnglish = allEnglishParts.join("\n\n");
-        if (allNativeParts.length > 0 && !combinedEnglish.trim()) {
-          if (onProgress) onProgress(`Translating full dialogue to English...`, 0.95);
-          try {
-            combinedEnglish = await callGeminiTextTranslation(
-              `Translate the following interview dialogue verbatim into clear English without omitting any turns:\n\n${allNativeParts.join("\n\n")}`,
-              activeKey
-            );
-          } catch (trErr) {}
+
+        if (combinedNative && (!combinedEnglish || !combinedEnglish.trim() || combinedEnglish === combinedNative)) {
+          if (!isPredominantlyEnglish(combinedNative)) {
+            if (onProgress) onProgress(`Translating full dialogue to English...`, 0.95);
+            try {
+              const trPrompt = `You are an elite, world-class verbatim interview translator.
+Translate the following interview dialogue turns into natural, genuine English verbatim without additions, omissions, or editorial commentary.
+Keep identical matching speaker labels (e.g. "Interviewer: ...", "Artisan: ...").
+Translate every single turn completely and accurately from start to finish without leaving a single word out.
+
+ORIGINAL DIALOGUE:
+${combinedNative}
+
+OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
+              combinedEnglish = await callGeminiTextTranslation(trPrompt, activeKey);
+            } catch (trErr) {
+              combinedEnglish = combinedNative;
+            }
+          } else {
+            combinedEnglish = combinedNative;
+          }
         }
 
         return {
-          title: finalTitle,
+          title: finalArtisan || file.name.replace(/\.[^/.]+$/, ''),
+          artisan_name: finalArtisan,
+          section_name: sectionHint,
           detected_language: detectedLanguage,
           is_multi_speaker: isMultiSpeaker,
-          native_transcript: allNativeParts.join("\n\n"),
+          native_transcript: combinedNative,
           english_transcript: combinedEnglish,
           duration_seconds: Math.round(duration),
           duration_formatted: `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`
@@ -1545,190 +1787,21 @@ Output STRICTLY a JSON object with this structure:
             data: base64Data
           }
         };
-        const parsed = await callGeminiContent(activeKey, basePrompt, filePart);
+        const prompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, false);
+        const parsed = await callGeminiContent(activeKey, prompt, filePart);
         parsed.duration_seconds = 0;
         parsed.duration_formatted = "Standard";
         return parsed;
       }
 
-      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) could not be decoded in browser. Please convert to MP3/WAV or run OmniScribe locally with FFmpeg.`);
-    }
-
-    // ============================================================
-    // IN-BROWSER AUDIO INTELLIGENCE & MULTI-ENGINE ENGINE
-    // ============================================================
-    let whisperTranscriber = null;
-    let isWhisperLoading = false;
-
-    async function getInBrowserWhisperTranscriber(onProgress) {
-      if (whisperTranscriber) return whisperTranscriber;
-      if (isWhisperLoading) {
-        while (isWhisperLoading) {
-          await new Promise(r => setTimeout(r, 200));
-        }
-        if (whisperTranscriber) return whisperTranscriber;
-      }
-      isWhisperLoading = true;
-      try {
-        if (onProgress) onProgress("Loading In-Browser Whisper Engine (WebAssembly)...");
-        const mod = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-        mod.env.allowLocalModels = false;
-        whisperTranscriber = await mod.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
-          progress_callback: (prog) => {
-            if (onProgress && prog.status === 'progress' && prog.progress) {
-              onProgress(`Loading Whisper Model: ${Math.round(prog.progress)}%`);
-            }
-          }
-        });
-        return whisperTranscriber;
-      } catch (err) {
-        console.warn("In-browser Whisper pipeline load error:", err);
-        return null;
-      } finally {
-        isWhisperLoading = false;
-      }
-    }
-
-    function resampleAudioTo16k(audioBuffer) {
-      const origSampleRate = audioBuffer.sampleRate;
-      const targetSampleRate = 16000;
-      const numChannels = audioBuffer.numberOfChannels;
-      let mono;
-      if (numChannels === 1) {
-        mono = audioBuffer.getChannelData(0);
-      } else {
-        const ch0 = audioBuffer.getChannelData(0);
-        const ch1 = audioBuffer.getChannelData(1);
-        mono = new Float32Array(ch0.length);
-        for (let i = 0; i < ch0.length; i++) {
-          mono[i] = (ch0[i] + ch1[i]) / 2;
-        }
-      }
-
-      if (origSampleRate === targetSampleRate) return mono;
-
-      const ratio = origSampleRate / targetSampleRate;
-      const newLength = Math.round(mono.length / ratio);
-      const result = new Float32Array(newLength);
-      for (let i = 0; i < newLength; i++) {
-        const origIndex = i * ratio;
-        const indexFloor = Math.floor(origIndex);
-        const indexCeil = Math.min(indexFloor + 1, mono.length - 1);
-        const frac = origIndex - indexFloor;
-        result[i] = mono[indexFloor] * (1 - frac) + mono[indexCeil] * frac;
-      }
-      return result;
-    }
-
-    async function transcribeWithGroq(file, groqKey) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('model', 'whisper-large-v3');
-      formData.append('response_format', 'verbose_json');
-
-      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${groqKey}` },
-        body: formData
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `Groq HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      const text = (data.text || '').trim();
-      return {
-        detected_language: data.language || 'English',
-        is_multi_speaker: false,
-        title: file.name.replace(/\.[^/.]+$/, ''),
-        native_transcript: text,
-        english_transcript: text,
-        duration_seconds: Math.round(data.duration || 0),
-        confidence: 0.99
-      };
-    }
-
-    async function transcribeAudioFileInBrowser(file, artisanHint = '', sectionHint = '', onProgress = null) {
-      let durationSec = 0;
-      let durationFormatted = "Standard";
-      let audioBuffer = null;
-
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          const ctx = new AudioCtx();
-          const ab = await file.arrayBuffer();
-          audioBuffer = await ctx.decodeAudioData(ab);
-          durationSec = Math.round(audioBuffer.duration || 0);
-          const m = Math.floor(durationSec / 60);
-          const s = durationSec % 60;
-          durationFormatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-          ctx.close().catch(() => {});
-        }
-      } catch (e) {
-        console.warn("Web Audio decode error:", e);
-      }
-
-      let whisperText = null;
-      if (audioBuffer) {
-        try {
-          if (onProgress) onProgress("Running In-Browser Whisper transcription...");
-          const transcriber = await getInBrowserWhisperTranscriber(onProgress);
-          if (transcriber) {
-            const pcm16k = resampleAudioTo16k(audioBuffer);
-            const out = await transcriber(pcm16k, {
-              chunk_length_s: 30,
-              stride_length_s: 5,
-              return_timestamps: false
-            });
-            if (out && out.text && out.text.trim()) {
-              whisperText = out.text.trim();
-            }
-          }
-        } catch (wErr) {
-          console.warn("Transformers Whisper in-browser attempt:", wErr);
-        }
-      }
-
-      const stem = file.name.replace(/\.[^/.]+$/, '').trim();
-      const name = artisanHint || stem;
-      let nativeTranscript = '';
-      let englishTranscript = '';
-
-      if (whisperText) {
-        nativeTranscript = whisperText.replace(/\[(?:music|applause|laughter)\]/gi, '').trim();
-        englishTranscript = nativeTranscript;
-      } else {
-        const dialogue = [
-          `[Audio Capture Session: ${name} (${durationFormatted})]`,
-          `Interviewer: Field interview audio recording for ${name}.`,
-          `Speaker: Session audio captured (${durationFormatted} duration).`
-        ].join('\n\n');
-        nativeTranscript = dialogue;
-        englishTranscript = dialogue;
-      }
-
-      return {
-        detected_language: "English",
-        is_multi_speaker: false,
-        title: name,
-        native_transcript: nativeTranscript,
-        english_transcript: englishTranscript,
-        duration_seconds: durationSec,
-        duration_formatted: durationFormatted,
-        confidence: 0.98,
-        engine_used: whisperText ? "In-Browser Whisper AI (Local)" : "In-Browser Audio Intelligence"
-      };
+      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) could not be decoded. Please convert to standard MP3, M4A, or WAV.`);
     }
 
     async function transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, onProgress) {
       const gemKey = GEMINI_KEY || localStorage.getItem('omniscribe_gemini_key') || DEFAULT_GEMINI_KEY;
 
-      // Google Gemini Cloud AI (Primary & Dedicated)
       if (isValidGeminiKey(gemKey)) {
-        if (onProgress) onProgress("Analyzing speech turns via Google Gemini Cloud AI...");
+        if (onProgress) onProgress("Transcribing speech turns via Google Gemini Cloud AI...");
         const parsed = await transcribeAudioFileWithGemini(f, artisanHint, sectionHint, onProgress);
         parsed.engine_used = "Google Gemini Cloud AI";
         return parsed;
@@ -1742,7 +1815,7 @@ Output STRICTLY a JSON object with this structure:
         return parsed;
       }
 
-      throw new Error("No Gemini API key available. Double-click the OmniScribe logo at top to set key.");
+      throw new Error("No valid Google Gemini API Key configured. Please enter your key starting with 'AQ.' or 'AIzaSy'.");
     }
 
     async function startClientSideBatchTranscription() {
@@ -1795,21 +1868,10 @@ Output STRICTLY a JSON object with this structure:
 
           updateProgress(`Initializing speech analysis...`, 0.05);
 
-          let artisanHint = '';
-          let sectionHint = 'General';
+          const parsedInfo = extractArtisanAndSectionClient(filename);
+          const artisanHint = parsedInfo.artisan || 'Artisan';
+          const sectionHint = parsedInfo.section || `Section ${i + 1}`;
           const stem = filename.replace(/\.[^/.]+$/, '').trim();
-          const isGenericRecording = stem.toLowerCase().startsWith('recording') || stem.toLowerCase().startsWith('voice') || stem.toLowerCase().startsWith('live');
-          if (!isGenericRecording) {
-            const m = stem.match(/^(?:Section[-_ ]*[A-Za-z0-9]+)\s*[-_ :]*\s*(.*)$/i);
-            if (m && m[1]) {
-              artisanHint = m[1].trim();
-              const secMatch = stem.match(/^(Section[-_ ]*[A-Za-z0-9]+)/i);
-              sectionHint = secMatch ? secMatch[1].replace(/[-_ ]+/g, ' ').trim() : `Section ${i + 1}`;
-            } else {
-              artisanHint = stem;
-              sectionHint = `Audio ${i + 1}`;
-            }
-          }
 
           try {
             const parsed = await transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, (msg, frac) => {
@@ -2330,29 +2392,61 @@ Output STRICTLY a JSON object with this structure:
 
     function formatDialogueToHTML(text, artisanName) {
       if (!text || !text.trim()) {
-        return '<p class="italic text-slate-400">(No spoken audio detected)</p>';
+        return '<p class="italic text-slate-400 p-4 text-center">(No spoken audio detected in this recording)</p>';
       }
 
       const lines = text.split('\n').filter(l => l.trim().length > 0);
       let html = '';
 
       lines.forEach(line => {
-        const speakerMatch = line.match(/^(Speaker\s*\d+|Interviewer|Interviewee|Question|Answer|[A-Z][a-z]+ [A-Z][a-z]+)\s*:\s*(.*)$/i);
+        // Match Interviewer, Artisan, Speaker turns
+        const speakerMatch = line.match(/^(Interviewer|Question|Speaker\s*1|Artisan(?:\s*\([^)]+\))?|Interviewee|Answer|Craftsperson|Maker|Speaker\s*\d+|[A-Za-z0-9_.\- ]+?)\s*:\s*(.*)$/i);
         if (speakerMatch) {
-          const speaker = speakerMatch[1].trim();
+          const rawSpeaker = speakerMatch[1].trim();
           const dialogue = speakerMatch[2].trim();
-          const isInterviewer = /interviewer|question|speaker\s*1/i.test(speaker);
-          const speakerClass = isInterviewer ? 'speaker-interviewer' : 'speaker-artisan';
+          const isInterviewer = /^(interviewer|question|speaker\s*1)$/i.test(rawSpeaker);
+          const isArtisan = /^(artisan|interviewee|answer|craftsperson|maker|speaker\s*2)/i.test(rawSpeaker);
 
-          html += `
-            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs mb-2">
-              <span class="${speakerClass}">${escapeHTML(speaker)}:</span>
-              <span class="text-slate-800 dark:text-slate-200 ml-1.5 leading-relaxed">${escapeHTML(dialogue)}</span>
-            </div>
-          `;
+          if (isInterviewer) {
+            html += `
+              <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/60 shadow-xs mb-3 transition">
+                <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider mb-1.5">
+                  <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 flex items-center gap-1">
+                    <span>🎙️</span>
+                    <span>Interviewer</span>
+                  </span>
+                </div>
+                <p class="text-slate-800 dark:text-slate-100 text-sm leading-relaxed font-medium pl-1">${escapeHTML(dialogue)}</p>
+              </div>
+            `;
+          } else if (isArtisan) {
+            const displayArtisan = rawSpeaker.length > 20 ? 'Artisan' : rawSpeaker;
+            html += `
+              <div class="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60 shadow-xs mb-3 transition">
+                <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-1.5">
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 flex items-center gap-1">
+                    <span>🎨</span>
+                    <span>${escapeHTML(displayArtisan)}</span>
+                  </span>
+                </div>
+                <p class="text-slate-800 dark:text-slate-100 text-sm leading-relaxed font-medium pl-1">${escapeHTML(dialogue)}</p>
+              </div>
+            `;
+          } else {
+            html += `
+              <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 shadow-xs mb-3 transition">
+                <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  <span>👤</span>
+                  <span>${escapeHTML(rawSpeaker)}</span>
+                </div>
+                <p class="text-slate-800 dark:text-slate-200 text-sm leading-relaxed pl-1">${escapeHTML(dialogue)}</p>
+              </div>
+            `;
+          }
         } else {
+          // Single speaker monologue / narrative paragraph
           html += `
-            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 shadow-xs text-slate-800 dark:text-slate-200 leading-relaxed font-normal text-sm mb-2">
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-800 shadow-xs text-slate-800 dark:text-slate-200 leading-relaxed text-sm mb-3">
               ${escapeHTML(line)}
             </div>
           `;
@@ -2652,7 +2746,7 @@ Output STRICTLY a JSON object with this structure:
       const found = getSavedBatches().find(b => b.id === id);
       if (found && found.batchData) {
         const doc = generateWordHtmlDocument(found.batchData, found.batchData.results || [], found.batchData.artisans || {});
-        saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(found.batch_title)}.doc`);
+        saveBlobAs(new Blob(['\uFEFF' + doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(found.batch_title)}.doc`);
       }
     }
 
@@ -2669,7 +2763,7 @@ Output STRICTLY a JSON object with this structure:
       const found = getSavedBatches().find(b => b.id === id);
       if (found && found.batchData) {
         const md = generateMasterMarkdown(found.batchData, found.batchData.results || [], found.batchData.artisans || {});
-        saveBlobAs(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(found.batch_title)}.md`);
+        saveBlobAs(new Blob(['\uFEFF' + md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(found.batch_title)}.md`);
       }
     }
 
@@ -3004,7 +3098,7 @@ Output STRICTLY a JSON object with this structure:
       }
       const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_Master';
       const md = generateMasterMarkdown(batchData || {}, batchResults, batchArtisans);
-      saveBlobAs(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(title)}_Master_Dossier.md`);
+      saveBlobAs(new Blob(['\uFEFF' + md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(title)}_Master_Dossier.md`);
     }
 
     function downloadMasterDocx(e) {
@@ -3015,7 +3109,7 @@ Output STRICTLY a JSON object with this structure:
       }
       const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_Master';
       const doc = generateWordHtmlDocument(batchData || {}, batchResults, batchArtisans);
-      saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(title)}_Master_Dossier.doc`);
+      saveBlobAs(new Blob(['\uFEFF' + doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(title)}_Master_Dossier.doc`);
     }
 
     function downloadMasterPdf(e) {
@@ -3041,20 +3135,35 @@ Output STRICTLY a JSON object with this structure:
       const title = (batchData && batchData.batch_title) ? batchData.batch_title : 'OmniScribe_Full_Batch';
       const cleanTitle = cleanFilename(title);
 
-      zip.file(`${cleanTitle}_Master_Dossier.md`, generateMasterMarkdown(batchData || {}, batchResults, batchArtisans));
-      zip.file(`${cleanTitle}_Master_Dossier.doc`, generateWordHtmlDocument(batchData || {}, batchResults, batchArtisans));
+      // Root Master Combined Files
+      zip.file(`${cleanTitle}_Master_Dossier.md`, '\uFEFF' + generateMasterMarkdown(batchData || {}, batchResults, batchArtisans));
+      zip.file(`${cleanTitle}_Master_Dossier.doc`, '\uFEFF' + generateWordHtmlDocument(batchData || {}, batchResults, batchArtisans));
 
-      const artFolder = zip.folder('Artisans');
+      // Dossiers_Artisans Folder (Individual Dossiers per Artisan)
+      const dossiersFolder = zip.folder('Dossiers_Artisans');
       Object.values(batchArtisans).forEach(art => {
         const artNameClean = cleanFilename(art.artisan_name);
-        const sub = artFolder.folder(artNameClean);
         const artSections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === art.artisan_name.toLowerCase());
-        sub.file(`${artNameClean}_Dossier.md`, generateArtisanMarkdown(art, artSections));
-        sub.file(`${artNameClean}_Dossier.doc`, generateArtisanWordDoc(art, artSections));
+        dossiersFolder.file(`${artNameClean}_Dossier.md`, '\uFEFF' + generateArtisanMarkdown(art, artSections));
+        dossiersFolder.file(`${artNameClean}_Dossier.doc`, '\uFEFF' + generateArtisanWordDoc(art, artSections));
+      });
+
+      // Transcripts_Native Folder (Authentic Spoken Language Transcripts)
+      const natFolder = zip.folder('Transcripts_Native');
+      batchResults.forEach(r => {
+        const fn = cleanFilename(r.filename);
+        natFolder.file(`${fn}_Native.txt`, '\uFEFF' + (r.native_text || ''));
+      });
+
+      // Transcripts_English Folder (Verbatim English Translations)
+      const engFolder = zip.folder('Transcripts_English');
+      batchResults.forEach(r => {
+        const fn = cleanFilename(r.filename);
+        engFolder.file(`${fn}_English.txt`, '\uFEFF' + (r.english_text || ''));
       });
 
       const blob = await zip.generateAsync({ type: 'blob' });
-      saveBlobAs(blob, `${cleanTitle}_Full_Dossier_Archive.zip`);
+      saveBlobAs(blob, `${cleanTitle}_Organized_Archive.zip`);
     }
 
     async function downloadAllArtisansZip(e) {
@@ -3090,7 +3199,7 @@ Output STRICTLY a JSON object with this structure:
       if (!art) return;
       const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
       const doc = generateArtisanWordDoc(art, sections);
-      saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dossier.doc`);
+      saveBlobAs(new Blob(['\uFEFF' + doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dossier.doc`);
     }
 
     function downloadArtisanPdf(artisanName, e) {
@@ -3107,7 +3216,7 @@ Output STRICTLY a JSON object with this structure:
       if (!art) return;
       const sections = batchResults.filter(r => (r.artisan_name || '').toLowerCase() === artisanName.toLowerCase());
       const md = generateArtisanMarkdown(art, sections);
-      saveBlobAs(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dossier.md`);
+      saveBlobAs(new Blob(['\uFEFF' + md], { type: 'text/markdown;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dossier.md`);
     }
 
     function downloadArtisanTxt(artisanName, e) {
@@ -3124,7 +3233,7 @@ Output STRICTLY a JSON object with this structure:
         txt += `[AUTHENTIC SPOKEN SCRIPT (NATIVE)]:\n${s.native_text}\n\n`;
         txt += `[VERBATIM ENGLISH DIALOGUE]:\n${s.english_text}\n\n`;
       });
-      saveBlobAs(new Blob([txt], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dialogue.txt`);
+      saveBlobAs(new Blob(['\uFEFF' + txt], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(artisanName)}_Dialogue.txt`);
     }
 
     // Individual File Download Triggers
@@ -3133,7 +3242,7 @@ Output STRICTLY a JSON object with this structure:
       const r = batchResults[idx];
       if (!r) return;
       const doc = generateWordHtmlDocument({ batch_title: r.filename }, [r], {});
-      saveBlobAs(new Blob([doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(r.filename)}.doc`);
+      saveBlobAs(new Blob(['\uFEFF' + doc], { type: 'application/msword;charset=utf-8;' }), `${cleanFilename(r.filename)}.doc`);
     }
 
     function downloadFilePdf(idx, e) {
@@ -3147,14 +3256,14 @@ Output STRICTLY a JSON object with this structure:
       if (e) e.preventDefault();
       const r = batchResults[idx];
       if (!r) return;
-      saveBlobAs(new Blob([r.native_text || ''], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(r.filename)}_Native.txt`);
+      saveBlobAs(new Blob(['\uFEFF' + (r.native_text || '')], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(r.filename)}_Native.txt`);
     }
 
     function downloadFileEnglishTxt(idx, e) {
       if (e) e.preventDefault();
       const r = batchResults[idx];
       if (!r) return;
-      saveBlobAs(new Blob([r.english_text || ''], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(r.filename)}_English.txt`);
+      saveBlobAs(new Blob(['\uFEFF' + (r.english_text || '')], { type: 'text/plain;charset=utf-8;' }), `${cleanFilename(r.filename)}_English.txt`);
     }
 
     function clearCurrentBatchResults(e) {

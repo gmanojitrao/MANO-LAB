@@ -205,52 +205,71 @@ class GeminiAudioEngine(BaseEngine):
         b64_audio = base64.b64encode(audio_bytes).decode("utf-8")
         clean_hint = artisan_hint if artisan_hint and not any(artisan_hint.lower().startswith(p) for p in ("live_", "recording_", "voice_", "sample_")) else ""
 
-        prompt = f"""You are a precise, professional verbatim audio transcription and translation engine.
-Listen carefully to the provided audio file.
+        prompt = f"""You are an elite, world-class verbatim field interview transcription and translation engine for craft, ethnographic, and oral history documentation.
+Listen attentively to every single second of the provided audio recording.
 
 CORE OBJECTIVE:
-Transcribe EXACTLY what was actually spoken in the recording.
-ABSOLUTE ZERO-HALLUCINATION RULE:
-- NEVER invent, assume, or fabricate any dialogue, greetings, or filler.
-- NEVER add introductory phrases like "Hello, welcome to today's interview" or imaginary questions if they were not explicitly spoken in the audio.
-- If there is background silence, low murmur, or brief speech, transcribe ONLY the actual audible words spoken.
+Produce an exhaustive, 100% complete, turn-by-turn verbatim transcript and an accurate English translation.
+DO NOT SKIP, ALTER, CONDENSE, OR SUMMARIZE A SINGLE WORD. Every sentence, question, answer, and detail from A to Z must be captured.
 
-SPEAKER RULES:
-1. SINGLE SPEAKER (Monologue, Dictation, Voice Note, Lecture, Solo Speech):
-   - If only ONE person is speaking in the audio:
-   - Output the pure verbatim text directly.
-   - DO NOT prefix with "Interviewer:", "Interviewee:", "Speaker 1:", or any speaker tags. Just provide the clean spoken words.
-2. MULTIPLE SPEAKERS (Actual Conversation / Dialogue):
-   - ONLY if two or more distinct people are genuinely conversing or taking turns speaking:
-   - Label distinct turns clearly using the names spoken in audio or "Speaker 1:", "Speaker 2:".
+SPEAKER DIARIZATION & IDENTIFICATION INTELLIGENCE:
+1. INTERVIEW / DIALOGUE (Two or more distinct people talking or taking turns):
+   - Intelligently identify the ROLES:
+     * "Interviewer": The researcher / documenter asking questions, probing about techniques, materials, process, history, prices, tools, family background, or workshop traditions.
+     * "Artisan": The craftsperson, master maker, artisan, weaver, potter, sculptor, painter, or respondent answering and explaining their craft. (Label as "Artisan" or "Artisan ({clean_hint or 'Artisan'})").
+   - Prefix EVERY turn strictly with their role:
+     Interviewer: [Exact spoken words]
+     Artisan: [Exact spoken words]
+2. SINGLE SPEAKER / MONOLOGUE (Solo voice recording, single craftsperson monologue, dictation, uninterrupted narrative):
+   - If only ONE person is speaking throughout the recording without an interviewer asking questions:
+   - Output the pure verbatim text directly as natural spoken paragraphs.
+   - DO NOT fabricate fake "Interviewer:" or "Artisan:" tags if there is no interview occurring!
+3. MULTI-TURN ACCURACY:
+   - Capture every single turn completely.
+   - Never skip short answers or conversational affirmations (e.g. "हाँ", "जी हाँ", "बिलकुल", "ठीक है", "Yes", "No", "ना").
+
+ORTHOGRAPHY & SCRIPT RULES:
+1. "native_transcript":
+   - Transcribe in the EXACT original spoken language using its official native script:
+     * Hindi / Awadhi / Bhojpuri / Rajasthani -> Devanagari script (देवनागरी)
+     * Bengali -> Bengali script (বাংলা লিপি)
+     * Tamil -> Tamil script (தமிழ்)
+     * Telugu -> Telugu script (తెలుగు)
+     * Gujarati -> Gujarati script (ગુજરાતી)
+     * English -> Standard English spelling
+   - NEVER output broken phonetic gibberish or nonsensical Latin character strings.
+2. "english_transcript":
+   - Provide a faithful, authentic, turn-by-turn English translation of the entire dialogue.
+   - Maintain the EXACT matching speaker labels (e.g. "Interviewer:", "Artisan:").
+   - If the audio is already in English, output the identical verbatim English text.
 
 REQUIRED OUTPUT FIELDS (JSON):
-1. "native_transcript": Complete verbatim transcript in the exact original language spoken (English if spoken in English, Devanagari script for Hindi, Bengali script বাংলা লিপি for Bengali, etc.). No timestamps.
-2. "english_transcript":
-   - If the audio is already in English: output the identical verbatim English transcription.
-   - If the audio is in an Indic or other language: provide an accurate, faithful English translation of ONLY what was said, without adding any extra dialogue.
-3. "detected_language": The primary spoken language (e.g. "English", "Hindi", "Bengali", etc.).
+1. "native_transcript": Complete verbatim transcript in the exact original language spoken. No timestamps.
+2. "english_transcript": Accurate, faithful verbatim English translation of every turn.
+3. "detected_language": The primary spoken language (e.g. "Hindi", "Bengali", "English", etc.).
 4. "is_multi_speaker": boolean (true if 2+ speakers conversing; false if single speaker).
 5. "title": A clean short title (e.g. "{clean_hint or 'Voice Recording'}").
 6. "confidence": 0.99
 
 Output STRICTLY a JSON object with this structure:
 {{
-  "detected_language": "English",
-  "is_multi_speaker": false,
+  "detected_language": "Hindi",
+  "is_multi_speaker": true,
   "title": "{clean_hint or 'Voice Recording'}",
   "confidence": 0.99,
-  "native_transcript": "...",
-  "english_transcript": "..."
+  "native_transcript": "Interviewer: ...\\n\\nArtisan: ...",
+  "english_transcript": "Interviewer: ...\\n\\nArtisan: ..."
 }}
 Output only the valid JSON without any other conversational commentary."""
 
         fallback_models = [
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash-8b",
-            "gemini-1.5-pro"
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
+            "gemini-3.1-flash-lite",
+            "gemini-3.5-flash-lite",
+            "gemini-3.5-flash",
+            "gemini-3.1-flash-lite-preview",
+            "gemini-3-flash-preview"
         ]
         
         # Ensure current model is first
