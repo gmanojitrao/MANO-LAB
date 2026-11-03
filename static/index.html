@@ -714,6 +714,27 @@
       '.ac3', '.eac3', '.dts', '.voc', '.au', '.snd', '.pcm', '.ra', '.rm', '.ts'
     ];
 
+    function getAccurateAudioMimeType(filename) {
+      if (!filename) return 'audio/mp3';
+      const clean = filename.toLowerCase().trim().replace(/[._\s]+$/, '');
+      const ext = clean.split('.').pop();
+      switch (ext) {
+        case 'wav': case 'wave': return 'audio/wav';
+        case 'm4a': return 'audio/m4a';
+        case 'mp3': return 'audio/mp3';
+        case 'aac': return 'audio/aac';
+        case 'ogg': case 'oga': return 'audio/ogg';
+        case 'opus': return 'audio/ogg; codecs=opus';
+        case 'flac': return 'audio/flac';
+        case 'webm': case 'weba': return 'audio/webm';
+        case 'mp4': return 'video/mp4';
+        case '3gp': return 'video/3gpp';
+        case 'amr': return 'audio/amr';
+        case 'mkv': return 'video/x-matroska';
+        default: return 'audio/mp3';
+      }
+    }
+
     function isAudioFilename(name) {
       if (!name) return false;
       const lower = name.toLowerCase().trim();
@@ -911,27 +932,24 @@
       if (!fileList || fileList.length === 0) return;
       const validFiles = Array.from(fileList).filter(f => isAudioFile(f));
       
-      // Reset input values so user can select the same folder again or re-select
       const folderInput = document.getElementById('folderInput');
       if (folderInput) folderInput.value = '';
       const filesInput = document.getElementById('filesInput');
       if (filesInput) filesInput.value = '';
 
       if (validFiles.length === 0) {
-        alert(`No supported audio files detected in the selected folder.\n(Found ${fileList.length} files. Supported formats: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, etc.)`);
+        alert(`No supported audio files detected in the selected folder.\n(Checked ${fileList.length} files. Supported formats: MP3, M4A, WAV, AAC, FLAC, OGG, OPUS, MP4, 3GP, AMR, etc.)`);
         return;
       }
 
       if (!isBackendAvailable) {
-        // Direct browser file handling for Cloudflare Pages / Standalone web
-        validFiles.forEach(f => {
-          selectedFiles.push({
-            name: f.name,
-            path: f.name,
-            size_mb: Math.round((f.size / (1024 * 1024)) * 100) / 100,
-            file: f
-          });
-        });
+        // Replace selection with the newly uploaded folder
+        selectedFiles = validFiles.map(f => ({
+          name: f.name,
+          path: f.name,
+          size_mb: Math.round((f.size / (1024 * 1024)) * 100) / 100,
+          file: f
+        }));
         renderSelectedFiles();
         return;
       }
@@ -1415,15 +1433,16 @@
         keys.push(activeKey);
       }
 
-      // Prioritize keys not marked as exhausted today
-      keys.sort((a, b) => (EXHAUSTED_DAILY_KEYS.has(a) ? 1 : 0) - (EXHAUSTED_DAILY_KEYS.has(b) ? 1 : 0));
+      // Filter out truly exhausted daily keys (only when Google explicitly returns per-day exhaustion)
+      const validPool = keys.filter(k => !EXHAUSTED_DAILY_KEYS.has(k));
+      let candidateKeys = validPool.length > 0 ? validPool : keys;
 
-      if (keys.length > 1) {
-        const offset = (geminiKeyRotationIndex++) % keys.length;
-        keys = [...keys.slice(offset), ...keys.slice(0, offset)];
+      // Rotate pool starting index to balance requests evenly across all active keys
+      if (candidateKeys.length > 1) {
+        const offset = (geminiKeyRotationIndex++) % candidateKeys.length;
+        candidateKeys = [...candidateKeys.slice(offset), ...candidateKeys.slice(0, offset)];
       }
 
-      // Priority list of proven Gemini models for audio transcription
       const fallbackModels = [
         "gemini-flash-latest",
         "gemini-flash-lite-latest",
@@ -1444,57 +1463,75 @@
 
       let lastError = null;
 
-      for (const k of keys) {
-        for (const m of fallbackModels) {
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`;
-            const res = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{
-                  parts: [
-                    { text: prompt },
-                    filePart
-                  ]
-                }],
-                generationConfig: {
-                  temperature: 0.1,
-                  maxOutputTokens: 8192,
-                  response_mime_type: "application/json"
-                },
-                safetySettings: safetySettings
-              })
-            });
+      // Up to 2 complete passes across candidate keys
+      for (let pass = 0; pass < 2; pass++) {
+        for (const k of candidateKeys) {
+          for (const m of fallbackModels) {
+            try {
+              // Gentle 400ms inter-request pacing so we never exceed per-minute rate limits
+              await new Promise(r => setTimeout(r, 400));
 
-            if (!res.ok) {
-              const errJson = await res.json().catch(() => ({}));
-              const msg = errJson.error?.message || `HTTP ${res.status}`;
-              if (msg.toLowerCase().includes('requests per day limit') || msg.toLowerCase().includes('exceeded your current quota') || res.status === 429) {
-                EXHAUSTED_DAILY_KEYS.add(k);
-                break; // Jump to next key immediately
+              const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`;
+              const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{
+                    parts: [
+                      { text: prompt },
+                      filePart
+                    ]
+                  }],
+                  generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 8192,
+                    response_mime_type: "application/json"
+                  },
+                  safetySettings: safetySettings
+                })
+              });
+
+              if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                const msg = errJson.error?.message || `HTTP ${res.status}`;
+
+                // ONLY blacklist for the day if Google explicitly says "Per-day limit"
+                if (msg.toLowerCase().includes('requests per day') || msg.toLowerCase().includes('quota metric \'queries\' and limit \'queries per day\'')) {
+                  console.warn(`Key ${k.slice(0, 6)}... reached daily quota. Marking exhausted for today.`);
+                  EXHAUSTED_DAILY_KEYS.add(k);
+                  break; // Move to next key
+                }
+
+                // If momentary rate limit (429) or high demand (503):
+                if (res.status === 429 || res.status === 503 || msg.includes('429') || msg.includes('quota') || msg.includes('high demand')) {
+                  console.warn(`Temporary throttle on key ${k.slice(0, 6)}... (${msg}). Rotating to next key in pool.`);
+                  // Wait 1 second and immediately rotate to next key (DO NOT blacklist!)
+                  await new Promise(r => setTimeout(r, 1000));
+                  break; // Move to next key in rotation pool
+                }
+
+                throw new Error(`[${m}] ${msg}`);
               }
-              throw new Error(`[${m}] ${msg}`);
-            }
 
-            const data = await res.json();
-            const candidate = data.candidates?.[0];
-            const rawText = candidate?.content?.parts?.[0]?.text || '';
-            const parsed = extractJsonFromResponse(rawText);
-            if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
-              return parsed;
-            }
-          } catch (e) {
-            lastError = e;
-            console.warn(`Model ${m} with key ${k.slice(0, 6)}... failed:`, e.message);
-            if (e.message.includes('API key not valid') || e.message.includes('quota') || e.message.includes('429')) {
-              break;
+              const data = await res.json();
+              const candidate = data.candidates?.[0];
+              const rawText = candidate?.content?.parts?.[0]?.text || '';
+              const parsed = extractJsonFromResponse(rawText);
+              if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+                return parsed;
+              }
+            } catch (e) {
+              lastError = e;
+              console.warn(`Model ${m} with key ${k.slice(0, 6)}...: `, e.message);
+              if (e.message.includes('API key not valid') || e.message.includes('quota') || e.message.includes('429')) {
+                break; // Jump to next key
+              }
             }
           }
         }
       }
 
-      throw lastError || new Error("Gemini cloud processing returned an empty transcript.");
+      throw lastError || new Error("Gemini cloud processing returned an empty transcript. Please verify your internet connection.");
     }
 
     async function callGeminiTextTranslation(prompt, activeKey) {
@@ -1614,13 +1651,13 @@ Output STRICTLY a JSON object with this structure:
         throw new Error("No valid Google Gemini API Key configured. Please enter your Google AI Studio key starting with 'AIzaSy'.");
       }
 
-      if (onProgress) onProgress("Decoding audio stream for verbatim analysis...");
+      if (onProgress) onProgress("Inspecting audio format & decoding stream...");
 
       let decoded = null;
       try {
         decoded = await decodeAndResampleAudio(file, 16000);
       } catch (decodeErr) {
-        console.warn("Browser audio decode failed, falling back to direct stream:", decodeErr);
+        console.warn(`Web Audio decode failed on ${file.name}, using direct audio container streaming:`, decodeErr);
       }
 
       // Case 1: Audio decoded into 16kHz PCM samples
@@ -1628,14 +1665,13 @@ Output STRICTLY a JSON object with this structure:
         const { samples, duration } = decoded;
         const totalDurationMins = (duration / 60).toFixed(1);
 
-        // Optimal chunking: 90 seconds (1.5 minutes) ensures 100% of speech is captured verbatim without rushing or summarization
         const CHUNK_DURATION_SEC = 90;
-        const OVERLAP_SEC = 2.5; // 2.5s overlap prevents cutting words at boundaries
+        const OVERLAP_SEC = 2.5;
         const CHUNK_SAMPLES = Math.floor(16000 * CHUNK_DURATION_SEC);
         const OVERLAP_SAMPLES = Math.floor(16000 * OVERLAP_SEC);
         const STEP_SAMPLES = CHUNK_SAMPLES - OVERLAP_SAMPLES;
 
-        // If audio <= 120 seconds (2 minutes), process as a single flawless pass
+        // If audio <= 120 seconds (2 minutes), process as a single pass
         if (duration <= 120) {
           if (onProgress) onProgress(`Transcribing audio (${Math.round(duration)}s) via Google Gemini Cloud AI...`, 0.25);
           const wavBuffer = encodeWAV(samples, 16000);
@@ -1648,17 +1684,19 @@ Output STRICTLY a JSON object with this structure:
           };
 
           const prompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, false);
-          if (onProgress) onProgress(`Identifying speakers & transcribing A-to-Z turns...`, 0.60);
+          if (onProgress) onProgress(`Transcribing speech turns with Google Gemini...`, 0.60);
           const parsed = await callGeminiContent(activeKey, prompt, filePart);
           parsed.duration_seconds = Math.round(duration);
           parsed.duration_formatted = `${Math.floor(duration / 60)}:${('0' + Math.floor(duration % 60)).slice(-2)}`;
+          parsed.artisan_name = parsed.artisan_name || artisanHint || 'Artisan';
+          parsed.title = parsed.artisan_name;
 
           // If Indic native text exists but English translation is missing or untranslated, translate
           if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim() || parsed.english_transcript === parsed.native_transcript)) {
             if (!isPredominantlyEnglish(parsed.native_transcript)) {
               if (onProgress) onProgress(`Translating verbatim dialogue to English...`, 0.85);
               try {
-                const trPrompt = `You are a precise, verbatim interview translator.
+                const trPrompt = `You are an elite, world-class verbatim interview translator.
 Translate the following interview dialogue turns into natural, genuine English verbatim without additions, omissions, or editorial commentary.
 Keep identical matching speaker labels (e.g. "Interviewer: ...", "Artisan: ...").
 Translate every single turn completely and accurately from start to finish.
@@ -1759,7 +1797,7 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
 
         return {
           title: finalArtisan || file.name.replace(/\.[^/.]+$/, ''),
-          artisan_name: finalArtisan,
+          artisan_name: finalArtisan || artisanHint || 'Artisan',
           section_name: sectionHint,
           detected_language: detectedLanguage,
           is_multi_speaker: isMultiSpeaker,
@@ -1770,31 +1808,63 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
         };
       }
 
-      // Case 2: Audio decode was unsupported by browser, fall back to direct raw base64 if <= 15MB
-      if (file.size <= 15 * 1024 * 1024) {
-        if (onProgress) onProgress("Transcribing raw audio via Google Gemini Cloud AI...");
+      // Case 2: Audio decode was unsupported by browser (e.g. AMR, 3GP, video containers, or memory constraints)
+      // Gemini natively ingests audio containers up to 25MB!
+      if (file.size <= 25 * 1024 * 1024) {
+        if (onProgress) onProgress("Transcribing audio container directly via Google Gemini Cloud AI...", 0.35);
         const base64Data = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result.split(',')[1]);
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-        const ext = file.name.split('.').pop().toLowerCase();
-        const mimeType = ext === 'wav' ? 'audio/wav' : (ext === 'm4a' ? 'audio/m4a' : (ext === 'ogg' ? 'audio/ogg' : 'audio/mp3'));
+
+        const mimeType = getAccurateAudioMimeType(file.name);
         const filePart = {
           inline_data: {
             mime_type: mimeType,
             data: base64Data
           }
         };
+
         const prompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, false);
+        if (onProgress) onProgress("Synthesizing verbatim turns via Google Gemini...", 0.70);
         const parsed = await callGeminiContent(activeKey, prompt, filePart);
-        parsed.duration_seconds = 0;
-        parsed.duration_formatted = "Standard";
+
+        // Approximate duration from file size if duration is unknown (approx 1MB per minute of 128kbps audio)
+        const estSec = Math.max(30, Math.round((file.size / (128 * 1024 / 8))));
+        parsed.duration_seconds = estSec;
+        parsed.duration_formatted = `${Math.floor(estSec / 60)}:${('0' + Math.floor(estSec % 60)).slice(-2)}`;
+        parsed.artisan_name = parsed.artisan_name || artisanHint || 'Artisan';
+        parsed.title = parsed.artisan_name;
+
+        if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim() || parsed.english_transcript === parsed.native_transcript)) {
+          if (!isPredominantlyEnglish(parsed.native_transcript)) {
+            if (onProgress) onProgress("Translating dialogue to English...", 0.90);
+            try {
+              const trPrompt = `You are an elite, world-class verbatim interview translator.
+Translate the following interview dialogue turns into natural, genuine English verbatim without additions, omissions, or editorial commentary.
+Keep identical matching speaker labels (e.g. "Interviewer: ...", "Artisan: ...").
+Translate every single turn completely and accurately from start to finish.
+
+ORIGINAL DIALOGUE:
+${parsed.native_transcript}
+
+OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
+              parsed.english_transcript = await callGeminiTextTranslation(trPrompt, activeKey);
+            } catch (trErr) {
+              parsed.english_transcript = parsed.native_transcript;
+            }
+          } else {
+            parsed.english_transcript = parsed.native_transcript;
+          }
+        }
+
+        if (onProgress) onProgress("Transcription complete", 1.0);
         return parsed;
       }
 
-      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) could not be decoded. Please convert to standard MP3, M4A, or WAV.`);
+      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) is too large for single-pass in-browser memory. Please convert to MP3 under 25MB or run locally with OmniScribe CLI.`);
     }
 
     async function transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, onProgress) {
@@ -1866,18 +1936,47 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
             progressBarFill.style.width = `${exactPercent}%`;
           };
 
-          updateProgress(`Initializing speech analysis...`, 0.05);
+          updateProgress(`Preparing speech analysis...`, 0.05);
 
           const parsedInfo = extractArtisanAndSectionClient(filename);
           const artisanHint = parsedInfo.artisan || 'Artisan';
           const sectionHint = parsedInfo.section || `Section ${i + 1}`;
           const stem = filename.replace(/\.[^/.]+$/, '').trim();
+          const isGeneric = /^(recording|voice|audio|live)[-_ ]*\d*$/i.test(stem);
 
-          try {
-            const parsed = await transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, (msg, frac) => {
-              updateProgress(msg, frac);
-            });
-            const title = parsed.title || parsed.confirmed_artisan_name || (artisanHint || (isGenericRecording ? 'Voice Recording' : stem));
+          // Bulletproof 3-Attempt Retry Loop per File
+          let parsed = null;
+          let fileError = null;
+
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              if (attempt > 1) {
+                updateProgress(`Retrying file with alternate key (Attempt ${attempt}/3)...`, 0.1);
+                // Rotate to next key in pool
+                geminiKeyRotationIndex++;
+                await new Promise(r => setTimeout(r, 1500));
+              }
+
+              parsed = await transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, (msg, frac) => {
+                updateProgress(msg, frac);
+              });
+
+              if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+                fileError = null;
+                break; // File succeeded!
+              }
+            } catch (err) {
+              fileError = err;
+              console.warn(`Attempt ${attempt} on ${filename} failed:`, err.message);
+              if (attempt < 3) {
+                updateProgress(`Rate limit or connection glitch. Cooldown before attempt ${attempt + 1}...`, 0.1);
+                await new Promise(r => setTimeout(r, 2000));
+              }
+            }
+          }
+
+          if (parsed && (parsed.native_transcript || parsed.english_transcript)) {
+            const finalTitle = parsed.artisan_name || parsed.title || artisanHint || (isGeneric ? 'Voice Recording' : stem);
             results.push({
               filename: filename,
               duration_seconds: parsed.duration_seconds || 0,
@@ -1887,18 +1986,18 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
               native_text: parsed.native_transcript || "",
               english_text: parsed.english_transcript || "",
               romanized_text: "",
-              artisan_name: title,
-              section_name: parsed.confirmed_section || sectionHint,
+              artisan_name: finalTitle,
+              section_name: parsed.section_name || sectionHint,
               segments: parsed.segments || [],
               chunks_info: [],
               engine_used: parsed.engine_used || "Google Gemini Cloud AI",
               denoised: false
             });
             updateProgress(`File ${i + 1} completed`, 1.0);
-          } catch (err) {
+          } else {
             hadErrors = true;
-            console.error(`Error transcribing ${filename}:`, err);
-            const errMsg = err.message || 'Transcription error';
+            const errMsg = fileError ? fileError.message : 'Transcription could not decode speech';
+            console.error(`Failed all 3 attempts for ${filename}:`, errMsg);
             results.push({
               filename: filename,
               duration_seconds: 0,
@@ -1914,13 +2013,15 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
               engine_used: "Google Gemini Cloud AI",
               denoised: false
             });
-            // Continue processing remaining files so the user gets all possible files transcribed
           }
+
+          // Gentle 500ms pacing between files in the batch
+          await new Promise(r => setTimeout(r, 500));
         }
 
         document.getElementById('progressPercent').textContent = "100%";
         document.getElementById('progressBarFill').style.width = "100%";
-        document.getElementById('progressSubtitle').textContent = "Consolidating bilingual dossiers and saving backup...";
+        document.getElementById('progressSubtitle').textContent = "Consolidating dossiers and backing up...";
 
         const batchData = {
           job_id: 'web_' + Date.now(),
@@ -1931,15 +2032,13 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
           artisans: deriveArtisansClientSide(results)
         };
 
-        // Automatically persist backup linked to current user
         saveBatchToStorage(batchData);
-
         displayResults(batchData);
         scrollToResults();
 
         if (hadErrors) {
           setTimeout(() => {
-            alert("Batch transcription completed with some errors. The successful recordings have been fully transcribed and backed up.");
+            alert("Batch transcription completed! Some files required retry or had audio format limitations. All successful files are backed up.");
           }, 300);
         }
       } catch (err) {
