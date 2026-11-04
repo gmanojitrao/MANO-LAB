@@ -263,13 +263,12 @@ Output STRICTLY a JSON object with this structure:
 Output only the valid JSON without any other conversational commentary."""
 
         fallback_models = [
-            "gemini-flash-latest",
             "gemini-flash-lite-latest",
-            "gemini-3.1-flash-lite",
             "gemini-3.5-flash-lite",
-            "gemini-3.5-flash",
+            "gemini-2.5-flash-lite",
             "gemini-3.1-flash-lite-preview",
-            "gemini-3-flash-preview"
+            "gemini-3.5-flash",
+            "gemini-flash-latest"
         ]
         
         # Ensure current model is first

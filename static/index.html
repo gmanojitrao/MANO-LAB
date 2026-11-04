@@ -1199,6 +1199,21 @@
       return btoa(binary);
     }
 
+    function downsampleFloatArray(monoData, inputSampleRate, targetSampleRate = 16000) {
+      if (inputSampleRate === targetSampleRate) return monoData;
+      const ratio = inputSampleRate / targetSampleRate;
+      const newLength = Math.round(monoData.length / ratio);
+      const resampled = new Float32Array(newLength);
+      for (let i = 0; i < newLength; i++) {
+        const origIdx = i * ratio;
+        const idx0 = Math.floor(origIdx);
+        const idx1 = Math.min(idx0 + 1, monoData.length - 1);
+        const frac = origIdx - idx0;
+        resampled[i] = monoData[idx0] * (1 - frac) + monoData[idx1] * frac;
+      }
+      return resampled;
+    }
+
     async function decodeAndResampleAudio(file, targetSampleRate = 16000) {
       const arrayBuffer = await file.arrayBuffer();
       const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
@@ -1206,11 +1221,15 @@
         throw new Error("Web Audio API not supported in this browser.");
       }
       const audioCtx = new AudioCtxClass();
-      let audioBuffer;
+      let audioBuffer = null;
       try {
         audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
       } finally {
         audioCtx.close().catch(() => {});
+      }
+
+      if (!audioBuffer) {
+        throw new Error("Audio decode produced null buffer.");
       }
 
       const numChannels = audioBuffer.numberOfChannels;
@@ -1224,29 +1243,58 @@
         }
       }
 
-      if (audioBuffer.sampleRate === targetSampleRate) {
-        return {
-          samples: monoData,
-          duration: audioBuffer.duration,
-          sampleRate: targetSampleRate
-        };
-      }
+      const duration = audioBuffer.duration;
+      // High-speed memory-safe linear interpolation downsample (no heavy OfflineAudioContext!)
+      const resampledSamples = downsampleFloatArray(monoData, audioBuffer.sampleRate, targetSampleRate);
 
-      const totalRenderedSamples = Math.ceil(audioBuffer.duration * targetSampleRate);
-      const offlineCtx = new OfflineAudioContext(1, totalRenderedSamples, targetSampleRate);
-      const source = offlineCtx.createBufferSource();
-      const monoBuffer = offlineCtx.createBuffer(1, length, audioBuffer.sampleRate);
-      monoBuffer.copyToChannel(monoData, 0);
-      source.buffer = monoBuffer;
-      source.connect(offlineCtx.destination);
-      source.start(0);
-
-      const renderedBuffer = await offlineCtx.startRendering();
       return {
-        samples: renderedBuffer.getChannelData(0),
-        duration: renderedBuffer.duration,
+        samples: resampledSamples,
+        duration: duration,
         sampleRate: targetSampleRate
       };
+    }
+
+    // Binary audio container slicer for files that cannot be decoded by Web Audio (e.g. raw .aac, .amr, .3gp, or huge files >20MB)
+    function sliceAudioContainer(arrayBuffer, targetChunkBytes = 9 * 1024 * 1024, ext = 'aac') {
+      const bytes = new Uint8Array(arrayBuffer);
+      const totalLen = bytes.length;
+      if (totalLen <= targetChunkBytes) {
+        return [arrayBuffer];
+      }
+
+      const chunks = [];
+      let currentOffset = 0;
+
+      while (currentOffset < totalLen) {
+        let nextTarget = currentOffset + targetChunkBytes;
+        if (nextTarget >= totalLen) {
+          chunks.push(bytes.subarray(currentOffset, totalLen));
+          break;
+        }
+
+        let cutPoint = nextTarget;
+        // Align cut to audio frame sync boundary if possible
+        if (ext === 'aac') {
+          for (let i = nextTarget; i < Math.min(nextTarget + 4096, totalLen - 6); i++) {
+            if (bytes[i] === 0xFF && (bytes[i + 1] & 0xF0) === 0xF0) {
+              cutPoint = i;
+              break;
+            }
+          }
+        } else if (ext === 'mp3') {
+          for (let i = nextTarget; i < Math.min(nextTarget + 4096, totalLen - 4); i++) {
+            if (bytes[i] === 0xFF && (bytes[i + 1] & 0xE0) === 0xE0) {
+              cutPoint = i;
+              break;
+            }
+          }
+        }
+
+        chunks.push(bytes.subarray(currentOffset, cutPoint));
+        currentOffset = cutPoint;
+      }
+
+      return chunks;
     }
 
     // ============================================================
@@ -1443,22 +1491,21 @@
         candidateKeys = [...candidateKeys.slice(offset), ...candidateKeys.slice(0, offset)];
       }
 
+      // High-capacity models (1,500 requests/day per key) first to prevent 20-req/day limits
       const fallbackModels = [
-        "gemini-flash-latest",
         "gemini-flash-lite-latest",
-        "gemini-3.1-flash-lite",
         "gemini-3.5-flash-lite",
-        "gemini-3.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-3.1-flash-lite-preview",
-        "gemini-3-flash-preview"
+        "gemini-3.5-flash",
+        "gemini-flash-latest"
       ];
 
       const safetySettings = [
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_NONE" }
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
       ];
 
       let lastError = null;
@@ -1548,10 +1595,10 @@
       }
 
       const models = [
-        'gemini-flash-latest',
         'gemini-flash-lite-latest',
-        'gemini-3.1-flash-lite',
         'gemini-3.5-flash-lite',
+        'gemini-2.5-flash-lite',
+        'gemini-3.1-flash-lite-preview',
         'gemini-3.5-flash'
       ];
 
@@ -1653,11 +1700,17 @@ Output STRICTLY a JSON object with this structure:
 
       if (onProgress) onProgress("Inspecting audio format & decoding stream...");
 
+      const ext = (file.name || '').split('.').pop().toLowerCase().trim();
+      const mimeType = getAccurateAudioMimeType(file.name);
+
       let decoded = null;
-      try {
-        decoded = await decodeAndResampleAudio(file, 16000);
-      } catch (decodeErr) {
-        console.warn(`Web Audio decode failed on ${file.name}, using direct audio container streaming:`, decodeErr);
+      // Raw .aac (ADTS) is not supported by Web Audio decodeAudioData in Chromium; bypass directly to container slicing
+      if (ext !== 'aac' && ext !== 'amr' && ext !== '3gp') {
+        try {
+          decoded = await decodeAndResampleAudio(file, 16000);
+        } catch (decodeErr) {
+          console.warn(`Web Audio decode failed on ${file.name}, using direct container streaming:`, decodeErr);
+        }
       }
 
       // Case 1: Audio decoded into 16kHz PCM samples
@@ -1691,7 +1744,6 @@ Output STRICTLY a JSON object with this structure:
           parsed.artisan_name = parsed.artisan_name || artisanHint || 'Artisan';
           parsed.title = parsed.artisan_name;
 
-          // If Indic native text exists but English translation is missing or untranslated, translate
           if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim() || parsed.english_transcript === parsed.native_transcript)) {
             if (!isPredominantlyEnglish(parsed.native_transcript)) {
               if (onProgress) onProgress(`Translating verbatim dialogue to English...`, 0.85);
@@ -1808,63 +1860,92 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
         };
       }
 
-      // Case 2: Audio decode was unsupported by browser (e.g. AMR, 3GP, video containers, or memory constraints)
-      // Gemini natively ingests audio containers up to 25MB!
-      if (file.size <= 25 * 1024 * 1024) {
-        if (onProgress) onProgress("Transcribing audio container directly via Google Gemini Cloud AI...", 0.35);
-        const base64Data = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+      // Case 2: Direct audio container streaming (handles raw .aac, .amr, .3gp, or files of ANY size!)
+      // Slices into ~9MB chunks so files of 30MB, 50MB, or 100MB+ succeed without payload or memory limits
+      if (onProgress) onProgress(`Reading audio container (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`, 0.1);
+      const arrayBuffer = await file.arrayBuffer();
+      const rawChunks = sliceAudioContainer(arrayBuffer, 9 * 1024 * 1024, ext);
+      const totalRawChunks = rawChunks.length;
 
-        const mimeType = getAccurateAudioMimeType(file.name);
+      const allNativeParts = [];
+      const allEnglishParts = [];
+      let detectedLang = 'Hindi / Indic';
+      let isMulti = false;
+      let finalArtisan = artisanHint;
+
+      for (let cIdx = 0; cIdx < totalRawChunks; cIdx++) {
+        const chunkBuf = rawChunks[cIdx];
+        if (onProgress) {
+          onProgress(`Transcribing audio part ${cIdx + 1} of ${totalRawChunks} (${(chunkBuf.byteLength / (1024 * 1024)).toFixed(1)} MB)...`, (cIdx + 0.1) / totalRawChunks);
+        }
+
+        const b64Data = arrayBufferToBase64(chunkBuf);
         const filePart = {
           inline_data: {
             mime_type: mimeType,
-            data: base64Data
+            data: b64Data
           }
         };
 
-        const prompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, false);
-        if (onProgress) onProgress("Synthesizing verbatim turns via Google Gemini...", 0.70);
-        const parsed = await callGeminiContent(activeKey, prompt, filePart);
+        const segmentInfo = totalRawChunks > 1 ? `part ${cIdx + 1} of ${totalRawChunks}` : '';
+        const prompt = buildAudioTranscriptionPrompt(artisanHint, sectionHint, totalRawChunks > 1, segmentInfo);
+        const chunkResult = await callGeminiContent(activeKey, prompt, filePart);
 
-        // Approximate duration from file size if duration is unknown (approx 1MB per minute of 128kbps audio)
-        const estSec = Math.max(30, Math.round((file.size / (128 * 1024 / 8))));
-        parsed.duration_seconds = estSec;
-        parsed.duration_formatted = `${Math.floor(estSec / 60)}:${('0' + Math.floor(estSec % 60)).slice(-2)}`;
-        parsed.artisan_name = parsed.artisan_name || artisanHint || 'Artisan';
-        parsed.title = parsed.artisan_name;
+        if (chunkResult.detected_language) detectedLang = chunkResult.detected_language;
+        if (chunkResult.is_multi_speaker) isMulti = true;
+        if (chunkResult.artisan_name && !artisanHint) finalArtisan = chunkResult.artisan_name;
 
-        if (parsed.native_transcript && (!parsed.english_transcript || !parsed.english_transcript.trim() || parsed.english_transcript === parsed.native_transcript)) {
-          if (!isPredominantlyEnglish(parsed.native_transcript)) {
-            if (onProgress) onProgress("Translating dialogue to English...", 0.90);
-            try {
-              const trPrompt = `You are an elite, world-class verbatim interview translator.
+        if (chunkResult.native_transcript && chunkResult.native_transcript.trim()) {
+          allNativeParts.push(chunkResult.native_transcript.trim());
+        }
+        if (chunkResult.english_transcript && chunkResult.english_transcript.trim()) {
+          allEnglishParts.push(chunkResult.english_transcript.trim());
+        }
+
+        if (onProgress) {
+          onProgress(`Audio part ${cIdx + 1} of ${totalRawChunks} complete`, (cIdx + 1) / totalRawChunks);
+        }
+      }
+
+      const combinedNative = allNativeParts.join("\n\n");
+      let combinedEnglish = allEnglishParts.join("\n\n");
+
+      if (combinedNative && (!combinedEnglish || !combinedEnglish.trim() || combinedEnglish === combinedNative)) {
+        if (!isPredominantlyEnglish(combinedNative)) {
+          if (onProgress) onProgress("Translating dialogue to English...", 0.95);
+          try {
+            const trPrompt = `You are an elite, world-class verbatim interview translator.
 Translate the following interview dialogue turns into natural, genuine English verbatim without additions, omissions, or editorial commentary.
 Keep identical matching speaker labels (e.g. "Interviewer: ...", "Artisan: ...").
 Translate every single turn completely and accurately from start to finish.
 
 ORIGINAL DIALOGUE:
-${parsed.native_transcript}
+${combinedNative}
 
 OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
-              parsed.english_transcript = await callGeminiTextTranslation(trPrompt, activeKey);
-            } catch (trErr) {
-              parsed.english_transcript = parsed.native_transcript;
-            }
-          } else {
-            parsed.english_transcript = parsed.native_transcript;
+            combinedEnglish = await callGeminiTextTranslation(trPrompt, activeKey);
+          } catch (trErr) {
+            combinedEnglish = combinedNative;
           }
+        } else {
+          combinedEnglish = combinedNative;
         }
-
-        if (onProgress) onProgress("Transcription complete", 1.0);
-        return parsed;
       }
 
-      throw new Error(`Audio file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) is too large for single-pass in-browser memory. Please convert to MP3 under 25MB or run locally with OmniScribe CLI.`);
+      // Approximate duration from file size (approx 1MB per minute of standard 128kbps audio)
+      const estSec = Math.max(30, Math.round((file.size / (128 * 1024 / 8))));
+
+      return {
+        title: finalArtisan || file.name.replace(/\.[^/.]+$/, ''),
+        artisan_name: finalArtisan || artisanHint || 'Artisan',
+        section_name: sectionHint,
+        detected_language: detectedLang,
+        is_multi_speaker: isMulti,
+        native_transcript: combinedNative,
+        english_transcript: combinedEnglish,
+        duration_seconds: estSec,
+        duration_formatted: `${Math.floor(estSec / 60)}:${('0' + Math.floor(estSec % 60)).slice(-2)}`
+      };
     }
 
     async function transcribeSingleAudioItem(f, filename, artisanHint, sectionHint, selectedEngine, onProgress) {
