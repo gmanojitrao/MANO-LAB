@@ -265,10 +265,7 @@ Output only the valid JSON without any other conversational commentary."""
         fallback_models = [
             "gemini-flash-lite-latest",
             "gemini-3.5-flash-lite",
-            "gemini-2.5-flash-lite",
-            "gemini-3.1-flash-lite-preview",
-            "gemini-3.5-flash",
-            "gemini-flash-latest"
+            "gemini-3.5-flash"
         ]
         
         # Ensure current model is first
@@ -473,11 +470,9 @@ ORIGINAL DIALOGUE:
 OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY."""
 
         fallback_models = [
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash-8b",
-            "gemini-1.5-pro"
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash-lite",
+            "gemini-3.5-flash"
         ]
         headers = {"Content-Type": "application/json"}
         payload = {
