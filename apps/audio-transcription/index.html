@@ -720,7 +720,7 @@
       const ext = clean.split('.').pop();
       switch (ext) {
         case 'wav': case 'wave': return 'audio/wav';
-        case 'm4a': return 'audio/m4a';
+        case 'm4a': return 'audio/mp4';
         case 'mp3': return 'audio/mp3';
         case 'aac': return 'audio/aac';
         case 'ogg': case 'oga': return 'audio/ogg';
@@ -1154,15 +1154,21 @@
       }
     }
 
-    function arrayBufferToBase64(buffer) {
-      let binary = '';
-      const bytes = new Uint8Array(buffer);
-      const len = bytes.byteLength;
-      const chunkSize = 0x8000;
-      for (let i = 0; i < len; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
-      }
-      return btoa(binary);
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result;
+          const idx = res.indexOf(',');
+          resolve(idx !== -1 ? res.substring(idx + 1) : res);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function arrayBufferToBase64(buffer) {
+      return blobToBase64(new Blob([buffer]));
     }
 
     async function decodeAndResampleAudio(file, targetSampleRate = 16000) {
@@ -1172,10 +1178,14 @@
         throw new Error("Web Audio API not supported in this browser.");
       }
       const audioCtx = new AudioCtxClass();
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume().catch(() => {});
+      }
       let audioBuffer = null;
       try {
         audioBuffer = await new Promise((resolve, reject) => {
-          audioCtx.decodeAudioData(arrayBuffer, resolve, (err) => {
+          // Pass a cloned slice so decodeAudioData does not neuter original arrayBuffer
+          audioCtx.decodeAudioData(arrayBuffer.slice(0), resolve, (err) => {
             reject(err || new Error("Web Audio decode failed."));
           });
         });
@@ -1201,6 +1211,9 @@
       }
 
       for (let i = 0; i < targetLength; i++) {
+        if (i % 250000 === 0 && i > 0) {
+          await new Promise(r => setTimeout(r, 0)); // Yield thread so browser stays smooth & responsive!
+        }
         const origIdx = i * ratio;
         const idx0 = Math.floor(origIdx);
         const idx1 = Math.min(idx0 + 1, audioBuffer.length - 1);
@@ -1492,7 +1505,10 @@
       // Exclusively use verified, active, high-capacity (1,500 req/day per key) models
       const fallbackModels = [
         "gemini-flash-lite-latest",
-        "gemini-3.5-flash-lite"
+        "gemini-2.5-flash-lite",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-3.5-flash"
       ];
 
       const safetySettings = [
@@ -1745,7 +1761,7 @@ Output STRICTLY a JSON object with this structure:
         if (duration <= 120) {
           if (onProgress) onProgress(`Transcribing audio (${Math.round(duration)}s) via Google Gemini Cloud AI...`, 0.25);
           const wavBuffer = encodeWAV(samples, 16000);
-          const b64 = arrayBufferToBase64(wavBuffer);
+          const b64 = await arrayBufferToBase64(wavBuffer);
           const filePart = {
             inline_data: {
               mime_type: "audio/wav",
@@ -1812,7 +1828,7 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
           try {
             const chunkSamples = samples.subarray(startSample, endSample);
             const wavBuffer = encodeWAV(chunkSamples, 16000);
-            const b64 = arrayBufferToBase64(wavBuffer);
+            const b64 = await arrayBufferToBase64(wavBuffer);
             const filePart = {
               inline_data: {
                 mime_type: "audio/wav",
@@ -1890,10 +1906,10 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
       if (onProgress) onProgress(`Reading audio container (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`, 0.1);
       const arrayBuffer = await file.arrayBuffer();
 
-      // If file <= 20MB (or if ext is m4a/mp4 where binary byte slicing breaks atoms), send intact
-      const rawChunks = (file.size <= 20 * 1024 * 1024 || ext === 'm4a' || ext === 'mp4')
+      // If file <= 12MB, send intact. If larger or raw AAC/MP3, slice into 6MB chunks to stay well under Gemini 20MB limit
+      const rawChunks = (file.size <= 12 * 1024 * 1024)
         ? [arrayBuffer]
-        : sliceAudioContainer(arrayBuffer, 10 * 1024 * 1024, ext);
+        : sliceAudioContainer(arrayBuffer, 6 * 1024 * 1024, ext);
       const totalRawChunks = rawChunks.length;
 
       const allNativeParts = [];
@@ -1909,7 +1925,7 @@ OUTPUT ONLY THE TRANSLATED DIALOGUE WITHOUT ANY PREAMBLE OR COMMENTARY.`;
         }
 
         try {
-          const b64Data = arrayBufferToBase64(chunkBuf);
+          const b64Data = await arrayBufferToBase64(chunkBuf);
           const filePart = {
             inline_data: {
               mime_type: mimeType,
