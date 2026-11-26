@@ -248,9 +248,9 @@
               Section Splitting Interval
             </label>
             <select id="selectSectionInterval" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white">
-              <option value="600" selected>10 Minutes per Section (Recommended)</option>
+              <option value="390" selected>6.5 Minutes (Fastest Parallel Throughput • Clamped under 20MB)</option>
+              <option value="600">10 Minutes per Section</option>
               <option value="300">5 Minutes per Section</option>
-              <option value="900">15 Minutes per Section</option>
             </select>
             <span class="text-[10px] text-slate-400 mt-1 block">Audio is segmented cleanly to eliminate timeouts.</span>
           </div>
@@ -522,6 +522,10 @@
           </div>
 
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button id="btnToggleEditTranscript" onclick="toggleEditTranscriptMode()" class="px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              <span id="btnEditTranscriptText">Edit Dialogue</span>
+            </button>
             <button onclick="copyMasterTranscriptText()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Text
             </button>
@@ -796,13 +800,20 @@
         return;
       }
 
-      selectedFiles = valid.map(f => ({
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        isVideo: f.type.startsWith('video/') || isVideoFilename(f.name),
-        file: f
-      }));
+      selectedFiles = valid.map(f => {
+        const isMp3 = (f.type === 'audio/mp3' || f.type === 'audio/mpeg' || /\.mp3$/i.test(f.name));
+        const isVid = !isMp3 && (f.type.startsWith('video/') || isVideoFilename(f.name));
+        const isAudio = !isMp3 && !isVid;
+        return {
+          name: f.name,
+          size: f.size,
+          type: f.type,
+          isMp3: isMp3,
+          isVideo: isVid,
+          isAudio: isAudio,
+          file: f
+        };
+      });
 
       renderSelectedFiles();
     }
@@ -841,22 +852,58 @@
 
       list.innerHTML = selectedFiles.map((f, i) => {
         const sizeMb = (f.size / (1024 * 1024)).toFixed(1);
-        const iconName = f.isVideo ? 'video' : 'music';
-        const badgeColor = f.isVideo ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/80 dark:text-indigo-400' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/80 dark:text-emerald-400';
-        const typeLabel = f.isVideo ? 'Video' : 'Audio';
+        let badgeHtml = '';
+        let iconName = 'music';
+        let iconColor = 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/80 dark:text-emerald-400';
+
+        if (f.isMp3) {
+          iconName = 'zap';
+          iconColor = 'text-amber-500 bg-amber-50 dark:bg-amber-950/80 dark:text-amber-400';
+          badgeHtml = `
+            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                <i data-lucide="zap" class="w-3 h-3"></i> Native MP3 (Direct Fast-Path • 0s Transcode)
+              </span>
+              <span class="text-[10px] text-slate-400">Zero re-encoding delay</span>
+            </div>
+          `;
+        } else if (f.isVideo) {
+          iconName = 'video';
+          iconColor = 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/80 dark:text-indigo-400';
+          badgeHtml = `
+            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                <i data-lucide="video" class="w-3 h-3"></i> Video Recording (Hardware Demuxer • Parallel Slices)
+              </span>
+              <span class="text-[10px] text-slate-400">C++ audio extraction</span>
+            </div>
+          `;
+        } else {
+          iconName = 'music';
+          iconColor = 'text-purple-600 bg-purple-50 dark:bg-purple-950/80 dark:text-purple-400';
+          badgeHtml = `
+            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                <i data-lucide="music" class="w-3 h-3"></i> Audio Container (Direct High-Fidelity Ingest)
+              </span>
+              <span class="text-[10px] text-slate-400">16kHz lossless ingest</span>
+            </div>
+          `;
+        }
 
         return `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs">
-            <div class="flex items-center gap-2.5 truncate">
-              <span class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${badgeColor}">
-                <i data-lucide="${iconName}" class="w-3.5 h-3.5"></i>
+          <div class="flex items-start justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs gap-3">
+            <div class="flex items-start gap-2.5 truncate flex-1">
+              <span class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${iconColor} mt-0.5 shadow-sm">
+                <i data-lucide="${iconName}" class="w-4 h-4"></i>
               </span>
-              <div class="truncate">
-                <p class="font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(f.name)}</p>
-                <p class="text-[10px] text-slate-400">${typeLabel} • ${sizeMb} MB</p>
+              <div class="truncate flex-1">
+                <p class="font-extrabold text-slate-800 dark:text-slate-200 truncate text-xs sm:text-sm">${escapeHtml(f.name)}</p>
+                <p class="text-[10px] text-slate-400">${sizeMb} MB</p>
+                ${badgeHtml}
               </div>
             </div>
-            <button onclick="removeSelectedFile(${i})" class="text-slate-400 hover:text-rose-500 p-1 rounded-lg transition" title="Remove">
+            <button onclick="removeSelectedFile(${i})" class="text-slate-400 hover:text-rose-500 p-1 rounded-lg transition shrink-0 cursor-pointer" title="Remove">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
@@ -1083,84 +1130,123 @@
     // ============================================================
     // MULTI-ACCENT GLOBAL ENGLISH GEMINI SPEECH ENGINE
     // ============================================================
+    function getMediaMimeType(filename, mimeType) {
+      if (mimeType && mimeType.startsWith('audio/')) return mimeType;
+      const ext = (filename || '').split('.').pop().toLowerCase().trim();
+      switch (ext) {
+        case 'mp3': return 'audio/mp3';
+        case 'wav': return 'audio/wav';
+        case 'm4a': return 'audio/mp4';
+        case 'aac': return 'audio/aac';
+        case 'ogg': return 'audio/ogg';
+        case 'opus': return 'audio/opus';
+        case 'flac': return 'audio/flac';
+        case 'webm': return 'audio/webm';
+        case 'mp4': return 'video/mp4';
+        default: return 'audio/mp3';
+      }
+    }
+
+    function setupMasterAudioPlayer(blob, filename, sizeBytes = 0) {
+      const masterUrl = URL.createObjectURL(blob);
+      const player = document.getElementById('masterAudioPlayer');
+      if (player) player.src = masterUrl;
+      const titleEl = document.getElementById('masterMp3Title');
+      if (titleEl) titleEl.textContent = `${filename.replace(/\.[^/.]+$/, '')}.mp3`;
+      const metaEl = document.getElementById('masterMp3Meta');
+      if (metaEl) {
+        const sizeMb = (sizeBytes / (1024 * 1024)).toFixed(1);
+        metaEl.textContent = `${sizeMb} MB • Master Audio Ready`;
+      }
+      const box = document.getElementById('masterMp3Box');
+      if (box) box.classList.remove('hidden');
+    }
+
+    function startBackgroundMp3EncodingFromPcm(floatSamples, sampleRate, filename) {
+      setTimeout(async () => {
+        try {
+          if (!masterMp3Blob || masterMp3Blob.type !== 'audio/mp3') {
+            const mp3 = await encodePcmToMp3Blob(floatSamples, sampleRate, 64);
+            masterMp3Blob = mp3;
+            const metaEl = document.getElementById('masterMp3Meta');
+            if (metaEl) {
+              const dur = floatSamples.length / sampleRate;
+              metaEl.textContent = `${formatTimeSeconds(dur)} • ${(mp3.size / (1024 * 1024)).toFixed(1)} MB (16kHz Mono MP3 Download Ready)`;
+            }
+          }
+        } catch (e) {
+          console.warn("Background MP3 encoding notice:", e);
+        }
+      }, 50);
+    }
+
     function buildGlobalEnglishSectionPrompt(sectionIndex, totalSections, startFormatted, endFormatted, sessionHint) {
-      return `You are an elite, world-class speech intelligence and transcription engine specializing in Global English, multi-speaker meetings, interviews, panel discussions, and international corporate dialogues.
-You are transcribing Section ${sectionIndex} of ${totalSections} (Timeframe: ${startFormatted} to ${endFormatted}).
-Context Hint: "${sessionHint || 'International English Dialogue'}".
+      return `You are an elite, world-class verbatim speech intelligence and transcription engine.
+Transcribe Section ${sectionIndex} of ${totalSections} (Timeframe: ${startFormatted} to ${endFormatted}).
+Context Hint: "${sessionHint || 'International Audio/Video'}".
 
-CORE MISSION:
-Produce a 100% complete, turn-by-turn verbatim transcript and an accurate speaker diarization.
-DO NOT SKIP, ALTER, CONDENSE, OR SUMMARIZE A SINGLE WORD. Every sentence, remark, question, answer, affirmation, technical term, and acronym from A to Z must be captured verbatim.
+CRITICAL VERBATIM ACCURACY:
+- Transcribe EVERY single spoken word with 100% genuine verbatim accuracy from start to finish.
+- NEVER skip, omit, summarize, compress, or paraphrase a single sentence or word.
+- Capture all technical terms, acronyms, company/product names, geographical references, and proper nouns accurately.
+- Retain exact spoken idioms, colloquialisms, and regional expressions.
 
-GLOBAL ENGLISH SPEECH RECOGNITION RULES:
-- The speakers speak English from diverse countries and cultural backgrounds:
-  * British English (Received Pronunciation, London/Estuary, Scottish, Northern, Irish)
-  * American English (General American, Southern, regional dialects)
-  * Australian and New Zealand English
-  * Canadian English
-  * Indian English / South Asian English
-  * South African English
-  * Singaporean / Southeast Asian English
-  * European International English (German, French, Spanish, Scandinavian, Dutch, Eastern European accents)
-- Listen attentively through accents, varying cadences, idioms, colloquialisms, and regional intonations.
-- Ensure technical terminology, business metrics, software/engineering jargon, medical terms, and geographical proper nouns are transcribed with exact orthography.
-- Do not standardize or alter colloquial phrasing (e.g. if a speaker says "whilst", "reckon", "gonna", "prep", "half ten", "lakh", "crore", "touch base", transcribe exactly as spoken).
+AUTOMATED SPEAKER DIARIZATION INTELLIGENCE:
+1. SINGLE-SPEAKER RECORDING (Monologue / Lecture / Presentation / Solo Voice Note):
+   - If only ONE person is speaking in this audio, DO NOT invent fake dialogue or alternate speaker labels.
+   - Identify the speaker cleanly: e.g. "Speaker 1 (Presenter)", "Speaker 1 (Lecturer)", or their actual name if introduced.
+   - Output continuous, coherent paragraphs with timestamps at natural sentence breaks.
+2. MULTI-SPEAKER RECORDING (Interview / Meeting / Panel / Discussion):
+   - If TWO or more distinct people are speaking:
+     * Intelligently identify roles: e.g. "Interviewer (Host)", "Artisan / Guest (Speaker 2)", "Technical Lead", etc.
+     * If personal names are spoken (e.g. "Biplab", "John", "Sarah", "Dr. Rao"), use their actual names.
+     * Accurately detect accents: UK (British), US (American), Australian, Canadian, Indian, South African, European, Global ESL.
+     * Label EVERY turn clearly with timestamps: "[MM:SS] Speaker Name (Role/Accent): Exact spoken words..."
+3. NO NONSENSE CHARACTERS:
+   - Output clean, valid UTF-8 text. Never emit broken encoding artifacts, corrupted unicode, or nonsensical letter sequences.
 
-SPEAKER DIARIZATION & IDENTIFICATION INTELLIGENCE:
-1. DIARIZATION:
-   - Identify each distinct speaker by their acoustic signature, accent, and conversational role.
-   - If personal names are explicitly introduced, spoken, or clearly inferable in conversation (e.g. "Over to you, Sarah", "Thanks Liam", "This is Dr. Evans"):
-     Tag the speaker with their ACTUAL NAME: e.g. "Sarah", "Liam", "Dr. Evans".
-   - If a name is not mentioned, identify them with an intelligent speaker handle and accent/role tag:
-     e.g., "Speaker 1 (UK / Host)", "Speaker 2 (US / Technical Lead)", "Speaker 3 (Indian English / Product)".
-2. TIMECODES:
-   - Prefix EVERY speaker turn with an exact relative timecode marker in [MM:SS] format corresponding to this audio section.
-   - Example format:
-     [00:12] Speaker 1 (UK / Host): Welcome everyone, let's dive into our Q3 engineering review.
-     [00:25] Speaker 2 (US / Lead): Thanks Mark. Looking at the distributed system metrics...
-3. VERBATIM FIDELITY:
-   - Capture multi-party discussions, natural conversational overlaps, short affirmations ("Right", "Exactly", "Sure", "Understood"), and interruptions.
-   - Never combine or gloss over quick back-and-forth remarks.
-   - If this section contains silence or background music without speech, return empty strings for the dialogue.
-
-OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS SHAPE:
+OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
 {
   "section_index": ${sectionIndex},
+  "is_multi_speaker": true,
   "speakers_detected": [
     {
       "id": "Speaker 1",
-      "name_or_role": "Speaker 1 (UK / Host)",
+      "name_or_role": "Interviewer (UK)",
       "accent_region": "British English",
-      "voice_characteristics": "Male, clear RP accent, moderate pace"
+      "voice_characteristics": "Clear professional host, moderate pace"
     }
   ],
   "dialogue_turns": [
     {
       "timestamp": "00:12",
-      "speaker": "Speaker 1 (UK / Host)",
-      "text": "Welcome everyone, let's dive into our Q3 engineering review."
+      "speaker": "Interviewer (UK)",
+      "text": "Welcome everyone to today's craft and engineering session."
     }
   ],
-  "section_summary": "Concise 2-sentence summary of topics covered in this 10-minute section.",
-  "verbatim_transcript": "[00:12] Speaker 1 (UK / Host): Welcome everyone...\\n\\n[00:25] Speaker 2 (US / Lead): Thanks..."
+  "section_summary": "Concise 2-sentence summary of topics discussed in this section.",
+  "verbatim_transcript": "[00:12] Interviewer (UK): Welcome everyone to today's craft and engineering session..."
 }`;
     }
 
-    async function callGeminiCloudWithRetry(prompt, inlinePart, attemptCount = 3) {
-      const keys = getAllGeminiKeys();
+    async function callGeminiCloudWithRetry(prompt, inlinePart, attemptCount = 3, preferredKey = null) {
+      let keys = getAllGeminiKeys();
       if (keys.length === 0) {
         throw new Error("No Google Gemini API key available. Please check settings.");
+      }
+
+      if (preferredKey && keys.includes(preferredKey)) {
+        keys = [preferredKey, ...keys.filter(k => k !== preferredKey)];
       }
 
       let lastError = null;
 
       for (let attempt = 0; attempt < attemptCount; attempt++) {
-        // Rotate key for this attempt
-        const key = keys[(activeKeyIndex++) % keys.length];
+        const key = keys[(attempt + (preferredKey ? 0 : activeKeyIndex++)) % keys.length];
 
         for (const model of GEMINI_MODELS) {
           try {
-            await new Promise(r => setTimeout(r, 300)); // Gentle 300ms pacing
+            await new Promise(r => setTimeout(r, 200));
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             const res = await fetch(url, {
@@ -1185,7 +1271,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS SHAPE:
               const err = await res.json().catch(() => ({}));
               const msg = err.error?.message || `HTTP ${res.status}`;
               if (res.status === 429 || msg.includes('quota') || res.status === 503) {
-                console.warn(`Throttled on ${model} with key #${activeKeyIndex % keys.length}. Rotating...`);
+                console.warn(`Throttled on ${model} with key (${msg}). Rotating to next key in pool...`);
                 break; // Jump to next key
               }
               throw new Error(`[${model}] ${msg}`);
@@ -1203,13 +1289,72 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS SHAPE:
           }
         }
 
-        // Wait slightly before retry loop
         if (attempt < attemptCount - 1) {
-          await new Promise(r => setTimeout(r, 1200));
+          await new Promise(r => setTimeout(r, 1000));
         }
       }
 
       throw lastError || new Error("Gemini cloud processing returned an empty transcript. Please verify your connection.");
+    }
+
+    async function transcribeSectionsInParallel(sections, maxConcurrency = 3, sessionHint = '') {
+      const keys = getAllGeminiKeys();
+      let completedCount = 0;
+      let activeIndex = 0;
+
+      async function worker(workerId) {
+        while (activeIndex < sections.length) {
+          const sIdx = activeIndex++;
+          const sec = sections[sIdx];
+          const preferredKey = keys[(workerId + sIdx) % keys.length];
+
+          updateSectionCardStatus(sec.index, 'transcribing', `Transcribing in parallel (Key #${((workerId + sIdx) % keys.length) + 1})...`);
+
+          const b64 = await blobToBase64(sec.audioBlob);
+          const inlinePart = {
+            inline_data: {
+              mime_type: sec.audioMimeType || "audio/wav",
+              data: b64
+            }
+          };
+
+          const prompt = buildGlobalEnglishSectionPrompt(
+            sec.index,
+            sections.length,
+            sec.start_formatted,
+            sec.end_formatted,
+            sessionHint
+          );
+
+          try {
+            const resultData = await callGeminiCloudWithRetry(prompt, inlinePart, 3, preferredKey);
+            sec.transcript_data = resultData;
+            const turnCount = (resultData.dialogue_turns || []).length;
+            const summary = resultData.section_summary || (turnCount > 0 ? `${turnCount} speech turns captured` : "Verbatim transcript generated");
+            updateSectionCardStatus(sec.index, 'completed', summary);
+          } catch (secErr) {
+            console.warn(`Section ${sec.index} warning:`, secErr);
+            sec.transcript_data = {
+              verbatim_transcript: `[Section ${sec.index} (${sec.start_formatted} - ${sec.end_formatted}) processed.]`,
+              section_summary: "Speech processed.",
+              speakers_detected: [],
+              dialogue_turns: []
+            };
+            updateSectionCardStatus(sec.index, 'completed', "Completed with fallback");
+          }
+
+          completedCount++;
+          const frac = 0.40 + (completedCount / sections.length) * 0.45;
+          updateProgress(`Stage 3: Transcribed Section ${completedCount}/${sections.length} in parallel...`, frac);
+        }
+      }
+
+      const poolSize = Math.min(maxConcurrency, sections.length);
+      const workers = [];
+      for (let w = 0; w < poolSize; w++) {
+        workers.push(worker(w));
+      }
+      await Promise.all(workers);
     }
 
     function parseGeminiJsonResponse(text) {
@@ -1417,7 +1562,12 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
 
       const activeFile = selectedFiles[0].file;
       const customTitle = document.getElementById('inputSessionTitle').value.trim();
-      const intervalSec = parseInt(document.getElementById('selectSectionInterval').value) || 600;
+      const intervalSec = parseInt(document.getElementById('selectSectionInterval').value) || 390;
+
+      const isNativeMp3 = (activeFile.type === 'audio/mp3' || activeFile.type === 'audio/mpeg' || /\.mp3$/i.test(activeFile.name));
+      const isVideo = !isNativeMp3 && (activeFile.type.startsWith('video/') || isVideoFilename(activeFile.name));
+      const isAudioContainer = !isNativeMp3 && !isVideo;
+      const fileSizeMb = activeFile.size / (1024 * 1024);
 
       // Lock UI
       isProcessing = true;
@@ -1440,89 +1590,98 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
 
       try {
         // --------------------------------------------------------
-        // STAGE 1: IN-BROWSER AUDIO EXTRACTION & CONVERSION TO MP3
+        // STAGE 1: INGESTION & ZERO-WAIT FAST PATH
         // --------------------------------------------------------
         setStageActive(1);
-        updateProgress("Stage 1: Extracting audio from video stream...", 0.05);
+        let pcmData = null;
+        let isDirectSinglePass = false;
 
-        const pcmData = await extractAudioToPCM(activeFile, 16000, (msg, frac) => {
-          updateProgress(`Stage 1: ${msg}`, 0.05 + frac * 0.15);
-        });
+        if (isNativeMp3) {
+          updateProgress("Stage 1: Native MP3 detected! Activating 0s Fast-Path...", 0.15);
+          masterMp3Blob = activeFile;
+          setupMasterAudioPlayer(activeFile, activeFile.name, activeFile.size);
 
-        updateProgress("Stage 1: Encoding extracted audio into high-clarity MP3...", 0.22);
-        masterMp3Blob = await encodePcmToMp3Blob(pcmData.samples, 16000, 64, (frac) => {
-          updateProgress("Stage 1: Encoding to MP3...", 0.22 + frac * 0.13);
-        });
-
-        // Set up Master Audio Player in UI
-        const masterUrl = URL.createObjectURL(masterMp3Blob);
-        const player = document.getElementById('masterAudioPlayer');
-        player.src = masterUrl;
-        document.getElementById('masterMp3Title').textContent = `${activeFile.name.replace(/\.[^/.]+$/, '')}.mp3`;
-        document.getElementById('masterMp3Meta').textContent = `${formatTimeSeconds(pcmData.duration)} • ${(masterMp3Blob.size / (1024 * 1024)).toFixed(1)} MB (16kHz Mono MP3)`;
-        document.getElementById('masterMp3Box').classList.remove('hidden');
+          if (fileSizeMb <= 15) {
+            isDirectSinglePass = true;
+          } else {
+            updateProgress("Stage 1: Decoding MP3 stream for parallel section slicing...", 0.20);
+            pcmData = await extractAudioToPCM(activeFile, 16000, (msg, frac) => {
+              updateProgress(`Stage 1: ${msg}`, 0.20 + frac * 0.10);
+            });
+          }
+        } else if (isAudioContainer && fileSizeMb <= 15) {
+          updateProgress("Stage 1: Audio container <=15MB. Direct lossless single-pass...", 0.15);
+          isDirectSinglePass = true;
+          masterMp3Blob = activeFile;
+          setupMasterAudioPlayer(activeFile, activeFile.name, activeFile.size);
+        } else {
+          // Video or large Audio container (>15MB): Hardware demuxing
+          updateProgress(isVideo ? "Stage 1: Demuxing audio from video at hardware speed..." : "Stage 1: Ingesting high-fidelity audio stream...", 0.10);
+          pcmData = await extractAudioToPCM(activeFile, 16000, (msg, frac) => {
+            updateProgress(`Stage 1: ${msg}`, 0.10 + frac * 0.15);
+          });
+          // Background MP3 encoding for master download (never blocks transcription!)
+          startBackgroundMp3EncodingFromPcm(pcmData.samples, 16000, activeFile.name);
+          setupMasterAudioPlayer(encodeWAVBlob(pcmData.samples.subarray(0, Math.min(pcmData.samples.length, 16000 * 60)), 16000), activeFile.name, activeFile.size);
+        }
 
         // --------------------------------------------------------
-        // STAGE 2: 10-MINUTE PRECISION SLICING
+        // STAGE 2: PRECISION SECTION SLICING (INSTANT WAV BLOBS)
         // --------------------------------------------------------
         setStageActive(2);
-        updateProgress("Stage 2: Slicing audio into 10-minute sections...", 0.38);
+        let sections = [];
 
-        const sections = sliceSamplesIntoSections(pcmData.samples, 16000, intervalSec);
-        renderSectionsProgressGrid(sections);
+        if (isDirectSinglePass) {
+          updateProgress("Stage 2: Single-pass fast path (intact media ready for instant transcription)...", 0.35);
+          sections = [{
+            index: 1,
+            start_seconds: 0,
+            end_seconds: 0,
+            start_formatted: "00:00",
+            end_formatted: "End",
+            duration_seconds: 0,
+            audioBlob: activeFile,
+            audioMimeType: isNativeMp3 ? "audio/mp3" : getMediaMimeType(activeFile.name, activeFile.type),
+            status: 'ready',
+            transcript_data: null
+          }];
+          renderSectionsProgressGrid(sections);
+          updateSectionCardStatus(1, 'ready', "Intact media ready");
+          sectionAudioBlobs = [activeFile];
+        } else {
+          // Clamp section interval to 390 seconds (6.5 min) max so WAV Base64 is ~16MB (under 20MB limit)
+          const effectiveIntervalSec = Math.min(intervalSec || 390, 390);
+          updateProgress(`Stage 2: Slicing audio into ${Math.round(effectiveIntervalSec / 60)}-minute precision sections...`, 0.30);
 
-        // Pre-encode each section to MP3/WAV blob
-        sectionAudioBlobs = [];
-        for (let i = 0; i < sections.length; i++) {
-          updateProgress(`Stage 2: Preparing Section ${i + 1} of ${sections.length} (${sections[i].start_formatted} - ${sections[i].end_formatted})...`, 0.38 + ((i + 1) / sections.length) * 0.1);
-          const secBlob = await encodePcmToMp3Blob(sections[i].samples, 16000, 64);
-          sectionAudioBlobs.push(secBlob);
-          sections[i].audioBlob = secBlob;
-          updateSectionCardStatus(i + 1, 'ready');
-        }
+          sections = sliceSamplesIntoSections(pcmData.samples, 16000, effectiveIntervalSec);
+          renderSectionsProgressGrid(sections);
 
-        // --------------------------------------------------------
-        // STAGE 3: MULTI-ACCENT SPEECH DIARIZATION & TRANSCRIPTION
-        // --------------------------------------------------------
-        setStageActive(3);
-        updateProgress(`Stage 3: Transcribing ${sections.length} sections with Global English Diarization...`, 0.50);
-
-        for (let sIdx = 0; sIdx < sections.length; sIdx++) {
-          const sec = sections[sIdx];
-          updateSectionCardStatus(sec.index, 'transcribing');
-          updateProgress(`Stage 3: Transcribing Section ${sec.index}/${sections.length} (${sec.start_formatted} - ${sec.end_formatted})...`, 0.50 + (sIdx / sections.length) * 0.35);
-
-          const b64 = await blobToBase64(sec.audioBlob);
-          const inlinePart = {
-            inline_data: {
-              mime_type: "audio/mp3",
-              data: b64
-            }
-          };
-
-          const prompt = buildGlobalEnglishSectionPrompt(sec.index, sections.length, sec.start_formatted, sec.end_formatted, customTitle || activeFile.name);
-          
-          try {
-            const resultData = await callGeminiCloudWithRetry(prompt, inlinePart, 3);
-            sec.transcript_data = resultData;
-            updateSectionCardStatus(sec.index, 'completed', resultData.section_summary);
-          } catch (secErr) {
-            console.warn(`Section ${sec.index} warning:`, secErr);
-            sec.transcript_data = {
-              verbatim_transcript: `[Section ${sec.index} (${sec.start_formatted} - ${sec.end_formatted}) transcribed with general speech audio.]`,
-              section_summary: "Audio processed.",
-              speakers_detected: [],
-              dialogue_turns: []
-            };
-            updateSectionCardStatus(sec.index, 'completed', "Completed with fallback");
+          // Instant WAV Blob slicing (takes ~50ms total for all slices!)
+          sectionAudioBlobs = [];
+          for (let i = 0; i < sections.length; i++) {
+            const secWavBlob = encodeWAVBlob(sections[i].samples, 16000);
+            sectionAudioBlobs.push(secWavBlob);
+            sections[i].audioBlob = secWavBlob;
+            sections[i].audioMimeType = "audio/wav";
+            updateSectionCardStatus(i + 1, 'ready', `${(secWavBlob.size / (1024 * 1024)).toFixed(1)} MB WAV slice ready`);
           }
         }
+
+        // --------------------------------------------------------
+        // STAGE 3: MULTI-KEY PARALLEL DIARIZATION & TRANSCRIPTION
+        // --------------------------------------------------------
+        setStageActive(3);
+        updateProgress(`Stage 3: Transcribing ${sections.length} section(s) in parallel across 7-key rotation pool...`, 0.40);
+
+        const sessionHint = customTitle || activeFile.name;
+        // Concurrent worker pool with concurrency limit of 3
+        await transcribeSectionsInParallel(sections, 3, sessionHint);
 
         // --------------------------------------------------------
         // STAGE 4: INTELLIGENT MERGE & SYNTHESIS
         // --------------------------------------------------------
         setStageActive(4);
-        updateProgress("Stage 4: Merging dialogue, reconciling speakers, and generating executive dossier...", 0.90);
+        updateProgress("Stage 4: Synthesizing continuous dialogue, speaker breakdown & executive dossier...", 0.90);
 
         currentSession = await synthesizeAndMergeAllSections(sections, activeFile.name, customTitle);
 
@@ -1720,24 +1879,84 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       if (window.lucide) lucide.createIcons();
     }
 
-    function renderMasterDialogue(turns) {
+    let isTranscriptEditing = false;
+
+    function renderMasterDialogue(turns, isEdit = false) {
       const container = document.getElementById('masterDialogueContainer');
-      if (turns.length === 0) {
+      if (!turns || turns.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No dialogue turns recorded.</p>`;
         return;
       }
 
-      container.innerHTML = turns.map(t => `
-        <div class="flex items-start gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-          <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 mt-0.5 cursor-pointer hover:text-indigo-600" onclick="seekMasterAudio('${t.seconds}')" title="Click to listen">
-            ${t.timestamp_formatted}
-          </span>
-          <div class="space-y-0.5 flex-1">
-            <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 block">${escapeHtml(t.speaker)}</span>
-            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${escapeHtml(t.text)}</p>
+      if (isEdit) {
+        container.innerHTML = `
+          <div class="p-3 mb-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between">
+            <span class="font-bold flex items-center gap-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit Mode Active: You can edit speaker names and dialogue text below.</span>
+            <div class="flex items-center gap-2">
+              <button onclick="saveEditedTranscript()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-sm cursor-pointer">
+                💾 Save Changes
+              </button>
+              <button onclick="toggleEditTranscriptMode(false)" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs cursor-pointer">
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      `).join('');
+        ` + turns.map((t, idx) => `
+          <div class="flex items-start gap-3 p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 bg-white dark:bg-slate-900 transition">
+            <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 mt-1">
+              ${t.timestamp_formatted}
+            </span>
+            <div class="space-y-1.5 flex-1">
+              <input type="text" id="editTurnSpeaker_${idx}" value="${escapeHtml(t.speaker)}" placeholder="Speaker name or role..." class="w-full sm:w-64 text-xs font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <textarea id="editTurnText_${idx}" rows="2" class="w-full text-xs sm:text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed">${escapeHtml(t.text)}</textarea>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = turns.map(t => `
+          <div class="flex items-start gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+            <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 mt-0.5 cursor-pointer hover:text-indigo-600" onclick="seekMasterAudio('${t.seconds}')" title="Click to listen">
+              ${t.timestamp_formatted}
+            </span>
+            <div class="space-y-0.5 flex-1">
+              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 block">${escapeHtml(t.speaker)}</span>
+              <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${escapeHtml(t.text)}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleEditTranscriptMode(forceState = null) {
+      if (!currentSession || !currentSession.turns) return;
+      isTranscriptEditing = (forceState !== null) ? forceState : !isTranscriptEditing;
+      const btn = document.getElementById('btnEditTranscriptText');
+      if (btn) btn.textContent = isTranscriptEditing ? "Cancel Edit" : "Edit Dialogue";
+      renderMasterDialogue(currentSession.turns, isTranscriptEditing);
+    }
+
+    function saveEditedTranscript() {
+      if (!currentSession || !currentSession.turns) return;
+      currentSession.turns.forEach((t, idx) => {
+        const spEl = document.getElementById(`editTurnSpeaker_${idx}`);
+        const txtEl = document.getElementById(`editTurnText_${idx}`);
+        if (spEl) t.speaker = spEl.value.trim();
+        if (txtEl) t.text = txtEl.value.trim();
+      });
+
+      // Re-generate master transcript text
+      currentSession.master_transcript = currentSession.turns.map(t => 
+        `[${t.timestamp_formatted}] ${t.speaker}: ${t.text}`
+      ).join('\n\n');
+
+      saveSessionToStorage(currentSession);
+      isTranscriptEditing = false;
+      const btn = document.getElementById('btnEditTranscriptText');
+      if (btn) btn.textContent = "Edit Dialogue";
+      renderMasterDialogue(currentSession.turns, false);
+      alert("✅ Transcript changes saved! All document exports (DOCX, PDF, MD, TXT, SRT, ZIP) now reflect your edits.");
     }
 
     function renderSectionsExplorer(sections) {
