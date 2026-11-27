@@ -1181,9 +1181,9 @@
       if (audioCtx.state === 'suspended') {
         await audioCtx.resume().catch(() => {});
       }
-      let audioBuffer = null;
+
       try {
-        audioBuffer = await Promise.race([
+        const audioBuffer = await Promise.race([
           new Promise((resolve, reject) => {
             // Pass a cloned slice so decodeAudioData does not neuter original arrayBuffer
             audioCtx.decodeAudioData(arrayBuffer.slice(0), resolve, (err) => {
@@ -1192,53 +1192,55 @@
           }),
           new Promise((_, reject) => setTimeout(() => reject(new Error("Web Audio decode timed out (15s)")), 15000))
         ]);
+
+        if (!audioBuffer) {
+          throw new Error("Audio decode produced null buffer.");
+        }
+
+        const numChannels = audioBuffer.numberOfChannels;
+        const inSampleRate = audioBuffer.sampleRate;
+        const duration = audioBuffer.duration;
+        const ratio = inSampleRate / targetSampleRate;
+        const targetLength = Math.round(audioBuffer.length / ratio);
+        const resampledSamples = new Float32Array(targetLength);
+
+        // Copy channel data directly to independent Float32Arrays BEFORE any context closing
+        const channelDataArrays = [];
+        for (let c = 0; c < numChannels; c++) {
+          channelDataArrays.push(new Float32Array(audioBuffer.getChannelData(c)));
+        }
+
+        for (let i = 0; i < targetLength; i++) {
+          if (i % 250000 === 0 && i > 0) {
+            await new Promise(r => setTimeout(r, 0)); // Yield thread so browser stays smooth & responsive!
+          }
+          const origIdx = i * ratio;
+          const idx0 = Math.min(Math.floor(origIdx), audioBuffer.length - 1);
+          const idx1 = Math.min(idx0 + 1, audioBuffer.length - 1);
+          const frac = origIdx - idx0;
+
+          let mixed0 = 0;
+          let mixed1 = 0;
+          for (let c = 0; c < numChannels; c++) {
+            mixed0 += channelDataArrays[c][idx0];
+            mixed1 += channelDataArrays[c][idx1];
+          }
+          mixed0 /= numChannels;
+          mixed1 /= numChannels;
+
+          resampledSamples[i] = mixed0 * (1 - frac) + mixed1 * frac;
+        }
+
+        channelDataArrays.length = 0;
+
+        return {
+          samples: resampledSamples,
+          duration: duration,
+          sampleRate: targetSampleRate
+        };
       } finally {
         audioCtx.close().catch(() => {});
       }
-
-      if (!audioBuffer) {
-        throw new Error("Audio decode produced null buffer.");
-      }
-
-      const numChannels = audioBuffer.numberOfChannels;
-      const inSampleRate = audioBuffer.sampleRate;
-      const duration = audioBuffer.duration;
-      const ratio = inSampleRate / targetSampleRate;
-      const targetLength = Math.round(audioBuffer.length / ratio);
-      const resampledSamples = new Float32Array(targetLength);
-
-      // Single-pass resample and mono mix (zero intermediate 500MB arrays!)
-      const channelDataArrays = [];
-      for (let c = 0; c < numChannels; c++) {
-        channelDataArrays.push(audioBuffer.getChannelData(c));
-      }
-
-      for (let i = 0; i < targetLength; i++) {
-        if (i % 250000 === 0 && i > 0) {
-          await new Promise(r => setTimeout(r, 0)); // Yield thread so browser stays smooth & responsive!
-        }
-        const origIdx = i * ratio;
-        const idx0 = Math.min(Math.floor(origIdx), audioBuffer.length - 1);
-        const idx1 = Math.min(idx0 + 1, audioBuffer.length - 1);
-        const frac = origIdx - idx0;
-
-        let mixed0 = 0;
-        let mixed1 = 0;
-        for (let c = 0; c < numChannels; c++) {
-          mixed0 += channelDataArrays[c][idx0];
-          mixed1 += channelDataArrays[c][idx1];
-        }
-        mixed0 /= numChannels;
-        mixed1 /= numChannels;
-
-        resampledSamples[i] = mixed0 * (1 - frac) + mixed1 * frac;
-      }
-
-      return {
-        samples: resampledSamples,
-        duration: duration,
-        sampleRate: targetSampleRate
-      };
     }
 
     // Binary audio container slicer for files that cannot be decoded by Web Audio (e.g. raw .aac, .amr, .3gp, or huge files >20MB)
