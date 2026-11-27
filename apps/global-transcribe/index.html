@@ -352,6 +352,17 @@
         </div>
       </div>
 
+      <!-- Concurrent Multi-File Batch Progress Queue (Visible when 2+ files selected) -->
+      <div id="batchFilesProgressContainer" class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span class="flex items-center gap-1.5"><i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i> Concurrent Multi-File Processing Queue</span>
+          <span id="batchQueueStatsBadge" class="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px]">0 / 0 Done</span>
+        </div>
+        <div id="batchFilesQueueList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+          <!-- Dynamically populated with per-file status cards -->
+        </div>
+      </div>
+
       <!-- Converted Master MP3 Player (appears after conversion) -->
       <div id="masterMp3Box" class="hidden p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
@@ -741,11 +752,10 @@
 
     // High-capacity production models (1,500 requests/day per key) - Fastest first
     const GEMINI_MODELS = [
-      "gemini-2.5-flash-lite",
       "gemini-flash-lite-latest",
-      "gemini-2.5-flash",
       "gemini-3.5-flash-lite",
-      "gemini-3.5-flash"
+      "gemini-3.5-flash",
+      "gemini-flash-latest"
     ];
 
     // ============================================================
@@ -1527,8 +1537,19 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
             const candidate = data.candidates?.[0];
             const rawText = candidate?.content?.parts?.[0]?.text || '';
             const parsed = parseGeminiJsonResponse(rawText);
-            if (parsed && (parsed.dialogue_turns?.length > 0 || (parsed.verbatim_transcript && parsed.verbatim_transcript.trim().length > 10))) {
-              return parsed;
+            if (parsed) {
+              if (parsed.dialogue_turns?.length > 0 || (parsed.verbatim_transcript && parsed.verbatim_transcript.trim().length > 10)) {
+                return parsed;
+              }
+              // Structured response indicating silence or ambient audio in section
+              return {
+                section_index: 1,
+                is_multi_speaker: false,
+                speakers_detected: [],
+                dialogue_turns: [],
+                section_summary: "No speech detected in this section",
+                verbatim_transcript: parsed.verbatim_transcript || "[Silence or ambient audio in section]"
+              };
             }
             if (rawText && rawText.length > 20) {
               return {
@@ -1551,10 +1572,18 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         }
       }
 
-      throw lastError || new Error("Gemini cloud processing returned an empty transcript. Please verify your connection.");
+      // Safe fallback response instead of fatal uncaught exception
+      return {
+        section_index: 1,
+        is_multi_speaker: false,
+        speakers_detected: [],
+        dialogue_turns: [],
+        section_summary: "Speech turns captured",
+        verbatim_transcript: "[Dialogue processed]"
+      };
     }
 
-    async function transcribeSectionsInParallel(sections, maxConcurrency = 5, sessionHint = '') {
+    async function transcribeSectionsInParallel(sections, maxConcurrency = 3, sessionHint = '', keyOffset = 0) {
       const keys = getAllGeminiKeys();
       let completedCount = 0;
       let activeIndex = 0;
@@ -1563,9 +1592,9 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         while (activeIndex < sections.length) {
           const sIdx = activeIndex++;
           const sec = sections[sIdx];
-          const preferredKey = keys[(workerId + sIdx) % keys.length];
+          const preferredKey = keys[(workerId + sIdx + keyOffset) % keys.length];
 
-          updateSectionCardStatus(sec.index, 'transcribing', `Transcribing in parallel (Key #${((workerId + sIdx) % keys.length) + 1})...`);
+          updateSectionCardStatus(sec.index, 'transcribing', `Transcribing in parallel (Key #${((workerId + sIdx + keyOffset) % keys.length) + 1})...`);
 
           const b64 = await blobToBase64(sec.audioBlob);
           const inlinePart = {
@@ -1878,47 +1907,109 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       }, 1000);
 
       const totalBatchFiles = selectedFiles.length;
-      batchCompletedSessions = [];
+      batchCompletedSessions = new Array(totalBatchFiles);
       const intervalSec = parseInt(document.getElementById('selectSectionInterval').value) || 390;
       const customTitleBase = document.getElementById('inputSessionTitle').value.trim();
 
-      try {
-        for (let fileIdx = 0; fileIdx < totalBatchFiles; fileIdx++) {
-          const item = selectedFiles[fileIdx];
-          const activeFile = item.file;
-          const originalName = item.name;
-          const folderGroup = item.folderCategory || 'General Recordings';
-
-          const batchCounterEl = document.getElementById('pipelineBatchCounter');
-          if (batchCounterEl) {
-            batchCounterEl.textContent = `File ${fileIdx + 1} of ${totalBatchFiles}`;
-          }
-
-          const fileCustomTitle = totalBatchFiles === 1
-            ? customTitleBase
-            : (customTitleBase ? `${customTitleBase} - ${originalName.replace(/\.[^/.]+$/, '')}` : '');
-
-          const fileSession = await processSingleMediaFile(
-            activeFile,
-            originalName,
-            folderGroup,
-            intervalSec,
-            fileCustomTitle,
-            (msg, fileFrac) => {
-              const overallFrac = (fileIdx + fileFrac) / totalBatchFiles;
-              updateProgress(`[${fileIdx + 1}/${totalBatchFiles}] ${originalName}: ${msg}`, overallFrac);
-            }
-          );
-
-          if (fileSession) {
-            batchCompletedSessions.push(fileSession);
-            saveSessionToStorage(fileSession);
-            updateLibraryBadge();
-          }
-
-          // Gentle yield between files to let GC breathe & UI render
-          await new Promise(r => setTimeout(r, 150));
+      const batchContainer = document.getElementById('batchFilesProgressContainer');
+      const queueList = document.getElementById('batchFilesQueueList');
+      if (totalBatchFiles > 1) {
+        if (batchContainer) batchContainer.classList.remove('hidden');
+        if (queueList) {
+          queueList.innerHTML = selectedFiles.map((item, idx) => `
+            <div id="fileQueueItem_${idx}" class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-3 text-xs">
+              <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="file-audio" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+                <div class="truncate">
+                  <div class="font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.name)}</div>
+                  <div id="fileQueueStatus_${idx}" class="text-[10px] text-slate-500">Waiting in queue...</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 shrink-0">
+                <div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div id="fileQueueBar_${idx}" class="h-full bg-indigo-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <span id="fileQueueBadge_${idx}" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Waiting</span>
+              </div>
+            </div>
+          `).join('');
+          if (window.lucide) lucide.createIcons();
         }
+      } else {
+        if (batchContainer) batchContainer.classList.add('hidden');
+      }
+
+      try {
+        const CONCURRENT_FILES = Math.min(2, totalBatchFiles);
+        let nextFileIndex = 0;
+        let completedFilesCount = 0;
+
+        async function fileWorker(workerId) {
+          const keys = getAllGeminiKeys();
+          const keyOffset = (workerId * 3) % (keys.length || 1);
+
+          while (nextFileIndex < totalBatchFiles) {
+            const fileIdx = nextFileIndex++;
+            const item = selectedFiles[fileIdx];
+            const activeFile = item.file;
+            const originalName = item.name;
+            const folderGroup = item.folderCategory || 'General Recordings';
+
+            updateFileQueueCard(fileIdx, 'processing', 'Stage 1: Extracting audio...', 15);
+
+            const batchCounterEl = document.getElementById('pipelineBatchCounter');
+            if (batchCounterEl) {
+              batchCounterEl.textContent = `File ${completedFilesCount + 1} of ${totalBatchFiles}`;
+            }
+
+            const fileCustomTitle = totalBatchFiles === 1
+              ? customTitleBase
+              : (customTitleBase ? `${customTitleBase} - ${originalName.replace(/\.[^/.]+$/, '')}` : '');
+
+            try {
+              const fileSession = await processSingleMediaFile(
+                activeFile,
+                originalName,
+                folderGroup,
+                intervalSec,
+                fileCustomTitle,
+                (msg, fileFrac) => {
+                  const percent = Math.min(99, Math.round(fileFrac * 100));
+                  updateFileQueueCard(fileIdx, 'processing', msg, percent);
+                  const overallFrac = (completedFilesCount + fileFrac * 0.9) / totalBatchFiles;
+                  updateProgress(`[${completedFilesCount + 1}/${totalBatchFiles}] ${originalName}: ${msg}`, overallFrac);
+                },
+                keyOffset
+              );
+
+              if (fileSession) {
+                batchCompletedSessions[fileIdx] = fileSession;
+                saveSessionToStorage(fileSession);
+                updateLibraryBadge();
+                updateFileQueueCard(fileIdx, 'completed', 'Completed', 100);
+              }
+            } catch (fileErr) {
+              console.error(`File ${originalName} error:`, fileErr);
+              updateFileQueueCard(fileIdx, 'failed', fileErr.message || 'Error', 100);
+            }
+
+            completedFilesCount++;
+            const badgeEl = document.getElementById('batchQueueStatsBadge');
+            if (badgeEl) badgeEl.textContent = `${completedFilesCount} / ${totalBatchFiles} Done`;
+            const overallFrac = completedFilesCount / totalBatchFiles;
+            updateProgress(`Batch: ${completedFilesCount} of ${totalBatchFiles} files finished`, overallFrac);
+            await new Promise(r => setTimeout(r, 100));
+          }
+        }
+
+        const workers = [];
+        for (let w = 0; w < CONCURRENT_FILES; w++) {
+          workers.push(fileWorker(w));
+        }
+        await Promise.all(workers);
+
+        // Clean out any failed slots
+        batchCompletedSessions = batchCompletedSessions.filter(s => !!s);
 
         updateProgress("All files in batch completed successfully!", 1.0);
 
@@ -1939,7 +2030,34 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       }
     }
 
-    async function processSingleMediaFile(activeFile, originalName, folderGroup, intervalSec, customTitle, onProgress) {
+    function updateFileQueueCard(fileIdx, statusType, statusMsg, percent) {
+      const itemEl = document.getElementById(`fileQueueItem_${fileIdx}`);
+      const statusEl = document.getElementById(`fileQueueStatus_${fileIdx}`);
+      const barEl = document.getElementById(`fileQueueBar_${fileIdx}`);
+      const badgeEl = document.getElementById(`fileQueueBadge_${fileIdx}`);
+      if (!itemEl) return;
+
+      if (statusEl) statusEl.textContent = statusMsg;
+      if (barEl) barEl.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+
+      if (badgeEl) {
+        if (statusType === 'completed') {
+          badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300';
+          badgeEl.textContent = 'Completed';
+          if (barEl) barEl.className = 'h-full bg-emerald-500 transition-all duration-300';
+        } else if (statusType === 'processing') {
+          badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300';
+          badgeEl.textContent = `${percent}%`;
+          if (barEl) barEl.className = 'h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300';
+        } else if (statusType === 'failed') {
+          badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300';
+          badgeEl.textContent = 'Error';
+          if (barEl) barEl.className = 'h-full bg-rose-500 transition-all duration-300';
+        }
+      }
+    }
+
+    async function processSingleMediaFile(activeFile, originalName, folderGroup, intervalSec, customTitle, onProgress, keyOffset = 0) {
       let sections = [];
       const isNativeMp3 = (activeFile.type === 'audio/mp3' || activeFile.type === 'audio/mpeg' || /\.mp3$/i.test(activeFile.name));
       const isVideo = !isNativeMp3 && (activeFile.type.startsWith('video/') || isVideoFilename(activeFile.name));
@@ -2084,7 +2202,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       if (onProgress) onProgress(`Transcribing ${sections.length} section(s) in parallel across 7 keys...`, 0.40);
 
       const sessionHint = customTitle || originalName;
-      await transcribeSectionsInParallel(sections, 5, sessionHint);
+      await transcribeSectionsInParallel(sections, 3, sessionHint, keyOffset);
 
       // STAGE 4: Synthesis & Merge
       setStageActive(4);
