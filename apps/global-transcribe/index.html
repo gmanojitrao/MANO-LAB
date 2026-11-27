@@ -754,8 +754,7 @@
     const GEMINI_MODELS = [
       "gemini-flash-lite-latest",
       "gemini-3.5-flash-lite",
-      "gemini-3.5-flash",
-      "gemini-flash-latest"
+      "gemini-3.5-flash"
     ];
 
     // ============================================================
@@ -1490,7 +1489,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s hard timeout to prevent hanging
+            const timeoutId = setTimeout(() => controller.abort(), 35000); // 35s timeout to prevent hanging
 
             let res;
             try {
@@ -1525,11 +1524,11 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
             if (!res.ok) {
               const err = await res.json().catch(() => ({}));
               const msg = err.error?.message || `HTTP ${res.status}`;
+              console.warn(`[${model}] notice (${res.status}): ${msg}`);
               if (res.status === 429 || msg.includes('quota') || res.status === 503) {
-                console.warn(`Throttled on ${model} with key (${msg}). Rotating to next key in pool...`);
                 break; // Jump to next key
               }
-              throw new Error(`[${model}] ${msg}`);
+              continue; // Try next model on this key
             }
 
             const data = await res.json();
@@ -1537,10 +1536,9 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
             const rawText = candidate?.content?.parts?.[0]?.text || '';
             const parsed = parseGeminiJsonResponse(rawText);
             if (parsed) {
-              if (parsed.dialogue_turns?.length > 0 || (parsed.verbatim_transcript && parsed.verbatim_transcript.trim().length > 10)) {
+              if (parsed.dialogue_turns?.length > 0 || (parsed.verbatim_transcript && parsed.verbatim_transcript.trim().length > 5)) {
                 return parsed;
               }
-              // Structured response indicating silence or ambient audio in section
               return {
                 section_index: 1,
                 is_multi_speaker: false,
@@ -1550,7 +1548,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
                 verbatim_transcript: parsed.verbatim_transcript || "[Silence or ambient audio in section]"
               };
             }
-            if (rawText && rawText.length > 20) {
+            if (rawText && rawText.length > 5) {
               return {
                 section_index: 1,
                 is_multi_speaker: /interviewer|speaker\s*2/i.test(rawText),
@@ -1567,7 +1565,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         }
 
         if (attempt < attemptCount - 1) {
-          await new Promise(r => setTimeout(r, 1000));
+          await new Promise(r => setTimeout(r, 600));
         }
       }
 
@@ -1582,7 +1580,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
       };
     }
 
-    async function transcribeSectionsInParallel(sections, maxConcurrency = 3, sessionHint = '', keyOffset = 0) {
+    async function transcribeSectionsInParallel(sections, maxConcurrency = 3, sessionHint = '', keyOffset = 0, onProgress = null) {
       const keys = getAllGeminiKeys();
       let completedCount = 0;
       let activeIndex = 0;
@@ -1598,7 +1596,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
           const b64 = await blobToBase64(sec.audioBlob);
           const inlinePart = {
             inline_data: {
-              mime_type: sec.audioMimeType || "audio/wav",
+              mime_type: sec.audioMimeType || "audio/mp3",
               data: b64
             }
           };
@@ -1630,7 +1628,9 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
 
           completedCount++;
           const frac = 0.40 + (completedCount / sections.length) * 0.45;
-          updateProgress(`Stage 3: Transcribed Section ${completedCount}/${sections.length} in parallel...`, frac);
+          const statusMsg = `Stage 3: Transcribed Section ${completedCount}/${sections.length} across Gemini keys...`;
+          updateProgress(statusMsg, frac);
+          if (onProgress) onProgress(statusMsg, frac);
         }
       }
 
@@ -1665,11 +1665,27 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         } catch (e) {}
       }
 
+      // Plaintext / dialogue turns extraction fallback
+      const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const extractedTurns = [];
+      lines.forEach((line) => {
+        const m = line.match(/^\[?(\d{1,2}:\d{2})\]?\s*(.*?):\s*(.*)$/);
+        if (m) {
+          extractedTurns.push({
+            timestamp: m[1],
+            speaker: m[2].trim(),
+            text: m[3].trim()
+          });
+        }
+      });
+
       return {
-        verbatim_transcript: raw,
-        section_summary: "Dialogue extracted",
+        section_index: 1,
+        is_multi_speaker: extractedTurns.length > 1,
         speakers_detected: [],
-        dialogue_turns: []
+        dialogue_turns: extractedTurns,
+        section_summary: "Dialogue extracted",
+        verbatim_transcript: raw
       };
     }
 
@@ -2256,7 +2272,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
         }
       }
 
-      // STAGE 2: Precision Section Slicing
+      // STAGE 2: Precision Section Slicing & Fast MP3 Encoding
       setStageActive(2);
       if (sections.length === 0) {
         if (isDirectSinglePass) {
@@ -2277,20 +2293,30 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
           updateSectionCardStatus(1, 'ready', "Intact media ready");
           sectionAudioBlobs = [activeFile];
         } else if (pcmData && pcmData.samples) {
-          const effectiveIntervalSec = Math.min(intervalSec || 390, 390);
-          if (onProgress) onProgress(`Slicing audio into ${Math.round(effectiveIntervalSec / 60)}-min sections...`, 0.30);
+          const effectiveIntervalSec = Math.min(intervalSec || 600, 600);
+          if (onProgress) onProgress(`Slicing audio into ${Math.round(effectiveIntervalSec / 60)}-min sections...`, 0.28);
 
           sections = sliceSamplesIntoSections(pcmData.samples, 16000, effectiveIntervalSec);
           renderSectionsProgressGrid(sections);
 
           sectionAudioBlobs = [];
           for (let i = 0; i < sections.length; i++) {
-            const secWavBlob = encodeWAVBlob(sections[i].samples, 16000);
-            sectionAudioBlobs.push(secWavBlob);
-            sections[i].audioBlob = secWavBlob;
-            sections[i].audioMimeType = "audio/wav";
+            if (onProgress) onProgress(`Stage 2: Encoding Section ${i + 1}/${sections.length} to fast MP3...`, 0.28 + ((i + 1) / sections.length) * 0.12);
+            let secBlob = null;
+            let mime = "audio/mp3";
+            try {
+              secBlob = await encodePcmToMp3Blob(sections[i].samples, 16000, 64);
+              mime = "audio/mp3";
+            } catch (mp3Err) {
+              console.warn("Lamejs encoding failed, fallback to WAV:", mp3Err);
+              secBlob = encodeWAVBlob(sections[i].samples, 16000);
+              mime = "audio/wav";
+            }
+            sectionAudioBlobs.push(secBlob);
+            sections[i].audioBlob = secBlob;
+            sections[i].audioMimeType = mime;
             sections[i].samples = null; // Free section raw float buffer!
-            updateSectionCardStatus(i + 1, 'ready', `${(secWavBlob.size / (1024 * 1024)).toFixed(1)} MB WAV slice ready`);
+            updateSectionCardStatus(i + 1, 'ready', `${(secBlob.size / (1024 * 1024)).toFixed(1)} MB ${mime === 'audio/mp3' ? 'MP3' : 'WAV'} slice ready`);
           }
           pcmData.samples = null; // Free master raw float buffer!
           pcmData = null;
@@ -2317,14 +2343,14 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
 
       // STAGE 3: Parallel Diarization & Transcription
       setStageActive(3);
-      if (onProgress) onProgress(`Transcribing ${sections.length} section(s) in parallel across 7 keys...`, 0.40);
+      if (onProgress) onProgress(`Stage 3: Transcribing ${sections.length} section(s) in parallel across 7 keys...`, 0.40);
 
       const sessionHint = customTitle || originalName;
-      await transcribeSectionsInParallel(sections, 3, sessionHint, keyOffset);
+      await transcribeSectionsInParallel(sections, 3, sessionHint, keyOffset, onProgress);
 
       // STAGE 4: Synthesis & Merge
       setStageActive(4);
-      if (onProgress) onProgress("Synthesizing continuous dialogue & executive dossier...", 0.90);
+      if (onProgress) onProgress("Stage 4: Synthesizing continuous dialogue & executive dossier...", 0.90);
 
       const session = await synthesizeAndMergeAllSections(sections, originalName, customTitle);
       session.folderCategory = folderGroup;
