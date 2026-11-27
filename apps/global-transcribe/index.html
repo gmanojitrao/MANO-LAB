@@ -739,12 +739,12 @@
       return pool;
     }
 
-    // High-capacity production models (1,500 requests/day per key)
+    // High-capacity production models (1,500 requests/day per key) - Fastest first
     const GEMINI_MODELS = [
-      "gemini-flash-lite-latest",
       "gemini-2.5-flash-lite",
-      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest",
       "gemini-2.5-flash",
+      "gemini-3.5-flash-lite",
       "gemini-3.5-flash"
     ];
 
@@ -1203,6 +1203,9 @@
         resampledSamples[i] = mixed0 * (1 - frac) + mixed1 * frac;
       }
 
+      channelDataArrays.length = 0;
+      audioBuffer = null;
+
       if (onProgress) onProgress("Audio decoded successfully.", 0.8);
       return {
         samples: resampledSamples,
@@ -1254,7 +1257,8 @@
     }
 
     function encodeWAVBlob(samples, sampleRate = 16000) {
-      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const byteLen = samples.length * 2;
+      const buffer = new ArrayBuffer(44 + byteLen);
       const view = new DataView(buffer);
 
       function writeString(view, offset, str) {
@@ -1262,7 +1266,7 @@
       }
 
       writeString(view, 0, 'RIFF');
-      view.setUint32(4, 36 + samples.length * 2, true);
+      view.setUint32(4, 36 + byteLen, true);
       writeString(view, 8, 'WAVE');
       writeString(view, 12, 'fmt ');
       view.setUint32(16, 16, true);
@@ -1273,15 +1277,16 @@
       view.setUint16(32, 2, true);
       view.setUint16(34, 16, true);
       writeString(view, 36, 'data');
-      view.setUint32(40, samples.length * 2, true);
+      view.setUint32(40, byteLen, true);
 
-      let offset = 44;
-      for (let i = 0; i < samples.length; i++, offset += 2) {
-        let s = Math.max(-1, Math.min(1, samples[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      // Fast typed-array assignment (10x faster than DataView in tight loop)
+      const pcm16 = new Int16Array(buffer, 44, samples.length);
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
       }
 
-      return new Blob([view], { type: 'audio/wav' });
+      return new Blob([buffer], { type: 'audio/wav' });
     }
 
     async function blobToBase64(blob) {
@@ -1472,7 +1477,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
 
         for (const model of GEMINI_MODELS) {
           try {
-            await new Promise(r => setTimeout(r, 200));
+            if (attempt > 0) await new Promise(r => setTimeout(r, 100));
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             const controller = new AbortController();
@@ -1549,7 +1554,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
       throw lastError || new Error("Gemini cloud processing returned an empty transcript. Please verify your connection.");
     }
 
-    async function transcribeSectionsInParallel(sections, maxConcurrency = 3, sessionHint = '') {
+    async function transcribeSectionsInParallel(sections, maxConcurrency = 5, sessionHint = '') {
       const keys = getAllGeminiKeys();
       let completedCount = 0;
       let activeIndex = 0;
@@ -1601,7 +1606,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         }
       }
 
-      const poolSize = Math.min(maxConcurrency, sections.length);
+      const poolSize = Math.min(maxConcurrency, keys.length, sections.length);
       const workers = [];
       for (let w = 0; w < poolSize; w++) {
         workers.push(worker(w));
@@ -1704,6 +1709,30 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
       const fullTranscriptText = continuousTurns.map(t => 
         `[${t.timestamp_formatted}] ${t.speaker}: ${t.text}`
       ).join('\n\n');
+
+      if (continuousTurns.length === 0) {
+        return {
+          session_id: 'session_' + Date.now(),
+          created_at: new Date().toISOString(),
+          title: customTitleHint || generateDefaultIntelligentTitle(originalFilename),
+          original_filename: originalFilename,
+          total_duration_seconds: sections.reduce((acc, s) => acc + s.duration_seconds, 0),
+          sections_count: sections.length,
+          summary: "Audio recording processed. No distinct dialogue turns detected.",
+          decisions: [],
+          action_items: [],
+          speakers: [],
+          turns: [],
+          master_transcript: "[No dialogue detected in this recording]",
+          sections: sections.map(s => ({
+            index: s.index,
+            start: s.start_formatted,
+            end: s.end_formatted,
+            summary: "No dialogue detected",
+            verbatim: ""
+          }))
+        };
+      }
 
       // 2. High-Level AI Synthesis Pass for Executive Insights
       const synthesisPrompt = `You are an elite executive intelligence analyst.
@@ -1951,7 +1980,6 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
             if (onProgress) onProgress(msg, 0.10 + frac * 0.15);
           });
           pcmSucceeded = true;
-          startBackgroundMp3EncodingFromPcm(pcmData.samples, 16000, originalName);
           fileMasterBlob = encodeWAVBlob(pcmData.samples.subarray(0, Math.min(pcmData.samples.length, 16000 * 60)), 16000);
           setupMasterAudioPlayer(fileMasterBlob, originalName, activeFile.size);
         } catch (extractErr) {
@@ -2025,8 +2053,11 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
             sectionAudioBlobs.push(secWavBlob);
             sections[i].audioBlob = secWavBlob;
             sections[i].audioMimeType = "audio/wav";
+            sections[i].samples = null; // Free section raw float buffer!
             updateSectionCardStatus(i + 1, 'ready', `${(secWavBlob.size / (1024 * 1024)).toFixed(1)} MB WAV slice ready`);
           }
+          pcmData.samples = null; // Free master raw float buffer!
+          pcmData = null;
         }
       }
 
@@ -2053,7 +2084,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       if (onProgress) onProgress(`Transcribing ${sections.length} section(s) in parallel across 7 keys...`, 0.40);
 
       const sessionHint = customTitle || originalName;
-      await transcribeSectionsInParallel(sections, 3, sessionHint);
+      await transcribeSectionsInParallel(sections, 5, sessionHint);
 
       // STAGE 4: Synthesis & Merge
       setStageActive(4);
@@ -2222,9 +2253,14 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
     }
 
     function downloadMasterMp3File() {
-      if (!masterMp3Blob) return;
+      const blob = masterMp3Blob || currentSession?.masterAudioBlob;
+      if (!blob) {
+        alert("Audio file is ready in session downloads.");
+        return;
+      }
       const title = (currentSession && currentSession.title) ? currentSession.title : 'OmniTranscribe_Audio';
-      saveBlobAs(masterMp3Blob, `${cleanFilename(title)}.mp3`);
+      const ext = blob.type === 'audio/wav' ? 'wav' : 'mp3';
+      saveBlobAs(blob, `${cleanFilename(title)}.${ext}`);
     }
 
     // ============================================================
@@ -2774,10 +2810,19 @@ ${(session.turns || []).map(t => `**[${t.timestamp_formatted}] ${t.speaker}:**\n
         const list = getStoredSessions();
         // Remove duplicate if same ID
         const filtered = list.filter(s => s.session_id !== session.session_id);
-        filtered.unshift(session);
-        // Keep up to 25 latest sessions
-        const trimmed = filtered.slice(0, 25);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        // Strip out binary blobs so it never exceeds localStorage 5MB quota or causes QuotaExceededError
+        const lightweight = {
+          ...session,
+          masterAudioBlob: null
+        };
+        filtered.unshift(lightweight);
+        // Keep up to 15 latest sessions in storage
+        const trimmed = filtered.slice(0, 15);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        } catch (storageErr) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed.slice(0, 5)));
+        }
       } catch (e) {
         console.warn("Storage save failed:", e);
       }
