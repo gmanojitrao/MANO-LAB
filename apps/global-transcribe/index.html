@@ -1433,14 +1433,13 @@ CRITICAL VERBATIM ACCURACY:
 AUTOMATED SPEAKER DIARIZATION INTELLIGENCE:
 1. SINGLE-SPEAKER RECORDING (Monologue / Lecture / Presentation / Solo Voice Note):
    - If only ONE person is speaking in this audio, DO NOT invent fake dialogue or alternate speaker labels.
-   - Identify the speaker cleanly: e.g. "Speaker 1 (Presenter)", "Speaker 1 (Lecturer)", or their actual name if introduced.
-   - Output continuous, coherent paragraphs with timestamps at natural sentence breaks.
+   - Identify the speaker cleanly: e.g. "Speaker 1", "Presenter", or their actual name if introduced.
+   - Output continuous, clean paragraphs without timestamps in the text.
 2. MULTI-SPEAKER RECORDING (Interview / Meeting / Panel / Discussion):
    - If TWO or more distinct people are speaking:
-     * Intelligently identify roles: e.g. "Interviewer (Host)", "Artisan / Guest (Speaker 2)", "Technical Lead", etc.
-     * If personal names are spoken (e.g. "Biplab", "John", "Sarah", "Dr. Rao"), use their actual names.
-     * Accurately detect accents: UK (British), US (American), Australian, Canadian, Indian, South African, European, Global ESL.
-     * Label EVERY turn clearly with timestamps: "[MM:SS] Speaker Name (Role/Accent): Exact spoken words..."
+     * Identify each speaker by their real name if spoken (e.g. "Manoj", "Ram", "Sarah", "Dr. Rao"), or clean role ("Interviewer", "Guest", "Speaker 1", "Speaker 2").
+     * Label EVERY turn cleanly: "Speaker Name: Exact spoken words..." (e.g. "Manoj: exact words", followed by "Ram: exact words").
+     * STRICT CRITICAL RULE: NEVER insert timestamps, bracketed times, or timecodes (e.g. NO [00:15], NO (01:23)) inside or between spoken sentences.
 3. NO NONSENSE CHARACTERS:
    - Output clean, valid UTF-8 text. Never emit broken encoding artifacts, corrupted unicode, or nonsensical letter sequences.
 
@@ -1451,20 +1450,20 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
   "speakers_detected": [
     {
       "id": "Speaker 1",
-      "name_or_role": "Interviewer (UK)",
-      "accent_region": "British English",
+      "name_or_role": "Manoj",
+      "accent_region": "English",
       "voice_characteristics": "Clear professional host, moderate pace"
     }
   ],
   "dialogue_turns": [
     {
-      "timestamp": "00:12",
-      "speaker": "Interviewer (UK)",
-      "text": "Welcome everyone to today's craft and engineering session."
+      "timestamp": "00:00",
+      "speaker": "Manoj",
+      "text": "Welcome everyone to today's session."
     }
   ],
   "section_summary": "Concise 2-sentence summary of topics discussed in this section.",
-  "verbatim_transcript": "[00:12] Interviewer (UK): Welcome everyone to today's craft and engineering session..."
+  "verbatim_transcript": "Manoj: Welcome everyone to today's session.\\n\\nRam: Thank you Manoj, glad to be here."
 }`;
     }
 
@@ -1669,13 +1668,17 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
       const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
       const extractedTurns = [];
       lines.forEach((line) => {
-        const m = line.match(/^\[?(\d{1,2}:\d{2})\]?\s*(.*?):\s*(.*)$/);
+        const m = line.match(/^(?:\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*)?(.*?):\s*(.*)$/);
         if (m) {
-          extractedTurns.push({
-            timestamp: m[1],
-            speaker: m[2].trim(),
-            text: m[3].trim()
-          });
+          const spk = cleanSpeakerName(m[1]);
+          const txt = cleanDialogueText(m[2]);
+          if (txt.length > 0) {
+            extractedTurns.push({
+              timestamp: "00:00",
+              speaker: spk,
+              text: txt
+            });
+          }
         }
       });
 
@@ -1685,7 +1688,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         speakers_detected: [],
         dialogue_turns: extractedTurns,
         section_summary: "Dialogue extracted",
-        verbatim_transcript: raw
+        verbatim_transcript: cleanDialogueText(raw)
       };
     }
 
@@ -1693,7 +1696,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
     // INTELLIGENT MERGER & CROSS-SECTION SYNTHESIS PASS
     // ============================================================
     async function synthesizeAndMergeAllSections(sections, originalFilename, customTitleHint) {
-      // 1. Compute continuous timecodes across section seams
+      // 1. Compute continuous dialogue turns across section seams
       const continuousTurns = [];
       const allSpeakersMap = new Map();
 
@@ -1704,54 +1707,64 @@ OUTPUT STRICTLY A VALID JSON OBJECT WITH THIS EXACT STRUCTURE:
         // Register speakers
         (data.speakers_detected || []).forEach(sp => {
           if (sp && sp.name_or_role) {
-            allSpeakersMap.set(sp.name_or_role, sp);
+            const cleanName = cleanSpeakerName(sp.name_or_role);
+            allSpeakersMap.set(cleanName, { ...sp, name_or_role: cleanName });
           }
         });
 
-        // Offset dialogue turns
+        // Offset dialogue turns & sanitize dialogue text
         if (data.dialogue_turns && data.dialogue_turns.length > 0) {
           data.dialogue_turns.forEach(turn => {
             const relSec = parseTimeToSeconds(turn.timestamp);
             const absSec = offsetSec + relSec;
-            continuousTurns.push({
-              section_index: sec.index,
-              seconds: absSec,
-              timestamp_formatted: formatTimeSeconds(absSec),
-              speaker: turn.speaker || 'Speaker',
-              text: turn.text || ''
-            });
+            const spk = cleanSpeakerName(turn.speaker);
+            const txt = cleanDialogueText(turn.text);
+            if (txt.length > 0) {
+              continuousTurns.push({
+                section_index: sec.index,
+                seconds: absSec,
+                timestamp_formatted: formatTimeSeconds(absSec),
+                speaker: spk,
+                text: txt
+              });
+            }
           });
         } else if (data.verbatim_transcript) {
           // Parse transcript lines if structured turns array was empty
           const lines = data.verbatim_transcript.split('\n').filter(l => l.trim().length > 0);
           lines.forEach(line => {
-            const match = line.match(/^\[?(\d{1,2}:\d{2})\]?\s*(.*?):\s*(.*)$/);
+            const match = line.match(/^(?:\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*)?(.*?):\s*(.*)$/);
             if (match) {
-              const relSec = parseTimeToSeconds(match[1]);
-              const absSec = offsetSec + relSec;
-              continuousTurns.push({
-                section_index: sec.index,
-                seconds: absSec,
-                timestamp_formatted: formatTimeSeconds(absSec),
-                speaker: match[2].trim(),
-                text: match[3].trim()
-              });
+              const spk = cleanSpeakerName(match[1]);
+              const txt = cleanDialogueText(match[2]);
+              if (txt.length > 0) {
+                continuousTurns.push({
+                  section_index: sec.index,
+                  seconds: offsetSec,
+                  timestamp_formatted: formatTimeSeconds(offsetSec),
+                  speaker: spk,
+                  text: txt
+                });
+              }
             } else {
-              continuousTurns.push({
-                section_index: sec.index,
-                seconds: offsetSec,
-                timestamp_formatted: formatTimeSeconds(offsetSec),
-                speaker: 'Speaker',
-                text: line
-              });
+              const txt = cleanDialogueText(line);
+              if (txt.length > 0) {
+                continuousTurns.push({
+                  section_index: sec.index,
+                  seconds: offsetSec,
+                  timestamp_formatted: formatTimeSeconds(offsetSec),
+                  speaker: 'Speaker',
+                  text: txt
+                });
+              }
             }
           });
         }
       });
 
-      // Construct master continuous dialogue text
+      // Construct master continuous dialogue text in clean "Speaker: Text" format
       const fullTranscriptText = continuousTurns.map(t => 
-        `[${t.timestamp_formatted}] ${t.speaker}: ${t.text}`
+        `${t.speaker}: ${t.text}`
       ).join('\n\n');
 
       if (continuousTurns.length === 0) {
@@ -2625,27 +2638,25 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
           </div>
         ` + turns.map((t, idx) => `
           <div class="flex items-start gap-3 p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 bg-white dark:bg-slate-900 transition">
-            <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 mt-1">
-              ${t.timestamp_formatted}
-            </span>
             <div class="space-y-1.5 flex-1">
-              <input type="text" id="editTurnSpeaker_${idx}" value="${escapeHtml(t.speaker)}" placeholder="Speaker name or role..." class="w-full sm:w-64 text-xs font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-              <textarea id="editTurnText_${idx}" rows="2" class="w-full text-xs sm:text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed">${escapeHtml(t.text)}</textarea>
+              <input type="text" id="editTurnSpeaker_${idx}" value="${escapeHtml(cleanSpeakerName(t.speaker))}" placeholder="Speaker name..." class="w-full sm:w-64 text-xs font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <textarea id="editTurnText_${idx}" rows="2" class="w-full text-xs sm:text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed">${escapeHtml(cleanDialogueText(t.text))}</textarea>
             </div>
           </div>
         `).join('');
       } else {
-        container.innerHTML = turns.map(t => `
-          <div class="flex items-start gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-            <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 mt-0.5 cursor-pointer hover:text-indigo-600" onclick="seekMasterAudio('${t.seconds}')" title="Click to listen">
-              ${t.timestamp_formatted}
-            </span>
+        container.innerHTML = turns.map(t => {
+          const spk = escapeHtml(cleanSpeakerName(t.speaker));
+          const txt = escapeHtml(cleanDialogueText(t.text));
+          return `
+          <div class="flex items-start gap-2.5 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
             <div class="space-y-0.5 flex-1">
-              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 block">${escapeHtml(t.speaker)}</span>
-              <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${escapeHtml(t.text)}</p>
+              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 block">${spk}:</span>
+              <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${txt}</p>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       }
 
       if (window.lucide) lucide.createIcons();
@@ -2664,13 +2675,13 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       currentSession.turns.forEach((t, idx) => {
         const spEl = document.getElementById(`editTurnSpeaker_${idx}`);
         const txtEl = document.getElementById(`editTurnText_${idx}`);
-        if (spEl) t.speaker = spEl.value.trim();
-        if (txtEl) t.text = txtEl.value.trim();
+        if (spEl) t.speaker = cleanSpeakerName(spEl.value.trim());
+        if (txtEl) t.text = cleanDialogueText(txtEl.value.trim());
       });
 
-      // Re-generate master transcript text
+      // Re-generate master transcript text in clean "Speaker: Text" format
       currentSession.master_transcript = currentSession.turns.map(t => 
-        `[${t.timestamp_formatted}] ${t.speaker}: ${t.text}`
+        `${t.speaker}: ${t.text}`
       ).join('\n\n');
 
       saveSessionToStorage(currentSession);
@@ -2698,7 +2709,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
           <p class="text-xs font-medium text-slate-500 dark:text-slate-400 italic">${escapeHtml(sec.summary || 'Summary not available')}</p>
 
           <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto custom-scrollbar">
-            ${escapeHtml(sec.verbatim || '')}
+            ${escapeHtml(cleanDialogueText(sec.verbatim || ''))}
           </div>
         </div>
       `).join('');
@@ -2837,7 +2848,7 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
       // 3. 10-Minute Sections Folder
       const sectionsFolder = zip.folder("10_Minute_Sections");
       (currentSession.sections || []).forEach((sec, idx) => {
-        sectionsFolder.file(`Section_${sec.index}_[${sec.start.replace(':', 'm')}-${sec.end.replace(':', 'm')}].txt`, sec.verbatim);
+        sectionsFolder.file(`Section_${sec.index}_[${sec.start.replace(':', 'm')}-${sec.end.replace(':', 'm')}].txt`, cleanDialogueText(sec.verbatim || ''));
         if (sectionAudioBlobs[idx]) {
           sectionsFolder.file(`Section_${sec.index}.mp3`, sectionAudioBlobs[idx]);
         }
@@ -2940,13 +2951,15 @@ OUTPUT STRICTLY A VALID JSON OBJECT:
     </tbody>
   </table>
 
-  <h2>5. Master Verbatim Transcript</h2>
-  ${(session.turns || []).map(t => `
-    <div class="dialogue-turn">
-      <span class="timecode">[${t.timestamp_formatted}]</span> <span class="speaker-name">${escapeHtml(t.speaker)}:</span>
-      <div>${escapeHtml(t.text)}</div>
-    </div>
-  `).join('')}
+  <h2>5. Master Transcript</h2>
+  ${(session.turns || []).map(t => {
+    const spk = escapeHtml(cleanSpeakerName(t.speaker));
+    const txt = escapeHtml(cleanDialogueText(t.text));
+    return `
+    <div class="dialogue-turn" style="margin-bottom: 10pt; line-height: 1.6;">
+      <span class="speaker-name" style="font-weight: bold; color: #312e81;">${spk}:</span> ${txt}
+    </div>`;
+  }).join('')}
 
   <p style="margin-top: 30pt; font-size: 9pt; color: #94a3b8; text-align: center;">
     Generated by OmniTranscribe Global Studio • MANO-LAB Precision Applications
@@ -3002,9 +3015,13 @@ ${(session.speakers || []).map(s => `| **${s.name}** | ${s.accent} | ${s.role} |
 
 ---
 
-## 5. Master Verbatim Transcript
+## 5. Master Transcript
 
-${(session.turns || []).map(t => `**[${t.timestamp_formatted}] ${t.speaker}:**\n${t.text}\n`).join('\n')}
+${(session.turns || []).map(t => {
+  const spk = cleanSpeakerName(t.speaker);
+  const txt = cleanDialogueText(t.text);
+  return `**${spk}:** ${txt}\n`;
+}).join('\n')}
 `;
       return md;
     }
@@ -3013,8 +3030,10 @@ ${(session.turns || []).map(t => `**[${t.timestamp_formatted}] ${t.speaker}:**\n
     function generateSrtSubtitles(turns) {
       let srt = '';
       turns.forEach((t, i) => {
-        const startSec = t.seconds;
-        const endSec = startSec + Math.max(3, Math.min(10, t.text.split(' ').length * 0.4));
+        const startSec = t.seconds || 0;
+        const cleanTxt = cleanDialogueText(t.text);
+        const cleanSpk = cleanSpeakerName(t.speaker);
+        const endSec = startSec + Math.max(3, Math.min(10, cleanTxt.split(' ').length * 0.4));
         const formatSrtTime = (sec) => {
           const s = Math.floor(sec);
           const ms = Math.floor((sec - s) * 1000);
@@ -3024,7 +3043,7 @@ ${(session.turns || []).map(t => `**[${t.timestamp_formatted}] ${t.speaker}:**\n
           return `${('0' + hrs).slice(-2)}:${('0' + mins).slice(-2)}:${('0' + secs).slice(-2)},${('00' + ms).slice(-3)}`;
         };
 
-        srt += `${i + 1}\n${formatSrtTime(startSec)} --> ${formatSrtTime(endSec)}\n${t.speaker}: ${t.text}\n\n`;
+        srt += `${i + 1}\n${formatSrtTime(startSec)} --> ${formatSrtTime(endSec)}\n${cleanSpk}: ${cleanTxt}\n\n`;
       });
       return srt;
     }
@@ -3042,13 +3061,15 @@ ${(session.turns || []).map(t => `**[${t.timestamp_formatted}] ${t.speaker}:**\n
           <h2 style="color: #4338ca; margin-top: 15px;">Key Decisions</h2>
           <ul>${(session.decisions || []).map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul>
 
-          <h2 style="color: #4338ca; margin-top: 15px;">Verbatim Transcript</h2>
-          ${(session.turns || []).slice(0, 50).map(t => `
-            <div style="margin-bottom: 8px;">
-              <span style="font-family: monospace; font-size: 9pt; color: #64748b;">[${t.timestamp_formatted}]</span>
-              <strong>${escapeHtml(t.speaker)}:</strong> ${escapeHtml(t.text)}
-            </div>
-          `).join('')}
+          <h2 style="color: #4338ca; margin-top: 18px; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">Master Transcript</h2>
+          ${(session.turns || []).map(t => {
+            const spk = escapeHtml(cleanSpeakerName(t.speaker));
+            const txt = escapeHtml(cleanDialogueText(t.text));
+            return `
+            <div style="margin-bottom: 10px; line-height: 1.6;">
+              <strong style="color: #312e81;">${spk}:</strong> ${txt}
+            </div>`;
+          }).join('')}
         </div>
       `;
     }
@@ -3221,8 +3242,39 @@ ${(session.turns || []).map(t => `**[${t.timestamp_formatted}] ${t.speaker}:**\n
     }
 
     // ============================================================
-    // GENERAL UTILITIES
+    // GENERAL UTILITIES & TEXT SANITIZATION
     // ============================================================
+    function cleanDialogueText(text) {
+      if (!text) return '';
+      return String(text)
+        // Remove ANY bracketed/parenthesized/angle timestamp or time ranges e.g. [00:12], [00:00 - 10:00], (01:23), <12:34.50>
+        .replace(/[\[\(<][^\]\)>]*?\b\d{1,2}:\d{2}(?::\d{2})?\b[^\]\)>]*?[\]\)>]/g, ' ')
+        // Remove standalone range timestamps like 00:00 - 10:00
+        .replace(/\b\d{1,2}:\d{2}(?::\d{2})?\s*-\s*\d{1,2}:\d{2}(?::\d{2})?\b/g, ' ')
+        // Remove line-leading timestamps like '00:12: ' or '00:12 - '
+        .replace(/^[ \t]*\d{1,2}:\d{2}(?::\d{2})?\s*[:-]\s*/gm, '')
+        // Remove section marker tags like [Section 1]
+        .replace(/\[\s*Section\s*\d+[^\]]*\]/gi, ' ')
+        // Clean up multiple spaces and punctuation spacing
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\s+([.,!?;:])/g, '$1')
+        .trim();
+    }
+
+    function cleanSpeakerName(speaker) {
+      if (!speaker) return 'Speaker';
+      let s = String(speaker).trim()
+        // Remove any leading/trailing timestamp brackets like [00:12] Manoj or (01:23) Ram
+        .replace(/^[\[\(<][^\]\)>]*?\b\d{1,2}:\d{2}(?::\d{2})?\b[^\]\)>]*?[\]\)>]\s*/g, '')
+        .replace(/[\[\(<][^\]\)>]*?\b\d{1,2}:\d{2}(?::\d{2})?\b[^\]\)>]*?[\]\)>]\s*$/g, '')
+        // Remove trailing colons
+        .replace(/:\s*$/g, '')
+        // If the speaker name has role/accent in parentheses like 'Manoj (Host)' or 'Manoj (UK Accent)', extract the actual name
+        .replace(/\s*\((?:UK|US|Indian|American|British|Australian|Canadian|South African|European|Global ESL|Host|Guest|Speaker\s*\d+|Presenter|Interviewer|Interviewee|Lead)[^)]*\)/gi, '')
+        .trim();
+      return s || 'Speaker';
+    }
+
     function cleanFilename(str) {
       if (!str) return 'OmniTranscribe';
       return str.replace(/[^a-zA-Z0-9_\-]/g, '_').replace(/_+/g, '_').slice(0, 80);
